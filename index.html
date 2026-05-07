@@ -392,6 +392,15 @@
   }
   .option-btn.correct .option-label { background: rgba(29,131,72,0.15); color: var(--green); }
   .option-btn.wrong .option-label { background: rgba(192,57,43,0.12); color: var(--red); }
+  .option-btn.opp-wrong {
+    background: #fff8e1; border-color: rgba(181,136,46,0.4);
+    color: var(--gold);
+  }
+  .option-btn.opp-wrong .option-label { background: rgba(181,136,46,0.15); color: var(--gold); }
+  .option-btn.opp-wrong::after {
+    content: ' (خصمك)';
+    font-size: 11px; opacity: 0.7;
+  }
 
   .status-bar {
     text-align: center; font-size: 14px; color: var(--ink3);
@@ -1457,12 +1466,69 @@ function startQTimer() {
     if (t <= 15) document.getElementById('q-timer-bar').style.background = 'var(--red)';
     if (t <= 0) {
       clearInterval(qTimerInterval);
-      setStatus('انتهى وقت السؤال!', 'warn');
+      setStatus('⏱ انتهى وقت السؤال!', 'warn');
       disableOptions();
-      setTimeout(() => nextQuestion(), 2000);
+      // أظهر الإجابة الصحيحة
+      const btns2 = document.querySelectorAll('.option-btn');
+      if (btns2[currentQ.a]) btns2[currentQ.a].classList.add('correct');
+      // إذا لم يُجب اللاعب بعد → سجّل answer = 'timeout' في DB
+      if (!answered) {
+        answered = true;
+        sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+          method: 'PATCH', body: JSON.stringify({ answer: 'timeout' })
+        });
+      }
+      setTimeout(() => nextQuestion(), 2200);
     }
   }, 1000);
 }
+
+// ==================== SOUND EFFECTS ====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playCorrectSound() {
+  try {
+    const ctx = getAudioCtx();
+    // نغمتان صاعدتان = إحساس الفوز
+    [[520, 0, 0.15], [660, 0.15, 0.15], [880, 0.30, 0.25]].forEach(([freq, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.28, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    });
+  } catch(e) {}
+}
+
+function playWrongSound() {
+  try {
+    const ctx = getAudioCtx();
+    // نغمتان هابطتان = إحساس الخطأ
+    [[300, 0, 0.18], [220, 0.18, 0.22]].forEach(([freq, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    });
+  } catch(e) {}
+}
+
+// حالة إجابة الخصم للسؤال الحالي (نحتاجها لتحديد متى ننتقل)
+let oppAnsweredIdx = null; // index الإجابة التي اختارها الخصم أو null
 
 async function answerQ(idx, btn) {
   if (answered) return;
@@ -1474,59 +1540,93 @@ async function answerQ(idx, btn) {
   btn.classList.add(correct ? 'correct' : 'wrong');
 
   if (correct) {
+    playCorrectSound();
     myMatchPts += 10;
     document.getElementById('my-pts-m').textContent = myMatchPts;
-    setStatus('إجابة صحيحة! +10 نقاط', 'good');
+    setStatus('إجابة صحيحة! +10 نقاط ✓', 'good');
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
       method: 'PATCH', body: JSON.stringify({ answer: 'correct', points: (currentUser.points || 0) + 10 })
     });
     currentUser.points = (currentUser.points || 0) + 10;
     if (myMatchPts >= 100) { setTimeout(() => endMatch('win'), 1500); return; }
-    // انتقل للسؤال التالي فوراً دون انتظار المنافس
+    // إذا الخصم أجاب بالفعل (صح أو غلط) → انتقل فوراً
+    // إذا الخصم لم يجب بعد → انتقل فوراً لأن "أحد اللاعبين خطف السؤال"
     setTimeout(() => nextQuestion(), 1800);
   } else {
+    playWrongSound();
     myMatchPts = Math.max(0, myMatchPts - 5);
     document.getElementById('my-pts-m').textContent = myMatchPts;
-    setStatus('إجابة خاطئة! -5 نقاط', 'bad');
-    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
-      method: 'PATCH', body: JSON.stringify({ answer: 'wrong', points: Math.max(0, (currentUser.points || 0) - 5) })
-    });
-    currentUser.points = Math.max(0, (currentUser.points || 0) - 5);
-    // Show correct answer
+    // أظهر الإجابة الصحيحة والخيار الذي اخترته
     const btns = document.querySelectorAll('.option-btn');
     if (btns[currentQ.a]) btns[currentQ.a].classList.add('correct');
-    // انتقل للسؤال التالي دون انتظار المنافس
-    setTimeout(() => nextQuestion(), 2000);
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH', body: JSON.stringify({ answer: `wrong:${idx}`, points: Math.max(0, (currentUser.points || 0) - 5) })
+    });
+    currentUser.points = Math.max(0, (currentUser.points || 0) - 5);
+
+    // هل الخصم أخطأ هو الآخر؟
+    if (oppAnsweredIdx !== null && oppAnsweredIdx !== 'correct') {
+      // كلانا أخطأ → انتقل للسؤال التالي
+      setStatus('❌ كلاكما أخطأ! ننتقل للسؤال التالي...', 'bad');
+      setTimeout(() => nextQuestion(), 2000);
+    } else if (oppAnsweredIdx === null) {
+      // الخصم لم يجب بعد → انتظر، وأخبر اللاعب
+      setStatus('❌ أخطأت! انتظر خصمك...', 'bad');
+      // الانتقال سيحدث عند pollForOpponentAnswer
+    }
+    // لو oppAnsweredIdx === 'correct' → الخصم أجاب صح قبلي، الانتقال سيحدث من pollForOpponentAnswer
   }
 }
 
 function pollForOpponentAnswer() {
   let tries = 0;
+  oppAnsweredIdx = null;
   const watchedQ = currentQ ? currentQ.id : 0;
   const poll = setInterval(async () => {
     tries++;
-    if (tries > 40) { clearInterval(poll); return; }
-    // إذا انتقلنا فعلاً للسؤال التالي (answered + currentQ changed) أوقف
+    if (tries > 60) { clearInterval(poll); return; }
     if (currentQ && currentQ.id !== watchedQ) { clearInterval(poll); return; }
     const opp = await sbFetch(`/rest/v1/system?id=eq.${opponent.id}&select=answer,points`, { method: 'GET' });
-    if (opp && opp[0] && opp[0].answer && opp[0].answer !== 'none') {
-      clearInterval(poll);
-      const newOppPts = opp[0].points || 0;
-      const oppAns = opp[0].answer;
-      oppMatchPts = newOppPts;
-      document.getElementById('opp-pts-m').textContent = oppMatchPts;
-      if (oppAns === 'correct' && !answered) {
-        // خصمك أجاب صح وأنا لم أجب بعد
+    if (!opp || !opp[0] || !opp[0].answer || opp[0].answer === 'none') return;
+    clearInterval(poll);
+
+    const rawAns = opp[0].answer; // 'correct' أو 'wrong:N' أو 'timeout'
+    const oppCorrect = rawAns === 'correct';
+    const oppTimeout = rawAns === 'timeout';
+    const oppChoiceIdx = (!oppCorrect && !oppTimeout) ? parseInt(rawAns.split(':')[1]) : null;
+    oppAnsweredIdx = oppCorrect ? 'correct' : (oppTimeout ? 'timeout' : oppChoiceIdx);
+
+    // تحديث نقاط الخصم
+    oppMatchPts = opp[0].points || 0;
+    document.getElementById('opp-pts-m').textContent = oppMatchPts;
+
+    if (oppCorrect) {
+      if (!answered) {
+        // خصمي أجاب صح وأنا لم أجب → خطف السؤال
         setStatus('⚡ خصمك خطف السؤال!', 'warn');
         disableOptions();
+        answered = true;
+        clearInterval(qTimerInterval);
         const btns = document.querySelectorAll('.option-btn');
         if (btns[currentQ.a]) btns[currentQ.a].classList.add('correct');
-        setTimeout(() => nextQuestion(), 2000);
-      } else if (oppAns === 'wrong' && !answered) {
-        // خصمك أخطأ وأنا لم أجب بعد → فرصتك!
-        setStatus('❌ خصمك أخطأ! أجب بسرعة!', 'good');
+        setTimeout(() => nextQuestion(), 2200);
       }
-      // إذا أنا أجبت بالفعل فقط حدّث النقاط، الانتقال يتم من answerQ
+      // لو أنا أجبت صح قبله → الانتقال تم من answerQ
+    } else {
+      // الخصم أخطأ → أظهر الإجابة التي اختارها
+      const btns = document.querySelectorAll('.option-btn');
+      if (!isNaN(oppChoiceIdx) && btns[oppChoiceIdx] && !btns[oppChoiceIdx].classList.contains('correct')) {
+        btns[oppChoiceIdx].classList.add('opp-wrong');
+      }
+
+      if (!answered) {
+        // أنا لم أجب بعد → أخبرني أن الخصم أخطأ، أنتظر إجابتي
+        setStatus('❌ خصمك أخطأ!', 'good');
+      } else {
+        // أنا أجبت خطأ أيضاً → الاتنين أخطآ → انتقل
+        setStatus('❌ كلاكما أخطأ! ننتقل للسؤال التالي...', 'bad');
+        setTimeout(() => nextQuestion(), 2000);
+      }
     }
   }, 1500);
 }
