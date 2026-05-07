@@ -1052,19 +1052,9 @@ function doLogout() {
 }
 
 // ==================== GOOGLE AUTH (SUPABASE) ====================
-async function doGoogleLogin() {
+function doGoogleLogin() {
   const redirectTo = window.location.href.split('?')[0].split('#')[0];
-  const res = await fetch(`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`, {
-    method: 'GET',
-    headers: { 'apikey': SB_KEY }
-  });
-  // Supabase returns a redirect URL
-  if (res.redirected || res.url) {
-    window.location.href = res.url;
-  } else {
-    // fallback: direct redirect
-    window.location.href = `${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
-  }
+  window.location.href = `${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
 }
 
 async function handleGoogleCallback() {
