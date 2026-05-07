@@ -994,33 +994,40 @@ async function startSearch() {
     if (countdown > 0) { countEl.textContent = `جاري البحث...`; return; }
     countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
-  }, 3500);
+  }, 2000);
 }
 
 async function matchMake() {
-  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level&order=id.asc`, { method: 'GET' });
-  if (!searchers) return; // سيحاول مرة أخرى في الدورة القادمة
-  const myIdx = searchers.findIndex(u => u.id === currentUser.id);
-  if (myIdx === -1) return; // سيحاول مرة أخرى
-  if (searchers.length < 2) return; // ينتظر حتى يجد خصم
-  if (myIdx % 2 !== 0) {
-    // أنا أنتظر أن يختارني الطرف الأول
-    const me = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=match`, { method: 'GET' });
-    if (me && me[0] && me[0].match && me[0].match !== 'searching' && me[0].match !== 'off') {
-      clearInterval(searchPollInterval);
-      clearInterval(searchTimerInterval);
-      const oppId = me[0].match;
-      const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level`, { method: 'GET' });
-      if (opp && opp[0]) startMatch(opp[0]);
-    }
+  // أولاً: تحقق من حالتي في قاعدة البيانات مباشرةً
+  const meData = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=match`, { method: 'GET' });
+  if (!meData || !meData[0]) return;
+
+  const myMatchVal = meData[0].match;
+
+  // إذا تغيّر حقل match إلى معرّف خصم (ليس searching وليس off) → ابدأ المباراة فوراً
+  if (myMatchVal && myMatchVal !== 'searching' && myMatchVal !== 'off') {
+    clearInterval(searchPollInterval);
+    clearInterval(searchTimerInterval);
+    const oppId = myMatchVal;
+    const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level`, { method: 'GET' });
+    if (opp && opp[0]) startMatch(opp[0]);
     return;
   }
+
+  // ما زلت searching → تحقق من قائمة المنتظرين وحاول التزاوج
+  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level&order=id.asc`, { method: 'GET' });
+  if (!searchers) return;
+  const myIdx = searchers.findIndex(u => u.id === currentUser.id);
+  if (myIdx === -1 || myIdx % 2 !== 0) return; // انتظر دورك أو لست في قائمة
+
   const partner = searchers[myIdx + 1];
   if (!partner) return;
+
+  // أنا الطرف الزوجي → أُعيِّن الخصم لكلينا
   clearInterval(searchPollInterval);
+  clearInterval(searchTimerInterval);
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(partner.id) }) });
   await sbFetch(`/rest/v1/system?id=eq.${partner.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(currentUser.id) }) });
-  clearInterval(searchTimerInterval);
   startMatch(partner);
 }
 
