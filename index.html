@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lord-icon-element/1.1.0/lord-icon-element.min.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   :root {
     --bg: #ffffff;
@@ -541,6 +542,15 @@
   .divider-or::before, .divider-or::after {
     content: ''; flex: 1; height: 1px; background: var(--line);
   }
+
+  /* ── TURNSTILE ── */
+  .turnstile-wrap {
+    display: flex; justify-content: center;
+    margin: 4px 0 12px;
+  }
+  .turnstile-wrap iframe {
+    border-radius: var(--radius-sm) !important;
+  }
 </style>
 </head>
 <body>
@@ -616,6 +626,9 @@
             <label>كلمة المرور</label>
             <input type="password" id="login-pass" placeholder="••••••••">
           </div>
+          <div class="turnstile-wrap">
+            <div class="cf-turnstile" id="turnstile-login" data-sitekey="0x4AAAAAADK6Tr3X-qqQ8q3B" data-theme="light" data-language="ar"></div>
+          </div>
           <button class="btn btn-primary" onclick="doLogin()">
             <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left:6px"></i> دخول
           </button>
@@ -644,6 +657,9 @@
           <div class="form-group">
             <label>كلمة المرور</label>
             <input type="password" id="reg-pass" placeholder="••••••••">
+          </div>
+          <div class="turnstile-wrap">
+            <div class="cf-turnstile" id="turnstile-register" data-sitekey="0x4AAAAAADK6Tr3X-qqQ8q3B" data-theme="light" data-language="ar"></div>
           </div>
           <button class="btn btn-primary" onclick="doRegister()">
             <i class="fa-solid fa-check" style="margin-left:6px"></i> إنشاء الحساب
@@ -938,6 +954,11 @@ function switchAuthTab(tab) {
   event.target.classList.add('active');
   document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
   document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+  // إعادة تحميل Turnstile عند تبديل التبويب
+  if (window.turnstile) {
+    try { window.turnstile.reset('#turnstile-login'); } catch(e){}
+    try { window.turnstile.reset('#turnstile-register'); } catch(e){}
+  }
 }
 
 // ==================== AUTH ====================
@@ -947,6 +968,9 @@ async function doRegister() {
   const pass = document.getElementById('reg-pass').value.trim();
   const msgEl = document.getElementById('reg-msg');
   if (!name || !email || !pass) return showMsg(msgEl, 'يرجى ملء جميع الحقول', 'error');
+  // التحقق من Turnstile
+  const turnstileToken = document.querySelector('#turnstile-register [name="cf-turnstile-response"]');
+  if (!turnstileToken || !turnstileToken.value) return showMsg(msgEl, 'يرجى إتمام التحقق الأمني أولاً', 'error');
   // التحقق من صيغة البريد الإلكتروني
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) return showMsg(msgEl, 'صيغة البريد الإلكتروني غير صحيحة (مثال: user@example.com)', 'error');
@@ -977,6 +1001,9 @@ async function doLogin() {
   const pass = document.getElementById('login-pass').value.trim();
   const msgEl = document.getElementById('login-msg');
   if (!email || !pass) return showMsg(msgEl, 'يرجى ملء جميع الحقول', 'error');
+  // التحقق من Turnstile
+  const turnstileToken = document.querySelector('#turnstile-login [name="cf-turnstile-response"]');
+  if (!turnstileToken || !turnstileToken.value) return showMsg(msgEl, 'يرجى إتمام التحقق الأمني أولاً', 'error');
   showMsg(msgEl, 'جاري التحقق...', 'info');
   const res = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&select=*`, { method: 'GET' });
   if (res && res.length > 0) { loginUser(res[0]); }
