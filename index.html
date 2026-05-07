@@ -987,11 +987,11 @@ async function startSearch() {
   }, 1000);
 
   const countEl = document.getElementById('search-text');
-  // افحص كل 5 ثواني طوال مدة البحث (60 ثانية = 12 محاولة)
+  // افحص كل 3 ثواني طوال مدة البحث (60 ثانية = 20 محاولة)
   searchPollInterval = setInterval(async () => {
     countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
-  }, 5000);
+  }, 3000);
 }
 
 async function matchMake() {
