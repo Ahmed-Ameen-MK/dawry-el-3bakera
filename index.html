@@ -527,6 +527,23 @@
     .vs-header { padding: 16px; }
   }
 
+  /* ── MOBILE NAV: رموز فقط في الشاشات الضيقة ── */
+  @media (max-width: 520px) {
+    nav button .nav-text { display: none; }
+    nav button { padding: 6px 10px; }
+    nav button img { width: 22px; height: 22px; }
+  }
+
+  /* ── MOBILE CHAT INPUT: أضيق في العرض ── */
+  @media (max-width: 520px) {
+    .chat-input-row input {
+      font-size: 13px;
+      padding: 8px 9px;
+    }
+    .match-chat { padding: 12px; }
+    .chat-input-row { gap: 6px; }
+  }
+
   /* ── GOOGLE BUTTON ── */
   .btn-google {
     width: 100%; padding: 12px;
@@ -585,13 +602,13 @@
     </div>
     <nav id="main-nav">
       <button onclick="showPage('home')" class="active" id="nav-home">
-        <i class="fa-solid fa-house"></i> الرئيسية
+        <i class="fa-solid fa-house"></i> <span class="nav-text">الرئيسية</span>
       </button>
       <button onclick="showPage('leaderboard')" id="nav-lb">
-        <i class="fa-solid fa-ranking-star"></i> المتصدرون
+        <i class="fa-solid fa-ranking-star"></i> <span class="nav-text">المتصدرون</span>
       </button>
       <button onclick="showPage('profile')" id="nav-profile" style="display:none">
-        <i class="fa-solid fa-user"></i> حسابي
+        <i class="fa-solid fa-user"></i> <span class="nav-text">حسابي</span>
       </button>
     </nav>
   </div>
@@ -1070,9 +1087,9 @@ function updateNavAvatar() {
   const navBtn = document.getElementById('nav-profile');
   if (!navBtn) return;
   if (u.avatar_url) {
-    navBtn.innerHTML = `<img src="${u.avatar_url}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1.5px solid var(--line)"> حسابي`;
+    navBtn.innerHTML = `<img src="${u.avatar_url}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1.5px solid var(--line)"> <span class="nav-text">حسابي</span>`;
   } else {
-    navBtn.innerHTML = `<i class="fa-solid fa-user"></i> حسابي`;
+    navBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span class="nav-text">حسابي</span>`;
   }
 }
 
@@ -1610,8 +1627,11 @@ function pollForOpponentAnswer() {
         const btns = document.querySelectorAll('.option-btn');
         if (btns[currentQ.a]) btns[currentQ.a].classList.add('correct');
         setTimeout(() => nextQuestion(), 2200);
+      } else {
+        // أنا أجبت خطأ قبله، والآن هو أجاب صح → انتقل للسؤال التالي
+        setStatus('⚡ خصمك أجاب صحيحاً! ننتقل...', 'warn');
+        setTimeout(() => nextQuestion(), 2000);
       }
-      // لو أنا أجبت صح قبله → الانتقال تم من answerQ
     } else {
       // الخصم أخطأ → أظهر الإجابة التي اختارها
       const btns = document.querySelectorAll('.option-btn');
