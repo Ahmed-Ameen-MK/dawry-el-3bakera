@@ -195,7 +195,38 @@
   .msg.success { background: var(--green-bg); border: 1px solid rgba(29,131,72,0.2); color: var(--green); }
   .msg.info { background: #eef4fb; border: 1px solid rgba(0,113,227,0.2); color: var(--blue); }
 
-  /* ── DASHBOARD ── */
+  /* ── AVATAR UPLOAD ── */
+  .avatar-upload-wrap {
+    position: relative; width: 72px; height: 72px; flex-shrink: 0;
+  }
+  .avatar-upload-wrap .avatar-img {
+    width: 72px; height: 72px; border-radius: 50%;
+    object-fit: cover; border: 2px solid rgba(255,255,255,0.3);
+  }
+  .avatar-upload-btn {
+    position: absolute; bottom: 0; right: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--blue); border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .avatar-upload-btn:hover { background: var(--blue-hover); }
+  .avatar-upload-btn i { font-size: 10px; color: #fff; }
+  .avatar-upload-btn input { display: none; }
+
+  /* ── PROFILE AVATAR ── */
+  .profile-avatar-wrap {
+    position: relative; display: inline-block; cursor: pointer;
+  }
+  .profile-avatar-wrap:hover .profile-avatar-overlay { opacity: 1; }
+  .profile-avatar-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.45); display: flex; align-items: center;
+    justify-content: center; opacity: 0; transition: opacity 0.2s;
+  }
+  .profile-avatar-overlay i { color: #fff; font-size: 16px; }
+
+
   .user-banner {
     background: var(--ink); color: #fff;
     border-radius: var(--radius);
@@ -707,6 +738,13 @@
         <div class="card-header">
           <div class="icon-wrap"><i class="fa-solid fa-ranking-star"></i></div>
           <h2>لوحة المتصدرين</h2>
+        </div>
+        <div style="margin-bottom:20px;position:relative">
+          <input type="text" id="lb-search" placeholder="🔍 ابحث عن لاعب..." oninput="filterLeaderboard()"
+            style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px 11px 40px;color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s,box-shadow 0.15s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(0,113,227,0.12)'"
+            onblur="this.style.borderColor='';this.style.boxShadow=''">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:14px;pointer-events:none"></i>
         </div>
         <div id="lb-list"><div style="text-align:center;color:var(--ink3);padding:40px">جاري التحميل...</div></div>
       </div>
@@ -1392,50 +1430,156 @@ function startChatPolling() {
 }
 
 // ==================== LEADERBOARD ====================
+let lbAllData = [];
+
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level&order=level.desc&limit=20', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=name,country,level&order=level.desc&limit=100', { method: 'GET' });
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
     return;
   }
+  lbAllData = data;
+  document.getElementById('lb-search').value = '';
+  renderLeaderboard(data);
+}
+
+function filterLeaderboard() {
+  const q = document.getElementById('lb-search').value.trim().toLowerCase();
+  if (!q) return renderLeaderboard(lbAllData);
+  const filtered = lbAllData.filter(u => (u.name||'').toLowerCase().includes(q) || (u.country||'').toLowerCase().includes(q));
+  renderLeaderboard(filtered, q);
+}
+
+function renderLeaderboard(data, highlight='') {
+  const el = document.getElementById('lb-list');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا توجد نتائج مطابقة</div>';
+    return;
+  }
   const rankClass = ['gold','silver','bronze'];
-  el.innerHTML = data.map((u, i) => `
+  el.innerHTML = data.map((u, i) => {
+    const globalRank = lbAllData.indexOf(u);
+    const displayRank = globalRank + 1;
+    let nameDisplay = u.name || 'لاعب';
+    if (highlight) {
+      const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+      nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
+    }
+    return `
     <div class="lb-row">
-      <div class="lb-rank ${rankClass[i]||''}">
-        ${i === 0 ? '<i class="fa-solid fa-medal"></i>' : i === 1 ? '<i class="fa-solid fa-medal" style="color:#aaa"></i>' : i === 2 ? '<i class="fa-solid fa-medal" style="color:#b07d4a"></i>' : (i+1)}
+      <div class="lb-rank ${rankClass[globalRank]||''}">
+        ${globalRank === 0 ? '<i class="fa-solid fa-medal"></i>' : globalRank === 1 ? '<i class="fa-solid fa-medal" style="color:#aaa"></i>' : globalRank === 2 ? '<i class="fa-solid fa-medal" style="color:#b07d4a"></i>' : displayRank}
       </div>
       <div class="lb-avatar">${u.name ? u.name[0].toUpperCase() : '?'}</div>
       <div class="lb-info">
-        <div class="lb-name">${u.name || 'لاعب'}</div>
+        <div class="lb-name">${nameDisplay}</div>
         <div class="lb-country">${u.country || ''}</div>
       </div>
       <div class="lb-pts">${u.level || 0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة صدارة</span></div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 // ==================== PROFILE ====================
 function loadProfile() {
   if (!currentUser) return;
-  // مسح حقول التعديل عند فتح الصفحة
   document.getElementById('edit-email').value = '';
   document.getElementById('edit-pass').value = '';
   document.getElementById('edit-msg').innerHTML = '';
+  const avatarUrl = currentUser.avatar_url || '';
+  const avatarHtml = avatarUrl
+    ? `<img src="${avatarUrl}" class="avatar-img" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line)">`
+    : `<div class="avatar" style="width:60px;height:60px;font-size:22px;background:var(--ink);color:#fff">${currentUser.name[0].toUpperCase()}</div>`;
   document.getElementById('profile-info').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
-      <div class="avatar" style="width:60px;height:60px;font-size:22px;background:var(--ink);color:#fff">${currentUser.name[0].toUpperCase()}</div>
+      <div class="profile-avatar-wrap" onclick="document.getElementById('avatar-file-input').click()" title="تغيير الصورة الشخصية">
+        ${avatarHtml}
+        <div class="profile-avatar-overlay"><i class="fa-solid fa-camera"></i></div>
+      </div>
+      <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
       <div>
         <div style="font-size:20px;font-weight:700;color:var(--ink)">${currentUser.name}</div>
         <div style="color:var(--ink3);font-size:14px">${currentUser.email}</div>
         <div style="color:var(--blue);margin-top:4px;font-size:14px">${currentUser.country||''}</div>
+        <div style="color:var(--ink3);font-size:12px;margin-top:4px"><i class="fa-solid fa-camera" style="margin-left:4px"></i>انقر على الصورة لتغييرها</div>
       </div>
     </div>
+    <div id="avatar-upload-msg"></div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="num">${currentUser.points||0}</div><div class="lbl">نقاط التحدي</div></div>
-      <div class="stat-card"><div class="num">${currentUser.level||0}</div><div class="lbl">نقاط لوحة الصدارة</div></div>
+      <div class="stat-card"><div class="num">${currentUser.level||0}</div><div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div></div>
+      <div class="stat-card"><div class="num" id="profile-rank">#-</div><div class="lbl"><i class="fa-solid fa-trophy" style="font-size:10px;color:var(--gold);margin-left:3px"></i> ترتيبك في الصدارة</div></div>
     </div>
   `;
+  loadProfileRank();
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msgEl = document.getElementById('avatar-upload-msg');
+  if (!msgEl) return;
+
+  // تحقق من الحجم (أقصى 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    return showMsg(msgEl, 'حجم الصورة يجب أن لا يتجاوز 2 ميغابايت', 'error');
+  }
+
+  showMsg(msgEl, 'جاري رفع الصورة...', 'info');
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `avatar_${currentUser.id}.${fileExt}`;
+
+  // رفع الصورة إلى Supabase Storage bucket "avatars"
+  const uploadRes = await fetch(`${SB_URL}/storage/v1/object/avatars/${fileName}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': file.type,
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+
+  if (!uploadRes.ok) {
+    const err = await uploadRes.json().catch(() => ({}));
+    return showMsg(msgEl, `فشل رفع الصورة: ${err.message || uploadRes.status}`, 'error');
+  }
+
+  const publicUrl = `${SB_URL}/storage/v1/object/public/avatars/${fileName}`;
+
+  // حفظ رابط الصورة في جدول system
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ avatar_url: publicUrl })
+  });
+
+  currentUser.avatar_url = publicUrl;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  showMsg(msgEl, 'تم حفظ الصورة بنجاح! ✓', 'success');
+
+  // تحديث الصورة مباشرة في الواجهة
+  const wrap = document.querySelector('.profile-avatar-wrap');
+  if (wrap) {
+    const existing = wrap.querySelector('.avatar, .avatar-img');
+    if (existing) {
+      const img = document.createElement('img');
+      img.src = publicUrl + '?t=' + Date.now();
+      img.className = 'avatar-img';
+      img.style.cssText = 'width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line)';
+      existing.replaceWith(img);
+    }
+  }
+}
+
+async function loadProfileRank() {
+  const all = await sbFetch('/rest/v1/system?select=id,level&order=level.desc', { method: 'GET' });
+  if (all) {
+    const idx = all.findIndex(u => u.id === currentUser.id);
+    const el = document.getElementById('profile-rank');
+    if (el) el.textContent = '#' + (idx + 1);
+  }
 }
 
 async function saveProfileEdit() {
