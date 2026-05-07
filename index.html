@@ -516,6 +516,31 @@
     .card { padding: 20px; }
     .vs-header { padding: 16px; }
   }
+
+  /* ── GOOGLE BUTTON ── */
+  .btn-google {
+    width: 100%; padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    letter-spacing: -0.2px;
+    margin-bottom: 4px;
+  }
+  .btn-google:hover { background: var(--bg2); border-color: #aaa; box-shadow: var(--shadow); }
+  .btn-google:active { transform: scale(0.98); }
+  .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .divider-or {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--ink3); font-size: 13px; margin: 14px 0;
+  }
+  .divider-or::before, .divider-or::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
 </style>
 </head>
 <body>
@@ -578,6 +603,11 @@
             <div class="icon-wrap"><i class="fa-solid fa-lock"></i></div>
             <h2>تسجيل الدخول</h2>
           </div>
+          <button class="btn-google" onclick="doGoogleLogin()">
+            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            المتابعة عبر Google
+          </button>
+          <div class="divider-or">أو</div>
           <div class="form-group">
             <label>البريد الإلكتروني</label>
             <input type="email" id="login-email" placeholder="example@email.com">
@@ -598,6 +628,11 @@
             <div class="icon-wrap"><i class="fa-solid fa-user-plus"></i></div>
             <h2>إنشاء حساب</h2>
           </div>
+          <button class="btn-google" onclick="doGoogleLogin()">
+            <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+            التسجيل عبر Google
+          </button>
+          <div class="divider-or">أو</div>
           <div class="form-group">
             <label>الاسم</label>
             <input type="text" id="reg-name" placeholder="اسمك الكامل">
@@ -1009,10 +1044,95 @@ function doLogout() {
   cancelSearch();
   currentUser = null;
   localStorage.removeItem('genius_user');
+  localStorage.removeItem('genius_sb_token');
   document.getElementById('auth-section').style.display = '';
   document.getElementById('dashboard-section').style.display = 'none';
   document.getElementById('nav-profile').style.display = 'none';
   showPage('home');
+}
+
+// ==================== GOOGLE AUTH (SUPABASE) ====================
+async function doGoogleLogin() {
+  const redirectTo = window.location.href.split('?')[0].split('#')[0];
+  const res = await fetch(`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: 'GET',
+    headers: { 'apikey': SB_KEY }
+  });
+  // Supabase returns a redirect URL
+  if (res.redirected || res.url) {
+    window.location.href = res.url;
+  } else {
+    // fallback: direct redirect
+    window.location.href = `${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+  }
+}
+
+async function handleGoogleCallback() {
+  // Check URL hash for access_token (Supabase OAuth callback)
+  const hash = window.location.hash;
+  if (!hash) return false;
+  const params = new URLSearchParams(hash.substring(1));
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (!accessToken) return false;
+
+  // Clear hash from URL
+  history.replaceState(null, '', window.location.pathname);
+
+  // Get user info from Supabase
+  const userRes = await fetch(`${SB_URL}/auth/v1/user`, {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + accessToken }
+  });
+  if (!userRes.ok) return false;
+  const userData = await userRes.json();
+  const email = userData.email;
+  const googleName = userData.user_metadata?.full_name || userData.user_metadata?.name || email.split('@')[0];
+  const googleAvatar = userData.user_metadata?.avatar_url || userData.user_metadata?.picture || '';
+
+  // Save token for later use
+  localStorage.setItem('genius_sb_token', accessToken);
+
+  // Check if user already exists in system table
+  const existing = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=*`, { method: 'GET' });
+  if (existing && existing.length > 0) {
+    // Update avatar if from Google
+    let user = existing[0];
+    if (googleAvatar && !user.avatar_url) {
+      await sbFetch(`/rest/v1/system?id=eq.${user.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ avatar_url: googleAvatar })
+      });
+      user.avatar_url = googleAvatar;
+    }
+    loginUser(user);
+    return true;
+  }
+
+  // New user — create record in system table
+  const country = await getCountry();
+  const newId = Date.now() + Math.floor(Math.random() * 9999);
+  const newUser = {
+    id: newId,
+    name: googleName,
+    email: email,
+    password: 'google-oauth',
+    country,
+    avatar_url: googleAvatar,
+    match: 'off',
+    points: 0,
+    question: 0,
+    answer: 'none',
+    'match-message': ''
+  };
+  const created = await sbFetch('/rest/v1/system', {
+    method: 'POST',
+    body: JSON.stringify(newUser)
+  });
+  if (created && created[0]) {
+    loginUser(created[0]);
+    return true;
+  }
+  return false;
 }
 
 // ==================== MATCHMAKING ====================
@@ -1664,7 +1784,18 @@ async function saveProfileEdit() {
 
 // ==================== INIT ====================
 const saved = localStorage.getItem('genius_user');
-if (saved) {
+
+// Handle Google OAuth callback first
+if (window.location.hash && window.location.hash.includes('access_token')) {
+  handleGoogleCallback().then(ok => {
+    if (!ok && saved) {
+      try {
+        currentUser = JSON.parse(saved);
+        showDashboard();
+      } catch(e) { localStorage.removeItem('genius_user'); }
+    }
+  });
+} else if (saved) {
   try {
     currentUser = JSON.parse(saved);
     sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=*`, { method: 'GET' }).then(res => {
