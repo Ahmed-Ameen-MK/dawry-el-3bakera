@@ -676,6 +676,7 @@
 
       <div class="vs-header">
         <div class="player-side">
+          <div id="my-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 6px;overflow:hidden;"></div>
           <div class="p-name" id="my-name-m"></div>
           <div class="p-pts" id="my-pts-m">0</div>
           <div class="p-country" id="my-country-m"></div>
@@ -688,6 +689,7 @@
           </div>
         </div>
         <div class="player-side">
+          <div id="opp-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 6px;overflow:hidden;"></div>
           <div class="p-name" id="opp-name-m"></div>
           <div class="p-pts" id="opp-pts-m">0</div>
           <div class="p-country" id="opp-country-m"></div>
@@ -958,7 +960,21 @@ function showDashboard() {
   document.getElementById('nav-profile').style.display = '';
   const u = currentUser;
   const initial = u.name ? u.name[0].toUpperCase() : '?';
-  document.getElementById('dash-avatar').textContent = initial;
+  const dashAvatarEl = document.getElementById('dash-avatar');
+  if (u.avatar_url) {
+    dashAvatarEl.innerHTML = '';
+    dashAvatarEl.style.background = 'none';
+    dashAvatarEl.style.border = 'none';
+    dashAvatarEl.style.padding = '0';
+    const img = document.createElement('img');
+    img.src = u.avatar_url;
+    img.style.cssText = 'width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3);display:block;';
+    img.onerror = () => { dashAvatarEl.innerHTML = initial; dashAvatarEl.style.cssText = ''; };
+    dashAvatarEl.appendChild(img);
+  } else {
+    dashAvatarEl.innerHTML = initial;
+    dashAvatarEl.style.cssText = '';
+  }
   document.getElementById('dash-name').textContent = u.name;
   document.getElementById('dash-email').textContent = u.email;
   document.getElementById('dash-country').textContent = u.country || '';
@@ -966,6 +982,19 @@ function showDashboard() {
   document.getElementById('stat-pts').textContent = u.level || 0;
   document.getElementById('stat-country').textContent = u.country || '';
   loadRank();
+  updateNavAvatar();
+}
+
+function updateNavAvatar() {
+  const u = currentUser;
+  if (!u) return;
+  const navBtn = document.getElementById('nav-profile');
+  if (!navBtn) return;
+  if (u.avatar_url) {
+    navBtn.innerHTML = `<img src="${u.avatar_url}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1.5px solid var(--line)"> حسابي`;
+  } else {
+    navBtn.innerHTML = `<i class="fa-solid fa-user"></i> حسابي`;
+  }
 }
 
 async function loadRank() {
@@ -1044,13 +1073,13 @@ async function matchMake() {
     clearInterval(searchPollInterval);
     clearInterval(searchTimerInterval);
     const oppId = myMatchVal;
-    const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level`, { method: 'GET' });
+    const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
     if (opp && opp[0]) startMatch(opp[0]);
     return;
   }
 
   // ما زلت searching → تحقق من قائمة المنتظرين وحاول التزاوج
-  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level&order=id.asc`, { method: 'GET' });
+  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level,avatar_url&order=id.asc`, { method: 'GET' });
   if (!searchers) return;
   const myIdx = searchers.findIndex(u => u.id === currentUser.id);
   if (myIdx === -1 || myIdx % 2 !== 0) return; // انتظر دورك أو لست في قائمة
@@ -1095,6 +1124,24 @@ function startMatch(opp) {
   document.getElementById('opp-name-m').textContent = opp.name;
   document.getElementById('opp-pts-m').textContent = '0';
   document.getElementById('opp-country-m').textContent = opp.country || '';
+
+  // set avatars in match header
+  const myAvatarEl = document.getElementById('my-avatar-m');
+  if (myAvatarEl) {
+    if (currentUser.avatar_url) {
+      myAvatarEl.innerHTML = `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${currentUser.name ? currentUser.name[0].toUpperCase() : '?'}'">`;
+    } else {
+      myAvatarEl.textContent = currentUser.name ? currentUser.name[0].toUpperCase() : '?';
+    }
+  }
+  const oppAvatarEl = document.getElementById('opp-avatar-m');
+  if (oppAvatarEl) {
+    if (opp.avatar_url) {
+      oppAvatarEl.innerHTML = `<img src="${opp.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${opp.name ? opp.name[0].toUpperCase() : '?'}'">`;
+    } else {
+      oppAvatarEl.textContent = opp.name ? opp.name[0].toUpperCase() : '?';
+    }
+  }
 
   // clear chat
   document.getElementById('chat-messages').innerHTML = '';
@@ -1433,7 +1480,7 @@ function startChatPolling() {
 let lbAllData = [];
 
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level&order=level.desc&limit=100', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100', { method: 'GET' });
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
@@ -1471,7 +1518,7 @@ function renderLeaderboard(data, highlight='') {
       <div class="lb-rank ${rankClass[globalRank]||''}">
         ${globalRank === 0 ? '<i class="fa-solid fa-medal"></i>' : globalRank === 1 ? '<i class="fa-solid fa-medal" style="color:#aaa"></i>' : globalRank === 2 ? '<i class="fa-solid fa-medal" style="color:#b07d4a"></i>' : displayRank}
       </div>
-      <div class="lb-avatar">${u.name ? u.name[0].toUpperCase() : '?'}</div>
+      <div class="lb-avatar">${u.avatar_url ? `<img src="${u.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name ? u.name[0].toUpperCase() : '?'}'">` : (u.name ? u.name[0].toUpperCase() : '?')}</div>
       <div class="lb-info">
         <div class="lb-name">${nameDisplay}</div>
         <div class="lb-country">${u.country || ''}</div>
@@ -1558,19 +1605,8 @@ async function uploadAvatar(event) {
   currentUser.avatar_url = publicUrl;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
   showMsg(msgEl, 'تم حفظ الصورة بنجاح! ✓', 'success');
-
-  // تحديث الصورة مباشرة في الواجهة
-  const wrap = document.querySelector('.profile-avatar-wrap');
-  if (wrap) {
-    const existing = wrap.querySelector('.avatar, .avatar-img');
-    if (existing) {
-      const img = document.createElement('img');
-      img.src = publicUrl + '?t=' + Date.now();
-      img.className = 'avatar-img';
-      img.style.cssText = 'width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line)';
-      existing.replaceWith(img);
-    }
-  }
+  updateNavAvatar();
+  showDashboard();
 }
 
 async function loadProfileRank() {
