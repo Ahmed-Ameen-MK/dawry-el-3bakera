@@ -598,15 +598,15 @@
             <p id="dash-country" style="margin-top:3px;font-size:13px;color:rgba(255,255,255,0.5)"></p>
           </div>
           <div class="pts-chip">
-            <i class="fa-solid fa-star"></i>
-            <span id="dash-points">0</span> نقطة
+            <i class="fa-solid fa-ranking-star"></i>
+            <span id="dash-points">0</span> صدارة
           </div>
         </div>
 
         <div class="stats-grid">
           <div class="stat-card">
             <div class="num" id="stat-pts">0</div>
-            <div class="lbl"><i class="fa-solid fa-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاطك الكلية</div>
+            <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div>
           </div>
           <div class="stat-card">
             <div class="num" id="stat-rank">#-</div>
@@ -924,8 +924,8 @@ function showDashboard() {
   document.getElementById('dash-name').textContent = u.name;
   document.getElementById('dash-email').textContent = u.email;
   document.getElementById('dash-country').textContent = u.country || '';
-  document.getElementById('dash-points').textContent = u.points || 0;
-  document.getElementById('stat-pts').textContent = u.points || 0;
+  document.getElementById('dash-points').textContent = u.level || 0;
+  document.getElementById('stat-pts').textContent = u.level || 0;
   document.getElementById('stat-country').textContent = u.country || '';
   loadRank();
 }
@@ -986,15 +986,12 @@ async function startSearch() {
     }
   }, 1000);
 
-  let countdown = 3;
   const countEl = document.getElementById('search-text');
-  // افحص كل 2 ثانية طوال مدة البحث (60 ثانية = 30 محاولة)
+  // افحص كل 5 ثواني طوال مدة البحث (60 ثانية = 12 محاولة)
   searchPollInterval = setInterval(async () => {
-    countdown--;
-    if (countdown > 0) { countEl.textContent = `جاري البحث...`; return; }
     countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
-  }, 2000);
+  }, 5000);
 }
 
 async function matchMake() {
@@ -1220,11 +1217,14 @@ function pollForOpponentAnswer() {
       document.getElementById('opp-pts-m').textContent = oppMatchPts;
       if (oppAns === 'correct' && !answered) {
         // خصمك أجاب صح وأنا لم أجب بعد
-        setStatus('خصمك أجاب صح! السؤال التالي...', 'warn');
+        setStatus('⚡ خصمك خطف السؤال!', 'warn');
         disableOptions();
         const btns = document.querySelectorAll('.option-btn');
         if (btns[currentQ.a]) btns[currentQ.a].classList.add('correct');
         setTimeout(() => nextQuestion(), 2000);
+      } else if (oppAns === 'wrong' && !answered) {
+        // خصمك أخطأ وأنا لم أجب بعد → فرصتك!
+        setStatus('❌ خصمك أخطأ! أجب بسرعة!', 'good');
       }
       // إذا أنا أجبت بالفعل فقط حدّث النقاط، الانتقال يتم من answerQ
     }
