@@ -722,6 +722,27 @@
           <h2>حسابي</h2>
         </div>
         <div id="profile-info"></div>
+
+        <!-- قسم تعديل الحساب -->
+        <div style="margin-top:28px;border-top:1px solid var(--line);padding-top:24px">
+          <div class="card-header" style="margin-bottom:16px">
+            <div class="icon-wrap"><i class="fa-solid fa-pen"></i></div>
+            <h2 style="font-size:17px">تعديل الحساب</h2>
+          </div>
+          <div class="form-group">
+            <label>البريد الإلكتروني الجديد</label>
+            <input type="email" id="edit-email" placeholder="اتركه فارغاً إن لم تريد تغييره">
+          </div>
+          <div class="form-group">
+            <label>كلمة المرور الجديدة</label>
+            <input type="password" id="edit-pass" placeholder="اتركها فارغة إن لم تريد تغييرها">
+          </div>
+          <button class="btn btn-primary" onclick="saveProfileEdit()">
+            <i class="fa-solid fa-floppy-disk" style="margin-left:6px"></i> حفظ التعديلات
+          </button>
+          <div id="edit-msg"></div>
+        </div>
+
         <button class="btn btn-danger" onclick="doLogout()" style="margin-top:20px">
           <i class="fa-solid fa-right-from-bracket" style="margin-left:6px"></i> تسجيل الخروج
         </button>
@@ -851,6 +872,12 @@ async function doRegister() {
   const pass = document.getElementById('reg-pass').value.trim();
   const msgEl = document.getElementById('reg-msg');
   if (!name || !email || !pass) return showMsg(msgEl, 'يرجى ملء جميع الحقول', 'error');
+  // التحقق من صيغة البريد الإلكتروني
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return showMsg(msgEl, 'صيغة البريد الإلكتروني غير صحيحة (مثال: user@example.com)', 'error');
+  // التحقق من الباسوورد: لا يحتوي على < : = >
+  if (/[<:=>]/.test(pass)) return showMsg(msgEl, 'كلمة المرور لا يجب أن تحتوي على الرموز: < : = >', 'error');
+  if (pass.length < 6) return showMsg(msgEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
   showMsg(msgEl, 'جاري إنشاء الحساب...', 'info');
   const country = await getCountry();
   const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`, { method: 'GET' });
@@ -947,65 +974,56 @@ async function startSearch() {
     document.getElementById('search-bar-fill').style.width = (timeLeft / SEARCH_MAX * 100) + '%';
     if (timeLeft <= 0) {
       clearInterval(searchTimerInterval);
-      cancelSearch();
+      clearInterval(searchPollInterval);
+      if (currentUser) sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
+      document.getElementById('searching-anim').classList.remove('show');
+      document.getElementById('play-btn').disabled = false;
+      document.getElementById('cancel-btn').style.display = 'none';
+      document.getElementById('search-countdown-num').textContent = SEARCH_MAX;
+      document.getElementById('search-bar-fill').style.width = '100%';
+      document.getElementById('search-text').textContent = 'جاري البحث عن خصم...';
       document.getElementById('search-msg').innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهى وقت البحث، حاول مرة أخرى</div>';
     }
   }, 1000);
 
   let countdown = 3;
   const countEl = document.getElementById('search-text');
+  // افحص كل 2 ثانية طوال مدة البحث (60 ثانية = 30 محاولة)
   searchPollInterval = setInterval(async () => {
     countdown--;
     if (countdown > 0) { countEl.textContent = `جاري البحث...`; return; }
-    clearInterval(searchPollInterval);
+    countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
-  }, 1000);
+  }, 2000);
 }
 
 async function matchMake() {
-  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points&order=id.asc`, { method: 'GET' });
-  if (!searchers) return fallbackSearch();
+  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level&order=id.asc`, { method: 'GET' });
+  if (!searchers) return; // سيحاول مرة أخرى في الدورة القادمة
   const myIdx = searchers.findIndex(u => u.id === currentUser.id);
-  if (myIdx === -1) return fallbackSearch();
-  if (searchers.length < 2) return fallbackSearch();
-  if (myIdx % 2 !== 0) { startWaitingForMatch(); return; }
+  if (myIdx === -1) return; // سيحاول مرة أخرى
+  if (searchers.length < 2) return; // ينتظر حتى يجد خصم
+  if (myIdx % 2 !== 0) {
+    // أنا أنتظر أن يختارني الطرف الأول
+    const me = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=match`, { method: 'GET' });
+    if (me && me[0] && me[0].match && me[0].match !== 'searching' && me[0].match !== 'off') {
+      clearInterval(searchPollInterval);
+      clearInterval(searchTimerInterval);
+      const oppId = me[0].match;
+      const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level`, { method: 'GET' });
+      if (opp && opp[0]) startMatch(opp[0]);
+    }
+    return;
+  }
   const partner = searchers[myIdx + 1];
-  if (!partner) return fallbackSearch();
+  if (!partner) return;
+  clearInterval(searchPollInterval);
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(partner.id) }) });
   await sbFetch(`/rest/v1/system?id=eq.${partner.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(currentUser.id) }) });
   clearInterval(searchTimerInterval);
   startMatch(partner);
 }
 
-async function startWaitingForMatch() {
-  let tries = 0;
-  const poll = setInterval(async () => {
-    tries++;
-    if (tries > 40) { clearInterval(poll); fallbackSearch(); return; }
-    const me = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=match,name,country,points`, { method: 'GET' });
-    if (me && me[0] && me[0].match && me[0].match !== 'searching' && me[0].match !== 'off') {
-      clearInterval(poll);
-      clearInterval(searchTimerInterval);
-      const oppId = me[0].match;
-      const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points`, { method: 'GET' });
-      if (opp && opp[0]) startMatch(opp[0]);
-    }
-  }, 1500);
-}
-
-function fallbackSearch() {
-  clearInterval(searchTimerInterval);
-  document.getElementById('search-text').textContent = 'لا يوجد خصم متاح الآن';
-  document.getElementById('cancel-btn').style.display = 'none';
-  setTimeout(() => {
-    document.getElementById('searching-anim').classList.remove('show');
-    document.getElementById('play-btn').disabled = false;
-    document.getElementById('search-text').textContent = 'جاري البحث عن خصم...';
-    document.getElementById('search-countdown-num').textContent = SEARCH_MAX;
-    document.getElementById('search-bar-fill').style.width = '100%';
-  }, 2500);
-  sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
-}
 
 async function cancelSearch() {
   clearInterval(searchPollInterval);
@@ -1042,10 +1060,10 @@ function startMatch(opp) {
 
   showPage('match');
 
-  // Match total timer (15 hours)
+  // Match total timer (5 minutes)
   matchTotalTimer = setInterval(() => {
     const elapsed = Date.now() - matchStartTime;
-    const remaining = (15 * 60 * 60 * 1000) - elapsed;
+    const remaining = (5 * 60 * 1000) - elapsed;
     if (remaining <= 0) { endMatch('time'); return; }
     const h = Math.floor(remaining / 3600000);
     const m = Math.floor((remaining % 3600000) / 60000);
@@ -1058,6 +1076,7 @@ function startMatch(opp) {
   sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ 'match-message': '' }) });
 
   startChatPolling();
+  startOpponentResultPolling();
 
   const iAmSmaller = currentUser.id < opponent.id;
   if (iAmSmaller) loadNextQuestion();
@@ -1158,7 +1177,7 @@ async function answerQ(idx, btn) {
       method: 'PATCH', body: JSON.stringify({ answer: 'correct', points: (currentUser.points || 0) + 10 })
     });
     currentUser.points = (currentUser.points || 0) + 10;
-    if (myMatchPts >= 50) { setTimeout(() => endMatch('win'), 1500); return; }
+    if (myMatchPts >= 100) { setTimeout(() => endMatch('win'), 1500); return; }
     // انتقل للسؤال التالي فوراً دون انتظار المنافس
     setTimeout(() => nextQuestion(), 1800);
   } else {
@@ -1216,36 +1235,76 @@ function nextQuestion() {
   else pollForQuestion();
 }
 
-function endMatch(reason) {
+async function endMatch(reason) {
   clearInterval(matchTotalTimer);
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
+  clearInterval(oppResultPollInterval);
   document.getElementById('match-chat').style.display = 'none';
 
-  sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
-    method: 'PATCH', body: JSON.stringify({ match: 'off', question: 0, answer: 'none', 'match-message': '' })
-  });
+  // حساب نتيجة لوحة الصدارة (level)
+  let levelDelta = 0;
+  let matchResult = ''; // 'win' | 'lose' | 'draw'
 
+  if (reason === 'win') {
+    matchResult = 'win';
+    levelDelta = 3;
+  } else if (reason === 'lose') {
+    matchResult = 'lose';
+    levelDelta = -2;
+  } else {
+    // انتهى الوقت
+    if (myMatchPts > oppMatchPts) { matchResult = 'win'; levelDelta = 3; }
+    else if (myMatchPts === oppMatchPts) { matchResult = 'draw'; levelDelta = 1; }
+    else { matchResult = 'lose'; levelDelta = -2; }
+  }
+
+  const newLevel = Math.max(0, (currentUser.level || 0) + levelDelta);
+
+  // إعادة ضبط النقاط (points) بعد المباراة + تحديث level
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ match: 'off', question: 0, answer: 'none', 'match-message': '', points: 0, level: newLevel })
+  });
+  currentUser.points = 0;
+  currentUser.level = newLevel;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+
+  // إشعار الخصم بنتيجته
+  if (opponent) {
+    const oppLevelDelta = matchResult === 'win' ? -2 : matchResult === 'lose' ? 3 : 1;
+    const oppNewLevel = Math.max(0, (opponent.level || 0) + oppLevelDelta);
+    const oppResult = matchResult === 'win' ? 'lose' : matchResult === 'lose' ? 'win' : 'draw';
+    await sbFetch(`/rest/v1/system?id=eq.${opponent.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ match: 'off', question: 0, answer: 'none', 'match-message': '', points: 0, level: oppNewLevel,
+        'end-result': oppResult })
+    });
+  }
+
+  showMatchResult(matchResult);
+}
+
+function showMatchResult(result) {
   const overlay = document.getElementById('win-overlay');
   overlay.classList.add('show');
   const icon = document.getElementById('win-icon');
 
-  if (reason === 'win') {
+  if (result === 'win') {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
-    document.getElementById('win-title').textContent = 'أنت الفائز!';
-    document.getElementById('win-sub').textContent = 'وصلت إلى 50 نقطة! رائع!';
-  } else if (reason === 'lose') {
+    document.getElementById('win-title').textContent = 'أنت الفائز! 🎉';
+    document.getElementById('win-sub').textContent = `أحسنت! حصلت على +3 نقاط في لوحة الصدارة`;
+  } else if (result === 'lose') {
     icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
     icon.className = 'win-icon lose';
-    document.getElementById('win-title').textContent = 'خسرت المباراة';
-    document.getElementById('win-sub').textContent = 'حاول مرة أخرى!';
+    document.getElementById('win-title').textContent = 'خسرت المباراة 😔';
+    document.getElementById('win-sub').textContent = 'لا تستسلم! -2 نقطة من لوحة الصدارة. حاول مرة أخرى!';
   } else {
-    const myWin = myMatchPts > oppMatchPts;
-    icon.innerHTML = myWin ? '<i class="fa-solid fa-clock-rotate-left"></i>' : '<i class="fa-regular fa-face-meh"></i>';
-    icon.className = 'win-icon ' + (myWin ? 'trophy' : 'lose');
-    document.getElementById('win-title').textContent = myWin ? 'انتهى الوقت - أنت الفائز!' : 'انتهى الوقت';
-    document.getElementById('win-sub').textContent = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts}`;
+    icon.innerHTML = '<i class="fa-solid fa-handshake"></i>';
+    icon.className = 'win-icon';
+    document.getElementById('win-title').textContent = 'تعادل!';
+    document.getElementById('win-sub').textContent = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +1 نقطة لوحة صدارة`;
   }
 }
 
@@ -1253,6 +1312,30 @@ function closeMatch() {
   document.getElementById('win-overlay').classList.remove('show');
   showPage('home');
   showDashboard();
+}
+
+// ==================== OPPONENT WIN DETECTION ====================
+let oppResultPollInterval = null;
+function startOpponentResultPolling() {
+  clearInterval(oppResultPollInterval);
+  oppResultPollInterval = setInterval(async () => {
+    if (!currentUser || !opponent) return;
+    const me = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=end-result`, { method: 'GET' });
+    if (me && me[0] && me[0]['end-result']) {
+      const result = me[0]['end-result'];
+      clearInterval(oppResultPollInterval);
+      clearInterval(matchTotalTimer);
+      clearInterval(qTimerInterval);
+      clearInterval(chatPollInterval);
+      document.getElementById('match-chat').style.display = 'none';
+      // امسح نتيجة الخصم من قاعدة البيانات
+      await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ 'end-result': '' })
+      });
+      showMatchResult(result);
+    }
+  }, 2000);
 }
 
 // ==================== MATCH CHAT ====================
@@ -1303,7 +1386,7 @@ function startChatPolling() {
 
 // ==================== LEADERBOARD ====================
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,points&order=points.desc&limit=20', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=name,country,level&order=level.desc&limit=20', { method: 'GET' });
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
@@ -1320,7 +1403,7 @@ async function loadLeaderboard() {
         <div class="lb-name">${u.name || 'لاعب'}</div>
         <div class="lb-country">${u.country || ''}</div>
       </div>
-      <div class="lb-pts">${u.points || 0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة</span></div>
+      <div class="lb-pts">${u.level || 0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة صدارة</span></div>
     </div>
   `).join('');
 }
@@ -1328,6 +1411,10 @@ async function loadLeaderboard() {
 // ==================== PROFILE ====================
 function loadProfile() {
   if (!currentUser) return;
+  // مسح حقول التعديل عند فتح الصفحة
+  document.getElementById('edit-email').value = '';
+  document.getElementById('edit-pass').value = '';
+  document.getElementById('edit-msg').innerHTML = '';
   document.getElementById('profile-info').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
       <div class="avatar" style="width:60px;height:60px;font-size:22px;background:var(--ink);color:#fff">${currentUser.name[0].toUpperCase()}</div>
@@ -1338,9 +1425,54 @@ function loadProfile() {
       </div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="num">${currentUser.points||0}</div><div class="lbl">النقاط الكلية</div></div>
+      <div class="stat-card"><div class="num">${currentUser.points||0}</div><div class="lbl">نقاط التحدي</div></div>
+      <div class="stat-card"><div class="num">${currentUser.level||0}</div><div class="lbl">نقاط لوحة الصدارة</div></div>
     </div>
   `;
+}
+
+async function saveProfileEdit() {
+  const newEmail = document.getElementById('edit-email').value.trim();
+  const newPass = document.getElementById('edit-pass').value.trim();
+  const msgEl = document.getElementById('edit-msg');
+
+  if (!newEmail && !newPass) return showMsg(msgEl, 'أدخل بريداً أو كلمة مرور جديدة للتعديل', 'error');
+
+  // التحقق من صيغة البريد
+  if (newEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) return showMsg(msgEl, 'صيغة البريد الإلكتروني غير صحيحة (مثال: user@example.com)', 'error');
+    // تأكد من عدم وجود بريد مكرر
+    const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(newEmail)}&select=id`, { method: 'GET' });
+    if (check && check.length > 0 && check[0].id !== currentUser.id) return showMsg(msgEl, 'هذا البريد مستخدم من قبل حساب آخر', 'error');
+  }
+
+  // التحقق من الباسوورد
+  if (newPass) {
+    if (/[<:=>]/.test(newPass)) return showMsg(msgEl, 'كلمة المرور لا يجب أن تحتوي على الرموز: < : = >', 'error');
+    if (newPass.length < 6) return showMsg(msgEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+  }
+
+  showMsg(msgEl, 'جاري الحفظ...', 'info');
+  const updates = {};
+  if (newEmail) updates.email = newEmail;
+  if (newPass) updates.password = newPass;
+
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates)
+  });
+
+  if (res !== null) {
+    if (newEmail) currentUser.email = newEmail;
+    localStorage.setItem('genius_user', JSON.stringify(currentUser));
+    showMsg(msgEl, 'تم حفظ التعديلات بنجاح!', 'success');
+    document.getElementById('edit-email').value = '';
+    document.getElementById('edit-pass').value = '';
+    loadProfile();
+  } else {
+    showMsg(msgEl, 'حدث خطأ أثناء الحفظ، حاول مرة أخرى', 'error');
+  }
 }
 
 // ==================== INIT ====================
