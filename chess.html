@@ -711,284 +711,238 @@
 </div><!-- /container -->
 
 <script>
-// ═══════════════════════════════════════════════
-//  CONFIG
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  CONFIG — Supabase
+// ═══════════════════════════════════════════════════════════
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
-const HEADERS = {
+const HDR = {
   'Content-Type': 'application/json',
   'apikey': SB_KEY,
   'Authorization': 'Bearer ' + SB_KEY,
   'Prefer': 'return=representation'
 };
+async function sb(path, opts = {}) {
+  try {
+    const r = await fetch(SB_URL + path, { ...opts, headers: { ...HDR, ...(opts.headers || {}) } });
+    const t = await r.text();
+    try { return JSON.parse(t); } catch { return null; }
+  } catch { return null; }
+}
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  نظام الترقيم:
+//  اللوحة 8×8 — المربعات من 1 إلى 64
+//  من منظور صاحب الجلسة: row0=الصف الأبعد (رقم 8), row7=الصف الأقرب (رقم 1)
+//  sqNum(row, col) → رقم المربع من منظوره هو
+//  mirrorSq(sq)    → الرقم المقابل من منظور الخصم (عكس اللوحة)
+// ═══════════════════════════════════════════════════════════
+function sqNum(row, col)  { return row * 8 + col + 1; }           // 1..64
+function sqToRC(sq)       { return { row: Math.floor((sq-1)/8), col: (sq-1)%8 }; }
+function mirrorSq(sq)     { return 65 - sq; }                     // عكس المربع
+
+// ═══════════════════════════════════════════════════════════
+//  مواضع القطع الابتدائية (من منظور صاحب الجلسة — الصف الأبعد للخصم)
+//  الجدول: أعمدة King,Queen,Rook1,Rook2,Bishop1,Bishop2,Knight1,Knight2,Pawn1..Pawn8
+//  كل لاعب يرى قطعه الخاصة في الأسفل (row 6-7)
+// ═══════════════════════════════════════════════════════════
+// القطع دايماً سوداء للكل — بس من يبدأ أولاً (الـ ID الأصغر) يكون في الدور الأول
+const PIECES_UNICODE = {
+  King:'♚', Queen:'♛', Rook:'♜', Bishop:'♝', Knight:'♞', Pawn:'♟'
+};
+
+// الأماكن الابتدائية من منظور "أنا" (قطعي في الأسفل)
+// row7 = الصف الأمامي لي (rank1)، row6 = البيادق
+const MY_DEFAULT = {
+  King:    sqNum(7, 4),
+  Queen:   sqNum(7, 3),
+  Rook1:   sqNum(7, 0),
+  Rook2:   sqNum(7, 7),
+  Bishop1: sqNum(7, 2),
+  Bishop2: sqNum(7, 5),
+  Knight1: sqNum(7, 1),
+  Knight2: sqNum(7, 6),
+  Pawn1:   sqNum(6, 0),
+  Pawn2:   sqNum(6, 1),
+  Pawn3:   sqNum(6, 2),
+  Pawn4:   sqNum(6, 3),
+  Pawn5:   sqNum(6, 4),
+  Pawn6:   sqNum(6, 5),
+  Pawn7:   sqNum(6, 6),
+  Pawn8:   sqNum(6, 7),
+};
+
+// الأعمدة في الـ DB
+const PIECE_COLS = ['King','Queen','Rook1','Rook2','Bishop1','Bishop2','Knight1','Knight2',
+                    'Pawn1','Pawn2','Pawn3','Pawn4','Pawn5','Pawn6','Pawn7','Pawn8'];
+
+// نوع كل قطعة (للقواعد)
+const PIECE_TYPE = {
+  King:'king', Queen:'queen', Rook1:'rook', Rook2:'rook',
+  Bishop1:'bishop', Bishop2:'bishop', Knight1:'knight', Knight2:'knight',
+  Pawn1:'pawn',Pawn2:'pawn',Pawn3:'pawn',Pawn4:'pawn',
+  Pawn5:'pawn',Pawn6:'pawn',Pawn7:'pawn',Pawn8:'pawn'
+};
+
+// ═══════════════════════════════════════════════════════════
 //  STATE
-// ═══════════════════════════════════════════════
-let currentUser = null;
-let opponent    = null;
-let myColor     = null; // 'white' | 'black'
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;   // من الـ DB (system table)
+let opponent    = null;   // بيانات الخصم
+let amIFirst    = false;  // أنا صاحب الـ ID الأصغر؟ → أبدأ أولاً
 let isInMatch   = false;
-let matchStartTime = null;
-let matchClockInterval = null;
+
+// board[row][col] = { col: 'King'|'Pawn1'..., owner:'me'|'opp' } | null
+let board = [];
+
+// حالة اللعبة
+let currentTurn = 'me';   // 'me' | 'opp'
+let selectedSq  = null;   // {row,col}
+let validMoves  = [];
+let lastMoveFrom = null;  // {row,col}
+let lastMoveTo   = null;
+let inCheck      = false; // هل ملكي في كش؟
+
+// للمقارنة لكشف التغيير
+let lastKnownRow = null;  // آخر قيمة قرأناها من صفنا في DB
+
+// Intervals
+let pollInterval      = null;
+let clockInterval     = null;
 let searchPollInterval = null;
 let searchTimerInterval = null;
-let chatPollInterval = null;
-let movePollInterval = null;
-let lastChatTs = 0;
+let matchStartTime    = null;
+let lastChatTs        = 0;
+let chatPollInterval  = null;
 
-// ═══════════════════════════════════════════════
-//  CHESS ENGINE STATE
-// ═══════════════════════════════════════════════
-// board[row][col] = { color:'white'|'black', type:'king'|'queen'|'rook'|'bishop'|'knight'|'pawn', id:'King'|'Queen'|'Rook1'.. }
-// Square names: a1..h8.  row 0=rank8, row7=rank1 (from white's perspective after flip for black)
-let board = [];
-let selectedSq  = null; // {row,col}
-let validMoves  = [];   // [{row,col}]
-let currentTurn = 'white';
-let lastMove    = null; // {from:{row,col},to:{row,col}}
-let inCheck     = null; // 'white'|'black'|null
-let moveHistory = [];
-let capturedByMe = [];
-let capturedByOpp = [];
-let myMoveNum   = 0;
-
-// Piece unicode
-const PIECES = {
-  white: { king:'♔', queen:'♕', rook:'♖', bishop:'♗', knight:'♘', pawn:'♙' },
-  black: { king:'♚', queen:'♛', rook:'♜', bishop:'♝', knight:'♞', pawn:'♟' }
-};
-
-// Column ID suffix: a=col0..h=col7
-const COL_LETTER = ['a','b','c','d','e','f','g','h'];
-
-// Piece column-slot mapping (white perspective bottom = rank1 = row7)
-// id → DB column name
-const PIECE_IDS = {
-  // white
-  white: {
-    King:    {type:'king',   startRow:7, startCol:4},
-    Queen:   {type:'queen',  startRow:7, startCol:3},
-    Bishop1: {type:'bishop', startRow:7, startCol:2},
-    Bishop2: {type:'bishop', startRow:7, startCol:5},
-    Knight1: {type:'knight', startRow:7, startCol:1},
-    Knight2: {type:'knight', startRow:7, startCol:6},
-    Rook1:   {type:'rook',   startRow:7, startCol:0},
-    Rook2:   {type:'rook',   startRow:7, startCol:7},
-    Pawn1:   {type:'pawn',   startRow:6, startCol:0},
-    Pawn2:   {type:'pawn',   startRow:6, startCol:1},
-    Pawn3:   {type:'pawn',   startRow:6, startCol:2},
-    Pawn4:   {type:'pawn',   startRow:6, startCol:3},
-    Pawn5:   {type:'pawn',   startRow:6, startCol:4},
-    Pawn6:   {type:'pawn',   startRow:6, startCol:5},
-    Pawn7:   {type:'pawn',   startRow:6, startCol:6},
-    Pawn8:   {type:'pawn',   startRow:6, startCol:7},
-  },
-  black: {
-    King:    {type:'king',   startRow:0, startCol:4},
-    Queen:   {type:'queen',  startRow:0, startCol:3},
-    Bishop1: {type:'bishop', startRow:0, startCol:2},
-    Bishop2: {type:'bishop', startRow:0, startCol:5},
-    Knight1: {type:'knight', startRow:0, startCol:1},
-    Knight2: {type:'knight', startRow:0, startCol:6},
-    Rook1:   {type:'rook',   startRow:0, startCol:0},
-    Rook2:   {type:'rook',   startRow:0, startCol:7},
-    Pawn1:   {type:'pawn',   startRow:1, startCol:0},
-    Pawn2:   {type:'pawn',   startRow:1, startCol:1},
-    Pawn3:   {type:'pawn',   startRow:1, startCol:2},
-    Pawn4:   {type:'pawn',   startRow:1, startCol:3},
-    Pawn5:   {type:'pawn',   startRow:1, startCol:4},
-    Pawn6:   {type:'pawn',   startRow:1, startCol:5},
-    Pawn7:   {type:'pawn',   startRow:1, startCol:6},
-    Pawn8:   {type:'pawn',   startRow:1, startCol:7},
-  }
-};
-
-// Square number mapping: sq 1..64, row 0 col 0 = sq1, row7 col7 = sq64
-function sqNum(row, col) { return row * 8 + col + 1; }
-function sqFromNum(n) { return { row: Math.floor((n-1)/8), col: (n-1)%8 }; }
-
-// ═══════════════════════════════════════════════
-//  SUPABASE HELPERS
-// ═══════════════════════════════════════════════
-async function sbFetch(path, opts={}) {
-  try {
-    const res = await fetch(SB_URL + path, { ...opts, headers: { ...HEADERS, ...(opts.headers||{}) } });
-    const text = await res.text();
-    try {
-      const json = JSON.parse(text);
-      if (!res.ok) { console.error('SB Error:', res.status, json); return { __error:true, ...json }; }
-      return json;
-    } catch(e) { return null; }
-  } catch(e) { console.error('Fetch error:', e); return null; }
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  AUTH
-// ═══════════════════════════════════════════════
-function showMsg(el, txt, type) { el.innerHTML = `<div class="msg ${type}">${txt}</div>`; }
-
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('login-form').style.display = tab==='login' ? '' : 'none';
-  document.getElementById('register-form').style.display = tab==='register' ? '' : 'none';
+// ═══════════════════════════════════════════════════════════
+function showMsg(elId, txt, type) {
+  document.getElementById(elId).innerHTML = `<div class="msg ${type}">${txt}</div>`;
 }
-
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('login-form').style.display   = tab === 'login'    ? '' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+}
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value.trim();
-  const msgEl = document.getElementById('login-msg');
-  if (!email || !pass) return showMsg(msgEl, 'يرجى ملء جميع الحقول', 'error');
-  showMsg(msgEl, 'جاري التحقق...', 'info');
-  const res = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&select=*`, { method:'GET' });
-  if (res && res.length > 0) { loginUser(res[0]); }
-  else showMsg(msgEl, 'البريد أو كلمة المرور غير صحيحة', 'error');
+  if (!email || !pass) return showMsg('login-msg','يرجى ملء جميع الحقول','error');
+  showMsg('login-msg','جاري التحقق...','info');
+  const res = await sb(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&select=*`, {method:'GET'});
+  if (res && res.length > 0) loginUser(res[0]);
+  else showMsg('login-msg','البريد أو كلمة المرور غير صحيحة','error');
 }
-
 async function doRegister() {
   const name  = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pass  = document.getElementById('reg-pass').value.trim();
-  const msgEl = document.getElementById('reg-msg');
-  if (!name || !email || !pass) return showMsg(msgEl, 'يرجى ملء جميع الحقول', 'error');
-  if (pass.length < 6) return showMsg(msgEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
-  showMsg(msgEl, 'جاري إنشاء الحساب...', 'info');
-  const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`, { method:'GET' });
-  if (check && check.length > 0) return showMsg(msgEl, 'هذا البريد مسجل مسبقاً', 'error');
+  if (!name||!email||!pass) return showMsg('reg-msg','يرجى ملء جميع الحقول','error');
+  if (pass.length < 6) return showMsg('reg-msg','كلمة المرور 6 أحرف على الأقل','error');
+  showMsg('reg-msg','جاري إنشاء الحساب...','info');
+  const check = await sb(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`,{method:'GET'});
+  if (check && check.length > 0) return showMsg('reg-msg','هذا البريد مسجل مسبقاً','error');
   let country = 'غير معروف';
-  try { const r=await fetch('https://ipapi.co/json/'); const d=await r.json(); country=(d.country_name||'غير معروف')+' '+countryFlag(d.country_code||''); } catch(e){}
+  try { const r=await fetch('https://ipapi.co/json/');const d=await r.json();country=(d.country_name||'')+(d.country_code?' '+countryFlag(d.country_code):''); } catch{}
   const newId = Date.now() + Math.floor(Math.random()*9999);
-  const res = await sbFetch('/rest/v1/system', {
-    method:'POST', body: JSON.stringify({ id:newId, name, email, password:pass, country, match:'off', points:0, question:0, answer:'none', 'match-message':'' })
-  });
-  if (res && res[0]) { showMsg(msgEl,'تم إنشاء الحساب!','success'); setTimeout(()=>loginUser(res[0]),800); }
-  else showMsg(msgEl, 'حدث خطأ، حاول مرة أخرى', 'error');
+  const res = await sb('/rest/v1/system',{method:'POST',body:JSON.stringify({id:newId,name,email,password:pass,country,level:0,match:'off','match-message':''})});
+  if (res && res[0]) { showMsg('reg-msg','تم إنشاء الحساب!','success'); setTimeout(()=>loginUser(res[0]),800); }
+  else showMsg('reg-msg','حدث خطأ، حاول مرة أخرى','error');
 }
-
 function countryFlag(cc) { return cc.toUpperCase().replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt())); }
-
 function loginUser(user) {
   currentUser = user;
   localStorage.setItem('chess_user', JSON.stringify(user));
   showHome();
 }
 
+// ═══════════════════════════════════════════════════════════
+//  PAGES
+// ═══════════════════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+}
 function showHome() {
   showPage('home');
   const u = currentUser;
-  const av = document.getElementById('banner-av');
   const initial = u.name ? u.name[0].toUpperCase() : '?';
-  if (u.avatar_url) {
-    av.innerHTML = `<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${initial}'">`;
-  } else { av.textContent = initial; }
+  const bav = document.getElementById('banner-av');
+  bav.textContent = initial;
   document.getElementById('banner-name').textContent = u.name;
   document.getElementById('banner-email').textContent = u.email;
   document.getElementById('banner-pts').textContent = u.level || 0;
-
-  // Header
   document.getElementById('header-user').style.display = 'flex';
-  const hav = document.getElementById('header-av');
-  if (u.avatar_url) {
-    hav.innerHTML = `<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  } else { hav.textContent = initial; }
+  document.getElementById('header-av').textContent = initial;
   document.getElementById('header-name').textContent = u.name;
 }
 
-// ═══════════════════════════════════════════════
-//  PAGES
-// ═══════════════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  MATCHMAKING
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const SEARCH_MAX = 60;
-
 async function startSearch() {
   if (!currentUser) return;
   document.getElementById('play-btn').disabled = true;
   document.getElementById('searching-anim').classList.add('show');
   document.getElementById('search-msg').innerHTML = '';
 
-  // Reset chess row in DB to 'searching'
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match:'searching' }) });
-  // If no row yet, insert
-  const existing = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=id`, { method:'GET' });
-  if (!existing || existing.length === 0) {
-    await sbFetch('/rest/v1/chess', { method:'POST', body: JSON.stringify({ id: currentUser.id, name: currentUser.name, match:'searching' }) });
+  // تأكد إن الصف موجود في chess
+  const ex = await sb(`/rest/v1/chess?id=eq.${currentUser.id}&select=id`,{method:'GET'});
+  if (!ex || ex.length === 0) {
+    await sb('/rest/v1/chess',{method:'POST',body:JSON.stringify({id:currentUser.id,name:currentUser.name,match:'searching','match-message':''})});
   } else {
-    await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match:'searching', 'match-message':'' }) });
+    await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'searching','match-message':'',King:null,Queen:null,Rook1:null,Rook2:null,Bishop1:null,Bishop2:null,Knight1:null,Knight2:null,Pawn1:null,Pawn2:null,Pawn3:null,Pawn4:null,Pawn5:null,Pawn6:null,Pawn7:null,Pawn8:null})});
   }
 
   let timeLeft = SEARCH_MAX;
   searchTimerInterval = setInterval(() => {
     timeLeft--;
     document.getElementById('search-num').textContent = timeLeft;
-    document.getElementById('search-bar').style.width = (timeLeft/SEARCH_MAX*100)+'%';
+    document.getElementById('search-bar').style.width = (timeLeft / SEARCH_MAX * 100) + '%';
     if (timeLeft <= 0) {
-      clearInterval(searchTimerInterval);
-      clearInterval(searchPollInterval);
-      sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match:'off' }) });
+      clearInterval(searchTimerInterval); clearInterval(searchPollInterval);
+      sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'off'})});
       stopSearchUI();
-      document.getElementById('search-msg').innerHTML = '<div class="msg error">انتهى وقت البحث، حاول مرة أخرى</div>';
+      document.getElementById('search-msg').innerHTML = '<div class="msg error">انتهى وقت البحث</div>';
     }
   }, 1000);
 
-  searchPollInterval = setInterval(matchMake, 1000);
+  searchPollInterval = setInterval(doMatchMake, 1500);
 }
 
-async function matchMake() {
-  const meData = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=match,role`, { method:'GET' });
-  if (!meData || !meData[0]) return;
-  const myMatch = meData[0].match;
-  const myRole  = meData[0].role;
-
-  // اللاعب وجد خصم وكُتب له match + role → ابدأ المباراة
-  if (myMatch && myMatch !== 'searching' && myMatch !== 'off' && myRole) {
+async function doMatchMake() {
+  // اقرأ صفي
+  const me = await sb(`/rest/v1/chess?id=eq.${currentUser.id}&select=match,role`,{method:'GET'});
+  if (!me || !me[0]) return;
+  // لو تم إقرانى من شخص آخر
+  if (me[0].match && me[0].match !== 'searching' && me[0].match !== 'off') {
     clearInterval(searchPollInterval); clearInterval(searchTimerInterval);
-    const oppId = myMatch;
-    const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,level,avatar_url`, { method:'GET' });
-    if (opp && opp[0]) startMatch(opp[0], myRole);
+    beginMatch(me[0].match);
     return;
   }
-
-  // ما زلت searching → حاول التزاوج
-  const searchers = await sbFetch('/rest/v1/chess?match=eq.searching&select=id,name&order=id.asc', { method:'GET' });
-  if (!searchers) return;
-  const myIdx = searchers.findIndex(u => u.id === currentUser.id);
+  // حاول تتزاوج أنت
+  const searchers = await sb('/rest/v1/chess?match=eq.searching&select=id,name&order=id.asc',{method:'GET'});
+  if (!searchers || searchers.length < 2) return;
+  const myIdx = searchers.findIndex(u => String(u.id) === String(currentUser.id));
   if (myIdx === -1 || myIdx % 2 !== 0) return;
   const partner = searchers[myIdx + 1];
   if (!partner) return;
-
   clearInterval(searchPollInterval); clearInterval(searchTimerInterval);
-
-  // اختر عشوائياً من يبدأ واكتب ID البادئ في role لكليهما
-  const starterID = Math.random() < 0.5 ? String(currentUser.id) : String(partner.id);
-
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, {
-    method:'PATCH',
-    body: JSON.stringify({ match: String(partner.id), role: starterID })
-  });
-  await sbFetch(`/rest/v1/chess?id=eq.${partner.id}`, {
-    method:'PATCH',
-    body: JSON.stringify({ match: String(currentUser.id), role: starterID })
-  });
-
-  const opp = await sbFetch(`/rest/v1/system?id=eq.${partner.id}&select=id,name,country,level,avatar_url`, { method:'GET' });
-  if (opp && opp[0]) startMatch(opp[0], starterID);
+  // الأصغر ID يبدأ أولاً
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:String(partner.id)})});
+  await sb(`/rest/v1/chess?id=eq.${partner.id}`,{method:'PATCH',body:JSON.stringify({match:String(currentUser.id)})});
+  beginMatch(String(partner.id));
 }
 
 async function cancelSearch() {
   clearInterval(searchPollInterval); clearInterval(searchTimerInterval);
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match:'off' }) });
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'off'})});
   stopSearchUI();
 }
-
 function stopSearchUI() {
   document.getElementById('searching-anim').classList.remove('show');
   document.getElementById('play-btn').disabled = false;
@@ -996,699 +950,551 @@ function stopSearchUI() {
   document.getElementById('search-bar').style.width = '100%';
 }
 
-// ═══════════════════════════════════════════════
-//  MATCH START
-// ═══════════════════════════════════════════════
-async function startMatch(opp, starterID) {
-  opponent = opp;
-  isInMatch = true;
+// ═══════════════════════════════════════════════════════════
+//  بداية الماتش
+// ═══════════════════════════════════════════════════════════
+async function beginMatch(oppId) {
+  stopSearchUI();
+  // اقرأ بيانات الخصم
+  const oppData = await sb(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,level`,{method:'GET'});
+  if (!oppData || !oppData[0]) return;
+  opponent = oppData[0];
+
+  // من الـ ID الأصغر يبدأ أولاً
+  amIFirst = Number(currentUser.id) < Number(opponent.id);
+  currentTurn = 'me';   // دايماً من منظوري: أنا أبدأ لو amIFirst
+  // لو مش أنا الأول، الدور للخصم
+  if (!amIFirst) currentTurn = 'opp';
+
+  isInMatch   = true;
   matchStartTime = Date.now();
-  lastChatTs = Date.now();
-  capturedByMe = [];
-  capturedByOpp = [];
-  moveHistory = [];
-  myMoveNum = 0;
+  lastChatTs  = Date.now();
+  selectedSq  = null;
+  validMoves  = [];
+  lastMoveFrom = null;
+  lastMoveTo   = null;
+  inCheck      = false;
+  lastKnownRow = null;
 
-  // starterID = ID اللاعب الأبيض (المحدد عشوائياً في role)
-  // لو starterID = ID بتاعي → أنا أبيض (أبدأ)، غير كده → أنا أسود
-  myColor = (String(starterID) === String(currentUser.id)) ? 'white' : 'black';
+  // اكتب الأماكن الابتدائية في صفي في DB
+  // هذه القيم تمثل مواضع قطعي من منظوري
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({
+    ...MY_DEFAULT,
+    'match-message': '',
+    match: String(opponent.id)
+  })});
 
-  // الأبيض فقط هو اللي يكتب الـ board الأولي في DB
-  if (myColor === 'white') {
-    await writeInitialBoard();
-  }
+  // بناء اللوحة المحلية من الأماكن الابتدائية
+  buildBoardFromDefaults();
 
-  // Setup header
-  document.getElementById('my-name-m').textContent = currentUser.name;
-  document.getElementById('opp-name-m').textContent = opp.name;
-  const myInitial = currentUser.name[0].toUpperCase();
-  const oppInitial = opp.name[0].toUpperCase();
-  const myAv = document.getElementById('my-av-m');
-  if (currentUser.avatar_url) myAv.innerHTML = `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
-  else myAv.textContent = myInitial;
-  const oppAv = document.getElementById('opp-av-m');
-  if (opp.avatar_url) oppAv.innerHTML = `<img src="${opp.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
-  else oppAv.textContent = oppInitial;
-
-  document.getElementById('my-color-label').textContent = myColor === 'white' ? '♙ أبيض' : '♟ أسود';
-  document.getElementById('opp-color-label').textContent = myColor === 'white' ? '♟ أسود' : '♙ أبيض';
+  // UI
+  document.getElementById('my-name-m').textContent  = currentUser.name;
+  document.getElementById('opp-name-m').textContent = opponent.name;
+  document.getElementById('my-av-m').textContent    = currentUser.name[0].toUpperCase();
+  document.getElementById('opp-av-m').textContent   = opponent.name[0].toUpperCase();
+  document.getElementById('chat-msgs').innerHTML    = '';
 
   showPage('match');
-  initBoard();
   renderBoard();
 
-  matchClockInterval = setInterval(updateClock, 1000);
-  startChatPolling();
-  startMovePoll();
+  clockInterval = setInterval(updateClock, 1000);
+  pollInterval  = setInterval(pollMyRow, 1000);
+  chatPollInterval = setInterval(pollChat, 1500);
 
   history.pushState(null,'',window.location.href);
 }
 
-// ═══════════════════════════════════════════════
-//  BOARD INIT
-// ═══════════════════════════════════════════════
-function initBoard() {
-  board = Array.from({length:8}, ()=>Array(8).fill(null));
-  currentTurn = 'white';
-  selectedSq = null;
-  validMoves = [];
-  lastMove = null;
-  inCheck = null;
-
-  const setup = (color) => {
-    const prefix = color === 'white' ? 'w' : 'b';
-    Object.entries(PIECE_IDS[color]).forEach(([id, info]) => {
-      board[info.startRow][info.startCol] = { color, type: info.type, id: prefix+id, moved: false };
-    });
-  };
-  setup('white');
-  setup('black');
+// ═══════════════════════════════════════════════════════════
+//  بناء اللوحة من الأماكن الافتراضية
+//  قطعي في الصف 6-7 (الأسفل)، قطع الخصم في الصف 0-1 (الأعلى)
+//  قطع الخصم هي مرايا (mirrorSq) من منظوري
+// ═══════════════════════════════════════════════════════════
+function buildBoardFromDefaults() {
+  board = Array.from({length:8}, () => Array(8).fill(null));
+  // قطعي (من MY_DEFAULT)
+  for (const col of PIECE_COLS) {
+    const sq = MY_DEFAULT[col];
+    const {row, col: c} = sqToRC(sq);
+    board[row][c] = { col, owner: 'me' };
+  }
+  // قطع الخصم: مرايا مواضعه (هو يرى قطعه في الأسفل، أنا أراها في الأعلى)
+  for (const col of PIECE_COLS) {
+    const mySq = MY_DEFAULT[col];
+    const oppSq = mirrorSq(mySq); // موضع قطعة الخصم من منظوري
+    const {row, col: c} = sqToRC(oppSq);
+    board[row][c] = { col, owner: 'opp' };
+  }
 }
 
-// Load board from DB columns
-function boardFromDB(row) {
-  const newBoard = Array.from({length:8}, ()=>Array(8).fill(null));
-  // الأعمدة: wKing, wPawn1... bKing, bPawn1...
-  ['white','black'].forEach(color => {
-    const prefix = color === 'white' ? 'w' : 'b';
-    Object.entries(PIECE_IDS[color]).forEach(([baseName, info]) => {
-      const colId = prefix + baseName;
-      const val = row[colId];
-      if (!val || val === 'died') return;
-      const sq = parseInt(val);
-      if (isNaN(sq)) return;
-      const {row: r, col: c} = sqFromNum(sq);
-      if (r < 0 || r > 7 || c < 0 || c > 7) return;
-      newBoard[r][c] = { color, type: info.type, id: colId, moved: true };
-    });
-  });
-  return newBoard;
+// ═══════════════════════════════════════════════════════════
+//  POLL — اقرأ صفي كل ثانية
+//  الخصم يكتب حركاته في صفي → أنا أقرأها من هنا
+// ═══════════════════════════════════════════════════════════
+async function pollMyRow() {
+  if (!isInMatch) return;
+  const cols = PIECE_COLS.join(',');
+  const rows = await sb(`/rest/v1/chess?id=eq.${currentUser.id}&select=${cols},match-message,match`,{method:'GET'});
+  if (!rows || !rows[0]) return;
+  const row = rows[0];
+
+  // لو الماتش انتهى
+  if (row.match === 'off' || row.match === 'lost' || row.match === 'won') {
+    if (row.match === 'lost') { clearAll(); showResult('lose'); }
+    else if (row.match === 'won') { clearAll(); showResult('win'); }
+    return;
+  }
+
+  // فحص match-message: لو فيه رسالة نهاية
+  const msgStr = row['match-message'];
+  if (msgStr && msgStr.startsWith('END:')) {
+    const result = msgStr.replace('END:','');
+    clearAll();
+    showResult(result === 'lose' ? 'win' : 'lose'); // الخصم بيقول لي نتيجته، أنا العكس
+    return;
+  }
+
+  // لو مش دور الخصم (دوري أنا) → مفيش حاجة نقرأها
+  if (currentTurn !== 'opp') return;
+
+  // مقارنة الـ row الحالي بالأخير عشان نكتشف تغيير
+  const rowStr = JSON.stringify(row);
+  if (rowStr === lastKnownRow) return; // مفيش تغيير
+  lastKnownRow = rowStr;
+
+  // اكتشاف القطعة اللي اتحركت
+  applyOpponentMove(row);
 }
 
-// ═══════════════════════════════════════════════
-//  WRITE INITIAL BOARD TO DB
-// ═══════════════════════════════════════════════
-async function writeInitialBoard() {
-  const allPieces = {};
-  ['white','black'].forEach(color => {
-    const prefix = color === 'white' ? 'w' : 'b';
-    Object.entries(PIECE_IDS[color]).forEach(([id, info]) => {
-      allPieces[prefix+id] = sqNum(info.startRow, info.startCol);
-    });
-  });
-  // اكتب الـ board الأولي في صف الاتنين (مرة واحدة فقط في البداية)
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify(allPieces) });
-  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`,    { method:'PATCH', body: JSON.stringify(allPieces) });
+// ═══════════════════════════════════════════════════════════
+//  تطبيق حركة الخصم
+//  الخصم كتب في صفي المربع من منظوره → نحوله لمنظوري (mirrorSq)
+// ═══════════════════════════════════════════════════════════
+function applyOpponentMove(dbRow) {
+  // نبني board جديد من بيانات DB
+  const newBoard = Array.from({length:8}, () => Array(8).fill(null));
+
+  // قطع الخصم — هو كتبها في صفي من منظوره → نعكسها لمنظوري
+  for (const col of PIECE_COLS) {
+    const val = dbRow[col];
+    if (!val || val === 'died' || val === 0) continue;
+    const oppSqFromHisPerspective = Number(val);
+    const mySq = mirrorSq(oppSqFromHisPerspective); // من منظوري
+    const {row, col: c} = sqToRC(mySq);
+    if (row < 0 || row > 7 || c < 0 || c > 7) continue;
+    newBoard[row][c] = { col, owner: 'opp' };
+  }
+
+  // قطعي أنا — محتفظ بها من board الحالي (أنا حركتها محلياً)
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++)
+      if (board[r][c] && board[r][c].owner === 'me')
+        newBoard[r][c] = board[r][c];
+
+  // اكتشف الحركة (lastMove) بالمقارنة
+  detectLastMove(board, newBoard, 'opp');
+
+  board = newBoard;
+  currentTurn = 'me';
+
+  // فحص كش على ملكي
+  inCheck = isKingInCheck('me');
+  if (inCheck) { showCheckAlert(); playCheck(); }
+  else playMove();
+
+  // فحص كش مات
+  if (inCheck && !hasAnyLegal('me')) {
+    clearAll(); showResult('lose'); return;
+  }
+
+  renderBoard();
 }
 
-// ═══════════════════════════════════════════════
+function detectLastMove(oldBoard, newBoard, owner) {
+  lastMoveFrom = null; lastMoveTo = null;
+  // ابحث عن المربع اللي اختفت منه قطعة الخصم
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    if (oldBoard[r][c]?.owner === owner && !newBoard[r][c]) {
+      lastMoveFrom = {row:r,col:c};
+    }
+    if (!oldBoard[r][c] && newBoard[r][c]?.owner === owner) {
+      lastMoveTo = {row:r,col:c};
+    }
+    // قطعة تحركت (كانت في مربع وراحت لمربع تاني)
+    if (oldBoard[r][c]?.owner === owner && newBoard[r][c]?.owner === owner &&
+        oldBoard[r][c]?.col !== newBoard[r][c]?.col) {
+      lastMoveTo = {row:r,col:c};
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CLICK على المربع
+// ═══════════════════════════════════════════════════════════
+function onSquareClick(row, col) {
+  if (!isInMatch || currentTurn !== 'me') return;
+  const piece = board[row][col];
+
+  if (selectedSq) {
+    const isValid = validMoves.some(m => m.row === row && m.col === col);
+    if (isValid) {
+      doMove(selectedSq.row, selectedSq.col, row, col);
+      selectedSq = null; validMoves = [];
+      return;
+    }
+    if (piece && piece.owner === 'me') {
+      selectedSq = {row, col};
+      validMoves = getLegal(row, col);
+    } else {
+      selectedSq = null; validMoves = [];
+    }
+  } else {
+    if (piece && piece.owner === 'me') {
+      selectedSq = {row, col};
+      validMoves = getLegal(row, col);
+    }
+  }
+  renderBoard();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  تنفيذ الحركة
+// ═══════════════════════════════════════════════════════════
+async function doMove(fromRow, fromCol, toRow, toCol) {
+  const piece    = board[fromRow][fromCol];
+  const captured = board[toRow][toCol];
+
+  // حرك على اللوحة المحلية
+  board[toRow][toCol]     = piece;
+  board[fromRow][fromCol] = null;
+
+  lastMoveFrom = {row:fromRow, col:fromCol};
+  lastMoveTo   = {row:toRow,   col:toCol};
+
+  // ترقية البيدق
+  if (PIECE_TYPE[piece.col] === 'pawn' && toRow === 0) {
+    board[toRow][toCol] = {...piece, promoted: true};
+    // نغير نوعه لـ Queen في الـ UI (نسجله كـ Queen لأغراض العرض)
+    board[toRow][toCol].promotedType = 'queen';
+  }
+
+  currentTurn = 'opp';
+  inCheck = false;
+
+  // فحص كش مات على الخصم
+  const oppInCheck = isKingInCheck('opp');
+  if (oppInCheck && !hasAnyLegal('opp')) {
+    renderBoard();
+    await sendMoveToOpp(piece, fromRow, fromCol, toRow, toCol, captured, 'checkmate');
+    clearAll();
+    showResult('win');
+    return;
+  }
+
+  renderBoard();
+  captured ? playCapture() : playMove();
+
+  // أرسل الحركة للخصم
+  await sendMoveToOpp(piece, fromRow, fromCol, toRow, toCol, captured, null);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  إرسال الحركة — نكتب في صف الخصم
+//  الخصم يقرأ صفه الخاص → نكتب له المربع من منظوره (mirrorSq)
+// ═══════════════════════════════════════════════════════════
+async function sendMoveToOpp(piece, fromRow, fromCol, toRow, toCol, captured, special) {
+  const toSqMine = sqNum(toRow, toCol);          // من منظوري
+  const toSqOpp  = mirrorSq(toSqMine);           // من منظور الخصم
+
+  const update = {};
+  // نكتب موضع القطعة في عمودها في صف الخصم — من منظوره
+  update[piece.col] = toSqOpp;
+
+  // القطعة المأكولة → died
+  if (captured) {
+    update[captured.col] = 'died';
+  }
+
+  // رسالة المباراة (للنهاية)
+  if (special === 'checkmate') {
+    update['match-message'] = 'END:lose';
+    update['match'] = 'off';
+  } else {
+    update['match-message'] = 'MOVE:' + Date.now();
+  }
+
+  await sb(`/rest/v1/chess?id=eq.${opponent.id}`, {method:'PATCH', body: JSON.stringify(update)});
+}
+
+// ═══════════════════════════════════════════════════════════
 //  RENDER
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function renderBoard() {
   const el = document.getElementById('chess-board');
   el.innerHTML = '';
-
-  // If I'm black, flip the board so my pieces are at bottom
-  const flip = myColor === 'black';
-
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
-      const boardRow = flip ? (7-r) : r;
-      const boardCol = flip ? (7-c) : c;
-
       const sq = document.createElement('div');
-      sq.className = 'sq ' + ((boardRow+boardCol)%2===0 ? 'light' : 'dark');
-      sq.dataset.row = boardRow;
-      sq.dataset.col = boardCol;
+      sq.className = 'sq ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
 
-      // Highlights
-      if (selectedSq && selectedSq.row===boardRow && selectedSq.col===boardCol) sq.classList.add('selected');
-      if (lastMove) {
-        if (lastMove.from.row===boardRow && lastMove.from.col===boardCol) sq.classList.add('last-from');
-        if (lastMove.to.row===boardRow && lastMove.to.col===boardCol) sq.classList.add('last-to');
-      }
+      if (selectedSq && selectedSq.row === r && selectedSq.col === c) sq.classList.add('selected');
+      if (lastMoveFrom && lastMoveFrom.row === r && lastMoveFrom.col === c) sq.classList.add('last-from');
+      if (lastMoveTo   && lastMoveTo.row   === r && lastMoveTo.col   === c) sq.classList.add('last-to');
       if (inCheck) {
-        const kingPos = findKing(inCheck);
-        if (kingPos && kingPos.row===boardRow && kingPos.col===boardCol) sq.classList.add('in-check');
+        const kp = findKing('me');
+        if (kp && kp.row === r && kp.col === c) sq.classList.add('in-check');
       }
 
-      // Valid move dot
-      const isValid = validMoves.some(m=>m.row===boardRow&&m.col===boardCol);
-      if (isValid) {
-        const piece = board[boardRow][boardCol];
-        sq.classList.add(piece ? 'valid-capture' : 'valid-move');
-      }
+      const isValid = validMoves.some(m => m.row === r && m.col === c);
+      if (isValid) sq.classList.add(board[r][c] ? 'valid-capture' : 'valid-move');
 
-      // Piece
-      const piece = board[boardRow][boardCol];
+      const piece = board[r][c];
       if (piece) {
         const span = document.createElement('span');
         span.className = 'piece';
-        span.textContent = PIECES[piece.color][piece.type];
+        const baseCol = piece.col.replace(/\d+$/, ''); // King,Queen,Rook,Bishop,Knight,Pawn
+        // لو مترقى → Queen
+        const displayCol = piece.promotedType ? 'Queen' : baseCol;
+        span.textContent = PIECES_UNICODE[displayCol] || '?';
+        // لون: قطعي = أبيض (أعلى)، قطع الخصم = سوداء (أدنى)
+        // كلانا أسود بالفعل من الـ unicode — نفرق بالـ filter
+        if (piece.owner === 'me') {
+          span.style.filter = 'invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.3))';
+        } else {
+          span.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))';
+        }
         sq.appendChild(span);
       }
-
-      sq.addEventListener('click', () => onSquareClick(boardRow, boardCol));
+      sq.addEventListener('click', () => onSquareClick(r, c));
       el.appendChild(sq);
     }
   }
 
-  // Update turn indicator
+  // turn indicator
+  const isMyTurn = currentTurn === 'me';
   const dot = document.getElementById('turn-dot');
-  const txt = document.getElementById('turn-text');
-  dot.className = 'turn-dot ' + currentTurn;
-  const isMyTurn = currentTurn === myColor;
-  txt.textContent = isMyTurn ? 'دورك! ♟' : `دور ${opponent.name}`;
-  txt.style.color = isMyTurn ? 'var(--blue)' : 'var(--ink3)';
-
-  // Check badge
+  dot.className = 'turn-dot ' + (isMyTurn ? 'white' : 'black');
+  document.getElementById('turn-text').textContent = isMyTurn ? 'دورك! ♟' : ('دور ' + (opponent?.name || 'الخصم'));
+  document.getElementById('turn-text').style.color = isMyTurn ? 'var(--blue)' : 'var(--ink3)';
   const badge = document.getElementById('check-badge');
   badge.className = 'check-badge' + (inCheck ? ' show' : '');
-
-  // Captured
-  renderCaptured();
 }
 
-function renderCaptured() {
-  const myEl = document.getElementById('my-captured');
-  const oppEl = document.getElementById('opp-captured');
-  myEl.innerHTML = '<span class="captured-label">أكلتُ:</span>' + capturedByMe.map(p=>`<span class="captured-piece">${PIECES[p.color][p.type]}</span>`).join('');
-  oppEl.innerHTML = '<span class="captured-label">أكل خصمك:</span>' + capturedByOpp.map(p=>`<span class="captured-piece">${PIECES[p.color][p.type]}</span>`).join('');
-}
-
-// ═══════════════════════════════════════════════
-//  CLICK HANDLER
-// ═══════════════════════════════════════════════
-function onSquareClick(row, col) {
-  if (!isInMatch) return;
-  if (currentTurn !== myColor) return; // not my turn
-
-  const piece = board[row][col];
-
-  if (selectedSq) {
-    // Try to move
-    const isValid = validMoves.some(m=>m.row===row&&m.col===col);
-    if (isValid) {
-      executeMove(selectedSq.row, selectedSq.col, row, col);
-      selectedSq = null;
-      validMoves = [];
-      return;
-    }
-    // Deselect or select another own piece
-    if (piece && piece.color === myColor) {
-      selectedSq = {row, col};
-      validMoves = getLegalMoves(row, col);
-    } else {
-      selectedSq = null;
-      validMoves = [];
-    }
-  } else {
-    if (piece && piece.color === myColor) {
-      selectedSq = {row, col};
-      validMoves = getLegalMoves(row, col);
-    }
-  }
-  renderBoard();
-}
-
-// ═══════════════════════════════════════════════
-//  CHESS RULES ENGINE
-// ═══════════════════════════════════════════════
-function getPseudoMoves(row, col, b) {
+// ═══════════════════════════════════════════════════════════
+//  قواعد الشطرنج
+// ═══════════════════════════════════════════════════════════
+function getPseudo(row, col, b) {
   b = b || board;
   const piece = b[row][col];
   if (!piece) return [];
   const moves = [];
-  const {color, type} = piece;
-  const opp = color === 'white' ? 'black' : 'white';
-  const dir = color === 'white' ? -1 : 1; // pawn direction
+  const type  = PIECE_TYPE[piece.col] || (piece.promotedType ? 'queen' : 'pawn');
+  const owner = piece.owner;
+  const opp   = owner === 'me' ? 'opp' : 'me';
+  const dir   = owner === 'me' ? -1 : 1; // بيادقي تتحرك للأعلى (row تنقص)
 
-  const addIfValid = (r, c) => {
+  const add = (r, c) => {
     if (r < 0 || r > 7 || c < 0 || c > 7) return false;
-    const sq = b[r][c];
-    if (sq && sq.color === color) return false;
-    moves.push({row:r, col:c});
-    return !sq; // return true if empty (can continue sliding)
+    if (b[r][c]?.owner === owner) return false;
+    moves.push({row:r,col:c});
+    return !b[r][c];
   };
 
   if (type === 'pawn') {
-    // Forward
     const r1 = row + dir;
     if (r1 >= 0 && r1 <= 7 && !b[r1][col]) {
       moves.push({row:r1, col});
-      // Double move from start
-      const startRow = color === 'white' ? 6 : 1;
-      if (row === startRow && !b[row+2*dir][col]) {
-        moves.push({row: row+2*dir, col});
-      }
+      const startRow = owner === 'me' ? 6 : 1;
+      if (row === startRow && !b[row+2*dir]?.[col]) moves.push({row:row+2*dir,col});
     }
-    // Captures
     [-1,1].forEach(dc => {
-      const r = row+dir, c = col+dc;
-      if (r>=0&&r<=7&&c>=0&&c<=7&&b[r][c]&&b[r][c].color===opp) moves.push({row:r,col:c});
+      const r=row+dir, c2=col+dc;
+      if (r>=0&&r<=7&&c2>=0&&c2<=7&&b[r][c2]?.owner===opp) moves.push({row:r,col:c2});
     });
   }
-
   if (type === 'knight') {
-    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>addIfValid(row+dr,col+dc));
+    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>add(row+dr,col+dc));
   }
-
-  if (type === 'bishop' || type === 'queen') {
-    [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([dr,dc])=>{
-      let r=row+dr, c=col+dc;
-      while(r>=0&&r<=7&&c>=0&&c<=7) { if(!addIfValid(r,c)) break; r+=dr; c+=dc; }
-    });
+  if (type === 'bishop'||type==='queen') {
+    [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([dr,dc])=>{let r=row+dr,c=col+dc;while(r>=0&&r<=7&&c>=0&&c<=7){if(!add(r,c))break;r+=dr;c+=dc;}});
   }
-
-  if (type === 'rook' || type === 'queen') {
-    [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{
-      let r=row+dr, c=col+dc;
-      while(r>=0&&r<=7&&c>=0&&c<=7) { if(!addIfValid(r,c)) break; r+=dr; c+=dc; }
-    });
+  if (type === 'rook'||type==='queen') {
+    [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{let r=row+dr,c=col+dc;while(r>=0&&r<=7&&c>=0&&c<=7){if(!add(r,c))break;r+=dr;c+=dc;}});
   }
-
   if (type === 'king') {
-    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>addIfValid(row+dr,col+dc));
+    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>add(row+dr,col+dc));
   }
-
   return moves;
 }
 
-function isInCheckState(color, b) {
+function isKingInCheck(owner, b) {
   b = b || board;
-  const kingPos = findKingOnBoard(color, b);
-  if (!kingPos) return false;
-  const opp = color === 'white' ? 'black' : 'white';
+  const kp = findKingOnBoard(owner, b);
+  if (!kp) return false;
+  const opp = owner === 'me' ? 'opp' : 'me';
   for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
-    const p = b[r][c];
-    if (p && p.color === opp) {
-      const moves = getPseudoMoves(r, c, b);
-      if (moves.some(m=>m.row===kingPos.row&&m.col===kingPos.col)) return true;
+    if (b[r][c]?.owner === opp) {
+      if (getPseudo(r, c, b).some(m=>m.row===kp.row&&m.col===kp.col)) return true;
     }
   }
   return false;
 }
 
-function findKing(color) { return findKingOnBoard(color, board); }
-function findKingOnBoard(color, b) {
+function findKing(owner)             { return findKingOnBoard(owner, board); }
+function findKingOnBoard(owner, b) {
   for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
-    if (b[r][c]&&b[r][c].color===color&&b[r][c].type==='king') return {row:r,col:c};
+    const p = b[r][c];
+    if (p?.owner===owner && PIECE_TYPE[p.col]==='king') return {row:r,col:c};
   }
   return null;
 }
 
-function getLegalMoves(row, col) {
-  const piece = board[row][col];
-  if (!piece) return [];
-  const pseudo = getPseudoMoves(row, col);
+function getLegal(row, col) {
+  const pseudo = getPseudo(row, col);
+  const piece  = board[row][col];
   return pseudo.filter(m => {
-    // Simulate move
     const nb = board.map(r=>r.map(c=>c?{...c}:null));
     nb[m.row][m.col] = nb[row][col];
     nb[row][col] = null;
-    return !isInCheckState(piece.color, nb);
+    return !isKingInCheck(piece.owner, nb);
   });
 }
 
-function hasAnyLegalMove(color) {
+function hasAnyLegal(owner) {
   for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
-    if (board[r][c]&&board[r][c].color===color) {
-      if (getLegalMoves(r,c).length > 0) return true;
-    }
+    if (board[r][c]?.owner===owner && getLegal(r,c).length>0) return true;
   }
   return false;
 }
 
-// ═══════════════════════════════════════════════
-//  EXECUTE MOVE
-// ═══════════════════════════════════════════════
-async function executeMove(fromRow, fromCol, toRow, toCol) {
-  const piece = board[fromRow][fromCol];
-  const captured = board[toRow][toCol];
-
-  if (captured) {
-    capturedByMe.push({...captured});
-    // Mark piece as 'died' in DB for opponent
-    playCapture();
-  } else {
-    playMove();
-  }
-
-  // Move on board
-  board[toRow][toCol] = {...piece, moved: true};
-  board[fromRow][fromCol] = null;
-
-  lastMove = { from:{row:fromRow,col:fromCol}, to:{row:toRow,col:toCol} };
-  moveHistory.push(moveNotation(piece, fromRow, fromCol, toRow, toCol, captured));
-
-  // Pawn promotion
-  if (piece.type === 'pawn') {
-    const promoteRow = piece.color === 'white' ? 0 : 7;
-    if (toRow === promoteRow) {
-      board[toRow][toCol] = {...piece, type:'queen', moved:true};
-    }
-  }
-
-  // Check/checkmate detection
-  const oppColor = myColor === 'white' ? 'black' : 'white';
-  inCheck = isInCheckState(oppColor) ? oppColor : null;
-
-  if (inCheck) {
-    if (!hasAnyLegalMove(oppColor)) {
-      // Checkmate!
-      renderBoard();
-      await writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, 'checkmate');
-      await endMatch('win');
-      return;
-    }
-    showCheckAlert();
-    playCheck();
-  }
-
-  currentTurn = oppColor;
-  renderBoard();
-
-  // Write move to Supabase
-  await writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, null);
-  myMoveNum++;
-}
-
-// ═══════════════════════════════════════════════
-//  DB WRITE (single move)
-// ═══════════════════════════════════════════════
-async function writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, special) {
-  const newSq    = sqNum(toRow, toCol);
-  const fromSq   = sqNum(fromRow, fromCol);
-  const update   = {};
-
-  // تحديث موضع القطعة
-  update[piece.id] = newSq;
-
-  // القطعة المأكولة → died
-  if (captured) {
-    update[captured.id] = 'died';
-  }
-
-  // move-message: كل بيانات الحركة بالتفصيل للاعب الثاني
-  const moveMsg = JSON.stringify({
-    turn:     currentTurn,          // دور مين دلوقتي (لاعب الانتظار)
-    pieceId:  piece.id,             // اسم القطعة اللي اتحركت
-    from:     fromSq,               // المربع اللي جت منه
-    to:       newSq,                // المربع اللي راحت ليه
-    captured: captured ? captured.id : null,
-    special:  special || null,
-    ts:       Date.now()
-  });
-  update['match-message'] = moveMsg;
-
-  // اكتب في صفك أنت فقط — الخصم يقرأ من صفك
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify(update) });
-}
-
-// ═══════════════════════════════════════════════
-//  POLL FOR OPPONENT MOVE
-// ═══════════════════════════════════════════════
-let lastMoveTs = 0;
-
-function startMovePoll() {
-  clearInterval(movePollInterval);
-  movePollInterval = setInterval(pollForMove, 1000);
-}
-
-async function pollForMove() {
-  if (!isInMatch || !opponent) return;
-  if (currentTurn === myColor) return; // my turn, no need to poll
-
-  const wCols = Object.keys(PIECE_IDS.white).map(id=>'w'+id);
-  const bCols = Object.keys(PIECE_IDS.black).map(id=>'b'+id);
-  const cols = wCols.concat(bCols).join(',');
-  // اقرأ من صف الخصم — هو كتب حركته في صفه
-  const row = await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}&select=match-message,${cols},end-result`, { method:'GET' });
-  if (!row || !row[0]) return;
-
-  // Check if opponent ended match
-  if (row[0]['end-result']) {
-    const result = row[0]['end-result'];
-    await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`, { method:'PATCH', body: JSON.stringify({'end-result':''}) });
-    clearInterval(movePollInterval);
-    await endMatch(result);
-    return;
-  }
-
-  // تحقق من وجود حركة جديدة عبر match-message
-  const msgStr = row[0]['match-message'];
-  if (!msgStr) return;
-  let msg;
-  try { msg = JSON.parse(msgStr); } catch(e) { return; }
-
-  // تجاهل رسائل الدردشة
-  if (!msg.ts || !msg.pieceId) return;
-  // تجاهل الرسائل القديمة
-  if (msg.ts <= lastMoveTs) return;
-  // الرسالة تقول إن الدور انتقل لي
-  if (msg.turn !== myColor) return;
-
-  lastMoveTs = msg.ts;
-
-  // ── إعادة بناء الـ board من أعمدة DB ──
-  board = boardFromDB(row[0]);
-
-  // ── تحديث lastMove للتظليل الأصفر ──
-  const fromPos = sqFromNum(msg.from);
-  const toPos   = sqFromNum(msg.to);
-  lastMove = { from: fromPos, to: toPos };
-
-  // ── تتبع المأكولات ──
-  if (msg.captured) {
-    const captColor = msg.captured.startsWith('w') ? 'white' : 'black';
-    const baseName  = msg.captured.slice(1);
-    const captType  = (PIECE_IDS[captColor][baseName] || {type:'pawn'}).type;
-    if (captColor === myColor) capturedByOpp.push({ color: captColor, type: captType });
-    else                       capturedByMe.push({ color: captColor, type: captType });
-    playCapture();
-  } else {
-    playMove();
-  }
-
-  currentTurn = myColor;
-
-  // ── كش مات ──
-  if (msg.special === 'checkmate') {
-    renderBoard();
-    await endMatch('lose');
-    return;
-  }
-
-  // ── كش ملك ──
-  inCheck = isInCheckState(myColor) ? myColor : null;
-  if (inCheck) {
-    showCheckAlert();
-    playCheck();
-  }
-
-  renderBoard();
-}
-
-// ═══════════════════════════════════════════════
-//  MOVE NOTATION
-// ═══════════════════════════════════════════════
-function moveNotation(piece, fr, fc, tr, tc, captured) {
-  const typeAbbr = {king:'K',queen:'Q',rook:'R',bishop:'B',knight:'N',pawn:''};
-  const from = COL_LETTER[fc]+(8-fr);
-  const to   = COL_LETTER[tc]+(8-tr);
-  return typeAbbr[piece.type] + from + (captured?'x':'→') + to;
-}
-
-// ═══════════════════════════════════════════════
-//  CLOCK
-// ═══════════════════════════════════════════════
-function updateClock() {
-  const elapsed = Math.floor((Date.now() - matchStartTime)/1000);
-  const m = Math.floor(elapsed/60).toString().padStart(2,'0');
-  const s = (elapsed%60).toString().padStart(2,'0');
-  document.getElementById('match-clock').textContent = `${m}:${s}`;
-}
-
-// ═══════════════════════════════════════════════
-//  CHECK ALERT
-// ═══════════════════════════════════════════════
-function showCheckAlert() {
-  const el = document.getElementById('check-alert');
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  CHAT
-// ═══════════════════════════════════════════════
-function startChatPolling() {
-  clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(async () => {
-    if (!isInMatch || !opponent) return;
-    // الدردشة تُقرأ من صف الخصم في عمود chat-message
-    const row = await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}&select=chat-message`, { method:'GET' });
-    if (!row || !row[0]) return;
-    const msgStr = row[0]['chat-message'];
-    if (!msgStr) return;
-    try {
-      const parsed = JSON.parse(msgStr);
-      if (parsed.ts && parsed.ts > lastChatTs) {
-        lastChatTs = parsed.ts;
-        appendChat(opponent.name, parsed.text, false);
-      }
-    } catch(e) {}
-  }, 1000);
-}
-
+// ═══════════════════════════════════════════════════════════
 async function sendChat() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  const ts = Date.now();
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  const ts  = Date.now();
   lastChatTs = ts;
-  // اكتب في عمود chat-message في صفي أنا فقط (الخصم يقرأ منه)
-  const msg = JSON.stringify({ ts, text });
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({'chat-message': msg}) });
-  appendChat('أنا', text, true);
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({'chat-message':JSON.stringify({ts,text:txt})})});
+  appendChat('أنا', txt, true);
 }
-
+async function pollChat() {
+  if (!isInMatch||!opponent) return;
+  const r = await sb(`/rest/v1/chess?id=eq.${opponent.id}&select=chat-message`,{method:'GET'});
+  if (!r||!r[0]||!r[0]['chat-message']) return;
+  try {
+    const p = JSON.parse(r[0]['chat-message']);
+    if (p.ts > lastChatTs) { lastChatTs = p.ts; appendChat(opponent.name, p.text, false); }
+  } catch {}
+}
 function appendChat(name, text, mine) {
   const el = document.getElementById('chat-msgs');
-  const div = document.createElement('div');
-  div.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
-  if (!mine) div.innerHTML = `<div style="font-size:10px;opacity:0.6;margin-bottom:2px">${name}</div>`;
-  div.appendChild(document.createTextNode(text));
-  el.appendChild(div);
+  const d  = document.createElement('div');
+  d.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
+  if (!mine) d.innerHTML = `<div style="font-size:10px;opacity:.6;margin-bottom:2px">${name}</div>`;
+  d.appendChild(document.createTextNode(text));
+  el.appendChild(d);
   el.scrollTop = el.scrollHeight;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════════
+function updateClock() {
+  const e = Math.floor((Date.now()-matchStartTime)/1000);
+  document.getElementById('match-clock').textContent =
+    String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CHECK ALERT
+// ═══════════════════════════════════════════════════════════
+function showCheckAlert() {
+  const el = document.getElementById('check-alert');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════════════════
 //  END MATCH
-// ═══════════════════════════════════════════════
-async function endMatch(reason) {
+// ═══════════════════════════════════════════════════════════
+function clearAll() {
   isInMatch = false;
-  clearInterval(matchClockInterval);
+  clearInterval(pollInterval);
+  clearInterval(clockInterval);
   clearInterval(chatPollInterval);
-  clearInterval(movePollInterval);
+  clearInterval(searchPollInterval);
+  clearInterval(searchTimerInterval);
+}
 
-  let levelDelta = 0;
-  let result = reason; // 'win'|'lose'|'draw'
-
-  if (reason === 'win') levelDelta = 3;
-  else if (reason === 'lose') levelDelta = -2;
-  else levelDelta = 0;
-
-  const newLevel = Math.max(0, (currentUser.level || 0) + levelDelta);
-
-  // Update system table (main points)
-  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
-    method:'PATCH', body: JSON.stringify({ level: newLevel })
-  });
+async function endMatch(reason) {
+  clearAll();
+  const delta = reason==='win'?3:reason==='lose'?-2:0;
+  const newLevel = Math.max(0, (currentUser.level||0)+delta);
   currentUser.level = newLevel;
   localStorage.setItem('chess_user', JSON.stringify(currentUser));
-
-  // Reset chess row
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, {
-    method:'PATCH', body: JSON.stringify({ match:'off', 'match-message':'' })
-  });
-
-  // Notify opponent if I won (they need to know to show 'lose')
-  if (opponent && reason === 'win') {
-    await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`, {
-      method:'PATCH', body: JSON.stringify({ 'end-result':'lose', match:'off' })
-    });
-  }
-
-  showResult(result);
+  await sb(`/rest/v1/system?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({level:newLevel})});
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'off','match-message':''})});
 }
 
 function showResult(result) {
-  const overlay = document.getElementById('win-overlay');
-  overlay.classList.add('show');
+  const ov = document.getElementById('win-overlay');
+  ov.classList.add('show');
   const icon = document.getElementById('win-icon');
-
-  if (result === 'win') {
-    icon.innerHTML = '♛';
-    icon.className = 'win-icon trophy';
-    document.getElementById('win-title').textContent = 'كش ملك! فزت! 🎉';
-    document.getElementById('win-sub').textContent = 'أحسنت! حصلت على +3 نقاط في لوحة الصدارة';
-    playWin();
-  } else if (result === 'lose') {
-    icon.innerHTML = '♚';
-    icon.className = 'win-icon lose';
-    document.getElementById('win-title').textContent = 'خسرت المباراة 😔';
-    document.getElementById('win-sub').textContent = 'لا تستسلم! -2 نقطة من لوحة الصدارة';
-    playLose();
+  if (result==='win') {
+    icon.innerHTML='♛'; icon.className='win-icon trophy';
+    document.getElementById('win-title').textContent='كش ملك! فزت! 🎉';
+    document.getElementById('win-sub').textContent='+3 نقاط في لوحة الصدارة';
+    playWin(); endMatch('win');
+  } else if (result==='lose') {
+    icon.innerHTML='♚'; icon.className='win-icon lose';
+    document.getElementById('win-title').textContent='خسرت المباراة 😔';
+    document.getElementById('win-sub').textContent='-2 نقطة من لوحة الصدارة';
+    playLose(); endMatch('lose');
   } else {
-    icon.innerHTML = '♟';
-    icon.className = 'win-icon';
-    document.getElementById('win-title').textContent = 'تعادل!';
-    document.getElementById('win-sub').textContent = 'لعبة جيدة! لا تغيير في النقاط';
+    icon.innerHTML='♟'; icon.className='win-icon';
+    document.getElementById('win-title').textContent='تعادل!';
+    document.getElementById('win-sub').textContent='لا تغيير في النقاط';
+    endMatch('draw');
   }
 }
 
 function closeMatch() {
   document.getElementById('win-overlay').classList.remove('show');
-  showPage('home');
-  showHome();
+  showPage('home'); showHome();
 }
 
 async function confirmForfeit() {
   if (!confirm('هل تريد الانسحاب؟ ستُعدّ خاسراً.')) return;
-  if (!isInMatch || !opponent) return;
-  isInMatch = false;
-  clearInterval(matchClockInterval); clearInterval(chatPollInterval); clearInterval(movePollInterval);
-  const newLevel = Math.max(0, (currentUser.level||0) - 2);
-  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ level: newLevel }) });
-  currentUser.level = newLevel;
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match:'off','match-message':'' }) });
-  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`, { method:'PATCH', body: JSON.stringify({ 'end-result':'win', match:'off' }) });
+  if (!isInMatch||!opponent) return;
+  // أعلم الخصم أنه فاز
+  await sb(`/rest/v1/chess?id=eq.${opponent.id}`,{method:'PATCH',body:JSON.stringify({'match-message':'END:lose','match':'off'})});
   showResult('lose');
 }
 
-// Browser back intercept
 window.addEventListener('popstate', () => {
-  if (isInMatch) {
-    history.pushState(null,'',window.location.href);
-    if (confirm('أنت في مباراة! الرجوع سيُعدّك خاسراً.')) confirmForfeit();
-  }
+  if (isInMatch) { history.pushState(null,'',window.location.href); if(confirm('أنت في مباراة! الرجوع سيُعدّك خاسراً.')) confirmForfeit(); }
 });
 
-// ═══════════════════════════════════════════════
-//  SOUND FX
-// ═══════════════════════════════════════════════
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
+// ═══════════════════════════════════════════════════════════
+//  SOUND
+// ═══════════════════════════════════════════════════════════
 let audioCtx = null;
-function getAC() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
-
-function playTone(freq, type, dur, vol=0.3) {
-  try {
-    const ctx = getAC();
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.connect(g); g.connect(ctx.destination);
-    osc.type = type; osc.frequency.value = freq;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
-    osc.start(); osc.stop(ctx.currentTime+dur);
-  } catch(e){}
-}
-
+function getAC() { if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function playTone(f,t,d,v=0.3){try{const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d);o.start();o.stop(ctx.currentTime+d);}catch{}}
 function playMove()    { playTone(440,'sine',0.08,0.15); }
 function playCapture() { playTone(300,'sawtooth',0.15,0.2); }
-function playCheck()   { [440,0,0.1],[600,0.12,0.12],[800,0.26,0.18].forEach(([f,s,d])=>setTimeout(()=>playTone(f,'sine',d,0.25),s*1000)); }
-function playWin()     { [[520,.0,.15],[660,.16,.15],[880,.33,.25]].forEach(([f,s,d])=>setTimeout(()=>playTone(f,'sine',d,0.3),s*1000)); }
-function playLose()    { [[300,.0,.18],[220,.19,.22]].forEach(([f,s,d])=>setTimeout(()=>playTone(f,'sawtooth',d,0.2),s*1000)); }
+function playCheck()   { [[440,0],[600,.12],[800,.26]].forEach(([f,s])=>setTimeout(()=>playTone(f,'sine',.18,.25),s*1000)); }
+function playWin()     { [[520,0],[660,.16],[880,.33]].forEach(([f,s])=>setTimeout(()=>playTone(f,'sine',.25,.3),s*1000)); }
+function playLose()    { [[300,0],[220,.19]].forEach(([f,s])=>setTimeout(()=>playTone(f,'sawtooth',.22,.2),s*1000)); }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 (function init() {
   const saved = localStorage.getItem('chess_user');
-  if (saved) {
-    try { currentUser = JSON.parse(saved); showHome(); return; } catch(e){}
-  }
+  if (saved) { try { currentUser = JSON.parse(saved); showHome(); return; } catch {} }
   showPage('auth');
 })();
 </script>
