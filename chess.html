@@ -939,36 +939,48 @@ async function startSearch() {
     }
   }, 1000);
 
-  searchPollInterval = setInterval(matchMake, 3000);
+  searchPollInterval = setInterval(matchMake, 1000);
 }
 
 async function matchMake() {
-  const meData = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=match`, { method:'GET' });
+  const meData = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=match,role`, { method:'GET' });
   if (!meData || !meData[0]) return;
   const myMatch = meData[0].match;
+  const myRole  = meData[0].role;
 
-  if (myMatch && myMatch !== 'searching' && myMatch !== 'off') {
+  // اللاعب وجد خصم وكُتب له match + role → ابدأ المباراة
+  if (myMatch && myMatch !== 'searching' && myMatch !== 'off' && myRole) {
     clearInterval(searchPollInterval); clearInterval(searchTimerInterval);
     const oppId = myMatch;
     const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,level,avatar_url`, { method:'GET' });
-    if (opp && opp[0]) startMatch(opp[0]);
+    if (opp && opp[0]) startMatch(opp[0], myRole);
     return;
   }
 
+  // ما زلت searching → حاول التزاوج
   const searchers = await sbFetch('/rest/v1/chess?match=eq.searching&select=id,name&order=id.asc', { method:'GET' });
   if (!searchers) return;
   const myIdx = searchers.findIndex(u => u.id === currentUser.id);
   if (myIdx === -1 || myIdx % 2 !== 0) return;
-  const partner = searchers[myIdx+1];
+  const partner = searchers[myIdx + 1];
   if (!partner) return;
 
   clearInterval(searchPollInterval); clearInterval(searchTimerInterval);
-  // I am white (smaller id = went first), partner is black
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({ match: String(partner.id) }) });
-  await sbFetch(`/rest/v1/chess?id=eq.${partner.id}`, { method:'PATCH', body: JSON.stringify({ match: String(currentUser.id) }) });
+
+  // اختر عشوائياً من يبدأ واكتب ID البادئ في role لكليهما
+  const starterID = Math.random() < 0.5 ? String(currentUser.id) : String(partner.id);
+
+  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, {
+    method:'PATCH',
+    body: JSON.stringify({ match: String(partner.id), role: starterID })
+  });
+  await sbFetch(`/rest/v1/chess?id=eq.${partner.id}`, {
+    method:'PATCH',
+    body: JSON.stringify({ match: String(currentUser.id), role: starterID })
+  });
 
   const opp = await sbFetch(`/rest/v1/system?id=eq.${partner.id}&select=id,name,country,level,avatar_url`, { method:'GET' });
-  if (opp && opp[0]) startMatch(opp[0]);
+  if (opp && opp[0]) startMatch(opp[0], starterID);
 }
 
 async function cancelSearch() {
@@ -987,7 +999,7 @@ function stopSearchUI() {
 // ═══════════════════════════════════════════════
 //  MATCH START
 // ═══════════════════════════════════════════════
-async function startMatch(opp) {
+async function startMatch(opp, starterID) {
   opponent = opp;
   isInMatch = true;
   matchStartTime = Date.now();
@@ -997,14 +1009,11 @@ async function startMatch(opp) {
   moveHistory = [];
   myMoveNum = 0;
 
-  // Determine color: the one who paired (smaller id for white logic)
-  // Check chess row to see who initiated (match value = opponent's id means we set it, so we are white)
-  const myRow = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=match`, { method:'GET' });
-  // If match === partner.id means WE set it → we are WHITE
-  // otherwise BLACK
-  myColor = (myRow && myRow[0] && myRow[0].match === String(opp.id)) ? 'white' : 'black';
+  // starterID = ID اللاعب الأبيض (المحدد عشوائياً في role)
+  // لو starterID = ID بتاعي → أنا أبيض (أبدأ)، غير كده → أنا أسود
+  myColor = (String(starterID) === String(currentUser.id)) ? 'white' : 'black';
 
-  // Write initial board to DB (only white player writes it)
+  // الأبيض فقط هو اللي يكتب الـ board الأولي في DB
   if (myColor === 'white') {
     await writeInitialBoard();
   }
@@ -1393,7 +1402,7 @@ let lastMoveTs = 0;
 
 function startMovePoll() {
   clearInterval(movePollInterval);
-  movePollInterval = setInterval(pollForMove, 1500);
+  movePollInterval = setInterval(pollForMove, 1000);
 }
 
 async function pollForMove() {
@@ -1505,7 +1514,7 @@ function startChatPolling() {
         appendChat(opponent.name, text, false);
       }
     }
-  }, 1500);
+  }, 1000);
 }
 
 async function sendChat() {
