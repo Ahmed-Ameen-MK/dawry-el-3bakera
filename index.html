@@ -2964,27 +2964,21 @@ async function submitLegend() {
     msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>يرجى إدخال رابط صحيح يبدأ بـ https://</span>';
     return;
   }
-  const userId = currentUser ? currentUser.id : null;
-  const userName = currentUser ? currentUser.name : 'زائر';
-  const userEmail = currentUser ? currentUser.email : '';
+  if (!currentUser) {
+    msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>يجب تسجيل الدخول أولاً</span>';
+    return;
+  }
   msgEl.innerHTML = '<span style="color:var(--blue)"><i class="fa-solid fa-spinner fa-spin" style="margin-left:4px"></i>جاري الإرسال...</span>';
-  try {
-    await sbFetch('/rest/v1/web-sharing', {
-      method: 'POST',
-      body: JSON.stringify({
-        user_id: userId,
-        user_name: userName,
-        user_email: userEmail,
-        channel_url: channelUrl,
-        status: 'pending',
-        submitted_at: new Date().toISOString()
-      })
-    });
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ 'web-sharing': channelUrl })
+  });
+  if (res && !res.__error) {
     msgEl.innerHTML = '<span style="color:var(--green)"><i class="fa-solid fa-circle-check" style="margin-left:4px"></i>تم الإرسال! سيراجع فريقنا مشاركة الموقع في قناتك، ثم ستحصل على هديتك قريباً.</span>';
     setTimeout(() => {
       document.getElementById('modal-legend').classList.remove('show');
     }, 3500);
-  } catch(e) {
+  } else {
     msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>حدث خطأ، يرجى المحاولة مرة أخرى</span>';
   }
 }
