@@ -1079,7 +1079,7 @@
     font-size: 13px; color: var(--gold); text-align: right; line-height: 1.6;
   }
   .legend-tips i { margin-left: 5px; }
-
+</style>
 </head>
 <body>
 
@@ -1606,8 +1606,13 @@
     <div id="legend-msg" style="margin-top:10px;text-align:center;font-size:13px"></div>
   </div>
 </div>
-<script src="questions.js"></script>
 <script>
+// إذا لم يتم تحميل questions.js نستخدم مصفوفة فارغة لتجنب الأعطال
+if (typeof QUESTIONS === 'undefined') { var QUESTIONS = []; }
+</script>
+<script src="questions.js" onerror="window.QUESTIONS = window.QUESTIONS || [];"></script>
+<script>
+if (typeof QUESTIONS === 'undefined') { var QUESTIONS = []; }
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
 
