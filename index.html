@@ -797,168 +797,6 @@
   .lang-flag { font-size: 24px; line-height: 1; }
   .lang-name { font-size: 12px; }
 
-  /* ── PLAY BUTTON WRAPPER ── */
-  .play-btn-wrapper {
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius);
-    padding: 24px 20px 20px;
-    background: linear-gradient(135deg, rgba(0,113,227,0.03) 0%, rgba(255,255,255,0.8) 100%);
-    box-shadow: 0 4px 24px rgba(0,113,227,0.08);
-    margin-top: 8px;
-  }
-  .play-btn-wrapper .live-stats-row { margin-top: 0; margin-bottom: 16px; }
-  .play-btn-wrapper .btn-play {
-    width: 100% !important;
-    border-radius: var(--radius-sm) !important;
-    padding: 18px 24px !important;
-    font-size: 19px !important;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(0,113,227,0.3) !important;
-  }
-  .play-btn-wrapper .offline-games-grid { margin-top: 16px; }
-
-  /* ── GIFTS SECTION ── */
-  .gifts-section {
-    margin-top: 0;
-    padding: 40px 0 32px;
-  }
-  .gifts-divider {
-    border: none;
-    border-top: 1.5px solid var(--line);
-    margin-bottom: 32px;
-  }
-  .gifts-title-row {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 8px;
-  }
-  .gifts-title-row .icon-wrap {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: linear-gradient(135deg, #fdf6e3, #fef9ee);
-    border: 1px solid rgba(181,136,46,0.2);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--gold); font-size: 16px;
-  }
-  .gifts-title-row h2 {
-    font-size: 20px; font-weight: 700; color: var(--ink);
-    letter-spacing: -0.3px;
-  }
-  .gifts-subtitle {
-    font-size: 14px; color: var(--ink3); margin-bottom: 24px;
-  }
-  .gift-card {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 14px;
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    cursor: pointer;
-    transition: all 0.18s;
-    position: relative;
-    overflow: hidden;
-  }
-  .gift-card:hover {
-    border-color: var(--gold);
-    box-shadow: 0 4px 24px rgba(181,136,46,0.12);
-    transform: translateY(-1px);
-  }
-  .gift-card .gift-icon {
-    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-  }
-  .gift-card .gift-body { flex: 1; }
-  .gift-card .gift-name {
-    font-size: 16px; font-weight: 700; color: var(--ink);
-    margin-bottom: 4px;
-  }
-  .gift-card .gift-desc {
-    font-size: 13px; color: var(--ink3);
-    line-height: 1.5;
-  }
-  .gift-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--gold-bg); border: 1px solid rgba(181,136,46,0.25);
-    color: var(--gold); border-radius: 20px;
-    padding: 3px 10px; font-size: 12px; font-weight: 700;
-    white-space: nowrap; flex-shrink: 0;
-  }
-  /* Legend card */
-  .gift-card.legend-card {
-    background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
-    border-color: rgba(181,136,46,0.3);
-  }
-  .gift-card.legend-card .gift-name { color: #fff; }
-  .gift-card.legend-card .gift-desc { color: rgba(255,255,255,0.55); }
-  .gift-card.legend-card:hover { border-color: var(--gold); }
-  /* Flicker animation for legend */
-  @keyframes flicker {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.55; }
-  }
-  .legend-flicker { animation: flicker 1.4s ease-in-out infinite; }
-  /* Flutter wings badge */
-  @keyframes flutter {
-    0%,100% { transform: scaleX(1) rotate(0deg); }
-    25% { transform: scaleX(1.15) rotate(-3deg); }
-    75% { transform: scaleX(0.88) rotate(3deg); }
-  }
-  .legend-wings { display:inline-block; animation: flutter 0.8s ease-in-out infinite; }
-
-  /* ── MODAL OVERLAY ── */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 200; display: none;
-    align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 22px; padding: 36px 32px;
-    max-width: 420px; width: 100%;
-    box-shadow: var(--shadow-lg);
-    animation: pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .modal-box h3 {
-    font-size: 20px; font-weight: 700; color: var(--ink);
-    margin-bottom: 10px; letter-spacing: -0.3px;
-  }
-  .modal-box p { font-size: 14px; color: var(--ink3); line-height: 1.7; margin-bottom: 16px; }
-  .modal-steps {
-    background: var(--bg2); border: 1px solid var(--line);
-    border-radius: var(--radius-sm); padding: 16px 18px;
-    margin-bottom: 20px;
-  }
-  .modal-step {
-    display: flex; align-items: flex-start; gap: 12px;
-    margin-bottom: 12px;
-  }
-  .modal-step:last-child { margin-bottom: 0; }
-  .step-num {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: var(--blue); color: #fff;
-    font-size: 12px; font-weight: 700; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .step-text { font-size: 14px; color: var(--ink2); line-height: 1.5; }
-  .modal-close {
-    position: absolute; top: 16px; left: 16px;
-    background: var(--bg2); border: 1px solid var(--line);
-    border-radius: 50%; width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.15s; color: var(--ink3); font-size: 13px;
-  }
-  .modal-close:hover { background: var(--bg3); color: var(--ink); }
-  .modal-box-wrap { position: relative; }
-
   /* Translation loading bar */
   .translate-status {
     margin-top: 12px;
@@ -988,13 +826,259 @@
     margin-top: 6px;
     overflow: hidden;
   }
-  .translate-progress-fill {
-    height: 100%;
-    background: var(--blue);
-    border-radius: 2px;
-    transition: width 0.3s ease;
-    width: 0%;
+  /* ── BIG PLAY BUTTON ── */
+  .btn-play-big {
+    width: 100%;
+    background: linear-gradient(135deg, var(--blue) 0%, #005bbf 100%);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 22px 28px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 6px 28px rgba(0,113,227,0.4);
+    position: relative;
+    overflow: hidden;
   }
+  .btn-play-big::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-play-big:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(0,113,227,0.5); }
+  .btn-play-big:active { transform: scale(0.99); }
+  .btn-play-big:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .play-btn-inner-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .play-btn-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 40px;
+    padding: 7px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    width: 100%;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  .play-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .play-stat-divider {
+    width: 1px; height: 14px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* ── GIFTS SECTION ── */
+  .gifts-section {
+    border-top: 1px solid var(--line);
+    margin-top: 32px;
+    padding: 40px 0 48px;
+  }
+  .gifts-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .gifts-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .gifts-header p {
+    font-size: 14px;
+    color: var(--ink3);
+  }
+  .gifts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 600px) {
+    .gifts-grid { grid-template-columns: 1fr; }
+  }
+  .gift-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .gift-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--blue);
+  }
+  .gift-card .gift-icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+    color: var(--blue);
+  }
+  .gift-card .gift-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .gift-card .gift-pts {
+    font-size: 12px;
+    color: var(--ink3);
+    font-weight: 500;
+  }
+  .gift-card .gift-badge {
+    display: inline-block;
+    background: var(--gold-bg);
+    color: var(--gold);
+    border: 1px solid rgba(181,136,46,0.3);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    margin-top: 8px;
+  }
+
+  /* Legend flicker badge */
+  .legend-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #b5882e, #f0c040);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 20px;
+    animation: legendFlicker 1.5s ease-in-out infinite;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(181,136,46,0.5);
+  }
+  @keyframes legendFlicker {
+    0%, 100% { opacity: 1; box-shadow: 0 2px 8px rgba(181,136,46,0.5); }
+    50% { opacity: 0.6; box-shadow: 0 2px 18px rgba(181,136,46,0.9); }
+  }
+  .gift-card.legend-card {
+    border-color: rgba(181,136,46,0.4);
+    background: linear-gradient(160deg, #fff 70%, #fdf6e3 100%);
+  }
+  .gift-card.legend-card:hover { border-color: var(--gold); }
+  .gift-card.legend-card .gift-icon { color: var(--gold); }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 36px 32px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 14px; left: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--bg2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 13px; color: var(--ink3);
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--bg3); color: var(--ink); }
+  .modal-icon {
+    font-size: 44px; text-align: center; margin-bottom: 14px; color: var(--blue);
+  }
+  .modal-icon.gold { color: var(--gold); }
+  .modal-title {
+    font-size: 20px; font-weight: 800; text-align: center;
+    color: var(--ink); margin-bottom: 8px; letter-spacing: -0.4px;
+  }
+  .modal-body {
+    font-size: 14px; color: var(--ink2); line-height: 1.7;
+    text-align: center; margin-bottom: 22px;
+  }
+  .modal-steps {
+    background: var(--bg2); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 16px 18px;
+    margin-bottom: 20px; text-align: right;
+  }
+  .modal-step {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--ink2); margin-bottom: 10px;
+  }
+  .modal-step:last-child { margin-bottom: 0; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--blue); color: #fff;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .btn-watch-ad {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #1d8348, #27ae60);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(29,131,72,0.35);
+  }
+  .btn-watch-ad:hover { transform: scale(1.02); }
+  .modal-tip {
+    font-size: 12px; color: var(--ink3); text-align: center; margin-top: 10px;
+  }
+
+  /* Legend submit form */
+  .legend-form-group { margin-bottom: 14px; text-align: right; }
+  .legend-form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; }
+  .legend-form-group input {
+    width: 100%; background: var(--bg2); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 11px 14px;
+    color: var(--ink); font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 14px; outline: none; transition: border-color 0.15s;
+  }
+  .legend-form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.12); }
+  .legend-tips {
+    background: var(--gold-bg); border: 1px solid rgba(181,136,46,0.3);
+    border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+    font-size: 13px; color: var(--gold); text-align: right; line-height: 1.6;
+  }
+  .legend-tips i { margin-left: 5px; }
 </style>
 </head>
 <body>
@@ -1154,7 +1238,7 @@
 
         <div class="play-section">
 
-          <!-- Searching animation ABOVE the play button -->
+          <!-- عنصر التحميل فوق الزر -->
           <div class="searching-anim" id="searching-anim">
             <div class="search-ring"></div>
             <div class="search-timer-text" id="search-text">جاري البحث عن خصم...</div>
@@ -1166,51 +1250,54 @@
               <i class="fa-solid fa-xmark"></i> إيقاف البحث
             </button>
           </div>
-          <div id="search-msg" style="text-align:center;margin-top:10px"></div>
 
-          <!-- PLAY BUTTON AREA: full width of both games -->
-          <div class="play-btn-wrapper" id="play-btn-wrapper">
-            <!-- Live Stats inside play area -->
-            <div class="live-stats-row" id="live-stats-row">
-              <div class="live-stat-pill green" id="searching-pill">
-                <span class="pulse-dot green-dot" id="searching-dot"></span>
-                <span id="searching-count">0</span> لاعب متاح للمنافسة
+          <!-- زر العب مباراة الكبير -->
+          <div style="text-align:center;margin-bottom:8px">
+            <button class="btn-play-big" id="play-btn" onclick="startSearch()">
+              <div class="play-btn-inner-top">
+                <i class="fa-solid fa-gamepad" style="font-size:22px;margin-left:10px"></i>
+                <span style="font-size:21px;font-weight:800;letter-spacing:-0.5px">العب مباراة</span>
               </div>
-              <div class="live-stat-pill green" id="matches-pill">
-                <span class="pulse-dot green-dot" id="matches-dot"></span>
-                <span id="matches-count">0</span> مباراة نشطة الآن
+              <div class="play-btn-stats" id="live-stats-row">
+                <div class="play-stat-item" id="searching-pill">
+                  <span class="pulse-dot green-dot" id="searching-dot"></span>
+                  <span id="searching-count">0</span> لاعب متاح
+                </div>
+                <div class="play-stat-divider"></div>
+                <div class="play-stat-item" id="matches-pill">
+                  <span class="pulse-dot green-dot" id="matches-dot"></span>
+                  <span id="matches-count">0</span> مباراة نشطة
+                </div>
               </div>
-            </div>
-
-            <button class="btn-play" id="play-btn" onclick="startSearch()">
-              <i class="fa-solid fa-gamepad"></i> العب مباراة
             </button>
-            <p class="play-subtitle">تحدّى الأسئلة مع أناس حقيقيين</p>
-
-            <!-- Offline Games INSIDE play button wrapper -->
-            <div class="offline-games-grid">
-              <a href="kanji-memory.html" class="offline-game-btn glass-card">
-                <div class="offline-game-icon"><i class="fa-solid fa-brain" style="font-size:28px;color:var(--blue)"></i></div>
-                <div class="offline-game-title">ذاكرة الكانجي</div>
-                <div class="offline-game-sub">تحدّ الذاكرة</div>
-                <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
-              </a>
-              <a href="sudoku.html" class="offline-game-btn glass-card">
-                <div class="offline-game-icon"><i class="fa-solid fa-hashtag" style="font-size:28px;color:var(--ink2)"></i></div>
-                <div class="offline-game-title">السودوكو</div>
-                <div class="offline-game-sub">ألعاب العباقرة</div>
-                <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
-              </a>
-            </div>
           </div>
 
+          <p class="play-subtitle">تحدّى الأسئلة مع أناس حقيقيين</p>
+
           <!-- Share Button -->
-          <div style="text-align:center;margin-top:14px">
+          <div style="text-align:center">
             <button class="btn-share" onclick="shareWebsite()">
               <i class="fa-solid fa-share-nodes"></i> شارك الموقع ليزداد عدد اللاعبين
             </button>
           </div>
 
+          <!-- Offline Games -->
+          <div class="offline-games-grid">
+            <a href="kanji-memory.html" class="offline-game-btn glass-card">
+              <div class="offline-game-icon"><i class="fa-solid fa-brain" style="font-size:28px;color:var(--blue)"></i></div>
+              <div class="offline-game-title">ذاكرة الكانجي</div>
+              <div class="offline-game-sub">تحدّ الذاكرة</div>
+              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+            </a>
+            <a href="sudoku.html" class="offline-game-btn glass-card">
+              <div class="offline-game-icon"><i class="fa-solid fa-table-cells" style="font-size:28px;color:var(--blue)"></i></div>
+              <div class="offline-game-title">السودوكو</div>
+              <div class="offline-game-sub">ألعاب العباقرة</div>
+              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+            </a>
+          </div>
+
+          <div id="search-msg" style="text-align:center;margin-top:10px"></div>
         </div>
       </div>
     </div>
@@ -1296,7 +1383,7 @@
           <h2>لوحة المتصدرين</h2>
         </div>
         <div style="margin-bottom:20px;position:relative">
-          <input type="text" id="lb-search" placeholder="🔍 ابحث عن لاعب..." oninput="filterLeaderboard()"
+          <input type="text" id="lb-search" placeholder="ابحث عن لاعب..." oninput="filterLeaderboard()"
             style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px 11px 40px;color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s,box-shadow 0.15s"
             onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(0,113,227,0.12)'"
             onblur="this.style.borderColor='';this.style.boxShadow=''">
@@ -1346,27 +1433,27 @@
           <p style="font-size:13px;color:var(--ink3);margin-bottom:4px">اختر لغة عرض الأسئلة وواجهة الموقع. سيتم ترجمة الأسئلة تلقائياً.</p>
           <div class="lang-grid" id="lang-grid">
             <button class="lang-btn active" onclick="setLanguage('ar')" id="lang-ar">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#00722a"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px"></i></span>
               <span class="lang-name">العربية</span>
             </button>
             <button class="lang-btn" onclick="setLanguage('en')" id="lang-en">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#0052a5"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-flag" style="font-size:22px;color:#3C3B6E"></i></span>
               <span class="lang-name">English</span>
             </button>
             <button class="lang-btn" onclick="setLanguage('fr')" id="lang-fr">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#0055a4"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-flag" style="font-size:22px;color:#002395"></i></span>
               <span class="lang-name">Français</span>
             </button>
             <button class="lang-btn" onclick="setLanguage('es')" id="lang-es">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#c60b1e"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-flag" style="font-size:22px;color:#AA151B"></i></span>
               <span class="lang-name">Español</span>
             </button>
             <button class="lang-btn" onclick="setLanguage('de')" id="lang-de">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#000"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-flag" style="font-size:22px;color:#000"></i></span>
               <span class="lang-name">Deutsch</span>
             </button>
             <button class="lang-btn" onclick="setLanguage('tr')" id="lang-tr">
-              <span class="lang-flag"><i class="fa-solid fa-globe" style="font-size:22px;color:#e30a17"></i></span>
+              <span class="lang-flag"><i class="fa-solid fa-flag" style="font-size:22px;color:#E30A17"></i></span>
               <span class="lang-name">Türkçe</span>
             </button>
           </div>
@@ -1395,144 +1482,130 @@
     </div>
   </div>
 
-</div><!-- /container -->
+</div>
 
-<!-- ══════════════════ GIFTS SECTION ══════════════════ -->
-<div class="container">
-  <div class="gifts-section" id="gifts-section">
-    <hr class="gifts-divider">
-    <div class="gifts-title-row">
-      <div class="icon-wrap"><i class="fa-solid fa-gift"></i></div>
-      <h2>الهدايا</h2>
+<!-- GIFTS SECTION (outside container, full width divider + section) -->
+<div style="max-width:860px;margin:0 auto;padding:0 24px">
+  <div class="gifts-section">
+    <div class="gifts-header">
+      <h2><i class="fa-solid fa-gift" style="color:var(--blue);margin-left:8px"></i> هدايا واربح نقاط صدارة</h2>
+      <p>أكمل المهام التالية واحصل على نقاط صدارة مجانية</p>
     </div>
-    <p class="gifts-subtitle">اكسب نقاط صدارة من خلال هذه المهام المميزة</p>
+    <div class="gifts-grid">
 
-    <!-- GIFT 1: Watch Ad -->
-    <div class="gift-card" onclick="openGiftAdModal()">
-      <div class="gift-icon" style="background:linear-gradient(135deg,#e8f4fd,#d0e8fa);color:#0071e3">
-        <i class="fa-solid fa-circle-play"></i>
+      <!-- هدية 1: مشاهدة إعلان -->
+      <div class="gift-card" onclick="openAdModal()">
+        <div class="gift-icon"><i class="fa-solid fa-play-circle"></i></div>
+        <div class="gift-title">شاهد إعلاناً واربح</div>
+        <div class="gift-pts"><i class="fa-solid fa-ranking-star" style="font-size:10px;margin-left:3px"></i> +1 نقطة صدارة</div>
+        <span class="gift-badge"><i class="fa-solid fa-bolt" style="font-size:9px;margin-left:3px"></i> سريع وسهل</span>
       </div>
-      <div class="gift-body">
-        <div class="gift-name">شاهد إعلاناً واربح</div>
-        <div class="gift-desc">شاهد إعلاناً قصيراً ثم ارجع للموقع لتحصل على مكافأتك</div>
-      </div>
-      <div class="gift-badge"><i class="fa-solid fa-ranking-star"></i> +1 نقطة</div>
-    </div>
 
-    <!-- GIFT 2: Share to 5 friends -->
-    <div class="gift-card" onclick="openGiftShareModal()">
-      <div class="gift-icon" style="background:linear-gradient(135deg,#e8fdf0,#c9f5dc);color:#1d8348">
-        <i class="fa-brands fa-whatsapp"></i>
+      <!-- هدية 2: شارك على واتساب -->
+      <div class="gift-card" onclick="openWhatsappModal()">
+        <div class="gift-icon"><i class="fa-brands fa-whatsapp" style="color:#25d366"></i></div>
+        <div class="gift-title">شارك لـ 5 أصدقاء على واتساب</div>
+        <div class="gift-pts"><i class="fa-solid fa-ranking-star" style="font-size:10px;margin-left:3px"></i> +5 نقاط صدارة</div>
+        <span class="gift-badge"><i class="fa-solid fa-users" style="font-size:9px;margin-left:3px"></i> مشاركة جماعية</span>
       </div>
-      <div class="gift-body">
-        <div class="gift-name">شارك مع 5 أصدقاء على واتساب</div>
-        <div class="gift-desc">أرسل الموقع لـ5 من أصدقائك على واتساب واربح نقاط صدارة</div>
-      </div>
-      <div class="gift-badge"><i class="fa-solid fa-ranking-star"></i> +5 نقاط</div>
-    </div>
 
-    <!-- GIFT 3: Legend - share to channel -->
-    <div class="gift-card legend-card" onclick="openGiftLegendModal()">
-      <div class="gift-icon" style="background:rgba(181,136,46,0.15);color:var(--gold)">
-        <span class="legend-wings"><i class="fa-solid fa-dragon"></i></span>
+      <!-- هدية 3: الأسطورة -->
+      <div class="gift-card legend-card" onclick="openLegendModal()">
+        <span class="legend-badge"><i class="fa-solid fa-fire" style="font-size:9px;margin-left:3px"></i> أسطورة</span>
+        <div class="gift-icon"><i class="fa-solid fa-crown"></i></div>
+        <div class="gift-title">شارك الموقع على قناتك</div>
+        <div class="gift-pts"><i class="fa-solid fa-ranking-star" style="font-size:10px;margin-left:3px"></i> 50 ~ 450 نقطة</div>
+        <span class="gift-badge" style="background:var(--gold-bg);color:var(--gold)"><i class="fa-solid fa-star" style="font-size:9px;margin-left:3px"></i> حسب عدد المتابعين</span>
       </div>
-      <div class="gift-body">
-        <div class="gift-name"><span class="legend-flicker"><i class="fa-solid fa-star" style="color:var(--gold);margin-left:4px"></i>الأسطورة</span></div>
-        <div class="gift-desc">شارك الموقع في قناة أو صفحة بأكثر من 100 متابع على أي منصة وارجع لتحصل على هديتك</div>
-      </div>
-      <div class="gift-badge" style="background:rgba(181,136,46,0.2);border-color:rgba(181,136,46,0.4)"><i class="fa-solid fa-ranking-star"></i> 50–450 نقطة</div>
+
     </div>
   </div>
 </div>
 
-<!-- ══════════════════ MODALS ══════════════════ -->
-
-<!-- Modal 1: Watch Ad -->
+<!-- MODAL: إعلان -->
 <div class="modal-overlay" id="modal-ad">
-  <div class="modal-box-wrap">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('modal-ad')"><i class="fa-solid fa-xmark"></i></button>
-      <div style="font-size:36px;margin-bottom:12px;color:var(--blue)"><i class="fa-solid fa-circle-play"></i></div>
-      <h3>شاهد إعلاناً واكسب نقطة صدارة</h3>
-      <p>اتبع الخطوات البسيطة التالية للحصول على نقطة صدارة مجانية:</p>
-      <div class="modal-steps">
-        <div class="modal-step">
-          <div class="step-num">1</div>
-          <div class="step-text">اضغط على زر <strong>"مشاهدة الإعلان"</strong> أدناه</div>
-        </div>
-        <div class="modal-step">
-          <div class="step-num">2</div>
-          <div class="step-text">شاهد الإعلان حتى النهاية في الصفحة التي ستنفتح</div>
-        </div>
-        <div class="modal-step">
-          <div class="step-num">3</div>
-          <div class="step-text">ارجع إلى هذا الموقع وستجد نقطة الصدارة قد أضيفت لحسابك تلقائياً</div>
-        </div>
-      </div>
-      <a href="https://nafezly.com/service/69231?ref=69f507b3714b4" target="_blank" rel="noopener"
-        class="btn btn-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:var(--radius-sm);padding:13px;">
-        <i class="fa-solid fa-circle-play"></i> مشاهدة الإعلان
-      </a>
+  <div class="modal-box">
+    <div class="modal-close" onclick="document.getElementById('modal-ad').classList.remove('show')">
+      <i class="fa-solid fa-xmark"></i>
     </div>
+    <div class="modal-icon"><i class="fa-solid fa-tv"></i></div>
+    <div class="modal-title">اكسب نقطة صدارة بمشاهدة إعلان</div>
+    <div class="modal-steps">
+      <div class="modal-step">
+        <span class="step-num">١</span>
+        <span>اضغط على زر "مشاهدة الإعلان" بالأسفل</span>
+      </div>
+      <div class="modal-step">
+        <span class="step-num">٢</span>
+        <span>شاهد الإعلان حتى النهاية في الصفحة التي ستفتح</span>
+      </div>
+      <div class="modal-step">
+        <span class="step-num">٣</span>
+        <span>ارجع لهذا الموقع وستجد نقطتك قد أضيفت تلقائياً</span>
+      </div>
+    </div>
+    <a href="https://nafezly.com/service/69231?ref=69f507b3714b4" target="_blank" class="btn-watch-ad" onclick="document.getElementById('modal-ad').classList.remove('show')">
+      <i class="fa-solid fa-play"></i> مشاهدة الإعلان الآن
+    </a>
+    <p class="modal-tip"><i class="fa-solid fa-circle-info" style="margin-left:4px"></i> بعد مشاهدة الإعلان أعد فتح الموقع لتظهر نقطتك</p>
   </div>
 </div>
 
-<!-- Modal 2: Share WhatsApp -->
-<div class="modal-overlay" id="modal-share">
-  <div class="modal-box-wrap">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('modal-share')"><i class="fa-solid fa-xmark"></i></button>
-      <div style="font-size:36px;margin-bottom:12px;color:#1d8348"><i class="fa-brands fa-whatsapp"></i></div>
-      <h3>شارك مع 5 أصدقاء واكسب 5 نقاط</h3>
-      <p>أرسل رابط الموقع لـ5 أصدقاء مختلفين على واتساب واحصل على 5 نقاط صدارة:</p>
-      <div class="modal-steps">
-        <div class="modal-step">
-          <div class="step-num">1</div>
-          <div class="step-text">اضغط زر <strong>"مشاركة على واتساب"</strong> أدناه</div>
-        </div>
-        <div class="modal-step">
-          <div class="step-num">2</div>
-          <div class="step-text">أرسل الرابط لـ<strong>5 أشخاص مختلفين</strong> على واتساب</div>
-        </div>
-        <div class="modal-step">
-          <div class="step-num">3</div>
-          <div class="step-text">ارجع للموقع واحصل على 5 نقاط صدارة مباشرةً</div>
-        </div>
-      </div>
-      <button class="btn btn-primary" onclick="shareWhatsApp()" style="display:flex;align-items:center;justify-content:center;gap:8px">
-        <i class="fa-brands fa-whatsapp"></i> مشاركة على واتساب
-      </button>
+<!-- MODAL: واتساب -->
+<div class="modal-overlay" id="modal-whatsapp">
+  <div class="modal-box">
+    <div class="modal-close" onclick="document.getElementById('modal-whatsapp').classList.remove('show')">
+      <i class="fa-solid fa-xmark"></i>
     </div>
+    <div class="modal-icon"><i class="fa-brands fa-whatsapp" style="color:#25d366"></i></div>
+    <div class="modal-title">شارك لـ 5 أصدقاء واكسب 5 نقاط</div>
+    <div class="modal-body">شارك رابط الموقع مع 5 أصدقاء على واتساب واكسب 5 نقاط صدارة فوراً!</div>
+    <div class="modal-steps">
+      <div class="modal-step">
+        <span class="step-num">١</span>
+        <span>اضغط على زر المشاركة بالأسفل لفتح واتساب</span>
+      </div>
+      <div class="modal-step">
+        <span class="step-num">٢</span>
+        <span>أرسل الرسالة لـ 5 أصدقاء مختلفين على الأقل</span>
+      </div>
+      <div class="modal-step">
+        <span class="step-num">٣</span>
+        <span>ارجع للموقع وستضاف 5 نقاط لرصيدك تلقائياً</span>
+      </div>
+    </div>
+    <button class="btn-watch-ad" style="background:linear-gradient(135deg,#1a9e55,#25d366)" onclick="shareWhatsapp()">
+      <i class="fa-brands fa-whatsapp"></i> شارك على واتساب الآن
+    </button>
   </div>
 </div>
 
-<!-- Modal 3: Legend -->
+<!-- MODAL: الأسطورة -->
 <div class="modal-overlay" id="modal-legend">
-  <div class="modal-box-wrap">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('modal-legend')"><i class="fa-solid fa-xmark"></i></button>
-      <div style="font-size:36px;margin-bottom:12px;color:var(--gold)"><i class="fa-solid fa-dragon"></i></div>
-      <h3><i class="fa-solid fa-star" style="color:var(--gold);margin-left:6px"></i> هدية الأسطورة</h3>
-      <p>شارك الموقع في قناتك أو صفحتك التي لا تقل عن <strong>100 متابع</strong> على أي منصة تواصل اجتماعي، وسيراجع الفريق مشاركتك ويرسل لك هديتك.</p>
-
-      <div class="msg info" style="margin-bottom:16px;font-size:13px">
-        <i class="fa-solid fa-lightbulb" style="margin-left:6px"></i>
-        <strong>نصيحة:</strong> كلما كانت قناتك أكثر متابعين، كلما زادت قيمة هديتك! الهدية تتراوح بين 50 و450 نقطة صدارة حسب حجم قناتك.
-      </div>
-
-      <div class="form-group">
-        <label><i class="fa-solid fa-link" style="margin-left:6px;color:var(--blue)"></i> رابط القناة أو الصفحة التي شاركت فيها الموقع</label>
-        <input type="url" id="legend-channel-url" placeholder="https://t.me/yourchannel أو رابط أي منصة أخرى"
-          style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px;width:100%;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;color:var(--ink);outline:none;transition:border-color 0.15s">
-      </div>
-      <button class="btn btn-primary" onclick="submitLegendShare()" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
-        <i class="fa-solid fa-paper-plane"></i> إرسال للمراجعة
-      </button>
-      <div id="legend-msg"></div>
+  <div class="modal-box">
+    <div class="modal-close" onclick="document.getElementById('modal-legend').classList.remove('show')">
+      <i class="fa-solid fa-xmark"></i>
     </div>
+    <div class="modal-icon gold"><i class="fa-solid fa-crown"></i></div>
+    <div class="modal-title">هدية الأسطورة</div>
+    <div class="legend-tips">
+      <i class="fa-solid fa-lightbulb"></i>
+      <strong>نصيحة لزيادة هديتك:</strong> كلما كانت قناتك تحتوي على متابعين أكثر، كلما زادت نقاطك. قناة بـ 100 متابع = 50 نقطة، وقناة بـ 10,000 متابع = حتى 450 نقطة!
+    </div>
+    <div class="legend-form-group">
+      <label><i class="fa-solid fa-link" style="margin-left:5px;color:var(--blue)"></i> رابط القناة / المنشور</label>
+      <input type="url" id="legend-channel-url" placeholder="https://youtube.com/c/قناتك أو رابط المنشور">
+    </div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:16px;text-align:right">
+      <i class="fa-solid fa-circle-info" style="margin-left:4px;color:var(--blue)"></i>
+      يُقبل أي رابط من: يوتيوب، تيك توك، إنستغرام، فيسبوك، تويتر/X أو أي منصة أخرى. يجب أن تحتوي القناة على 100 متابع على الأقل.
+    </div>
+    <button class="btn-watch-ad" style="background:linear-gradient(135deg,#b5882e,#f0c040)" onclick="submitLegend()">
+      <i class="fa-solid fa-paper-plane"></i> إرسال للمراجعة
+    </button>
+    <div id="legend-msg" style="margin-top:10px;text-align:center;font-size:13px"></div>
   </div>
 </div>
-
 <script src="questions.js"></script>
 <script>
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
@@ -2250,7 +2323,7 @@ function pollForOpponentAnswer() {
     if (oppCorrect) {
       if (!answered) {
         // خصمي أجاب صح وأنا لم أجب → خطف السؤال
-        setStatus('<i class="fa-solid fa-bolt"></i> خصمك خطف السؤال!', 'warn');
+        setStatus('⚡ خصمك خطف السؤال!', 'warn');
         disableOptions();
         answered = true;
         clearInterval(qTimerInterval);
@@ -2259,7 +2332,7 @@ function pollForOpponentAnswer() {
         setTimeout(() => nextQuestion(), 2200);
       } else {
         // أنا أجبت خطأ قبله، والآن هو أجاب صح → انتقل للسؤال التالي
-        setStatus('<i class="fa-solid fa-bolt"></i> خصمك أجاب صحيحاً! ننتقل...', 'warn');
+        setStatus('⚡ خصمك أجاب صحيحاً! ننتقل...', 'warn');
         setTimeout(() => nextQuestion(), 2000);
       }
     } else {
@@ -2862,7 +2935,68 @@ function shareWebsite() {
 }
 
 
-let translationCache = {};
+// ==================== GIFTS ====================
+function openAdModal() {
+  document.getElementById('modal-ad').classList.add('show');
+}
+function openWhatsappModal() {
+  document.getElementById('modal-whatsapp').classList.add('show');
+}
+function openLegendModal() {
+  document.getElementById('modal-legend').classList.add('show');
+  document.getElementById('legend-msg').innerHTML = '';
+  document.getElementById('legend-channel-url').value = '';
+}
+function shareWhatsapp() {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent('🎮 العب معي في دوري العباقرة! اختبر معرفتك في مسابقات مباشرة مع لاعبين من حول العالم 🏆');
+  window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+  document.getElementById('modal-whatsapp').classList.remove('show');
+}
+async function submitLegend() {
+  const channelUrl = document.getElementById('legend-channel-url').value.trim();
+  const msgEl = document.getElementById('legend-msg');
+  if (!channelUrl) {
+    msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>يرجى إدخال رابط القناة</span>';
+    return;
+  }
+  if (!channelUrl.startsWith('http')) {
+    msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>يرجى إدخال رابط صحيح يبدأ بـ https://</span>';
+    return;
+  }
+  const userId = currentUser ? currentUser.id : null;
+  const userName = currentUser ? currentUser.name : 'زائر';
+  const userEmail = currentUser ? currentUser.email : '';
+  msgEl.innerHTML = '<span style="color:var(--blue)"><i class="fa-solid fa-spinner fa-spin" style="margin-left:4px"></i>جاري الإرسال...</span>';
+  try {
+    await sbFetch('/rest/v1/web-sharing', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        user_name: userName,
+        user_email: userEmail,
+        channel_url: channelUrl,
+        status: 'pending',
+        submitted_at: new Date().toISOString()
+      })
+    });
+    msgEl.innerHTML = '<span style="color:var(--green)"><i class="fa-solid fa-circle-check" style="margin-left:4px"></i>تم الإرسال! سيراجع فريقنا مشاركة الموقع في قناتك، ثم ستحصل على هديتك قريباً.</span>';
+    setTimeout(() => {
+      document.getElementById('modal-legend').classList.remove('show');
+    }, 3500);
+  } catch(e) {
+    msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>حدث خطأ، يرجى المحاولة مرة أخرى</span>';
+  }
+}
+
+// Close modals on overlay click
+['modal-ad','modal-whatsapp','modal-legend'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+});
+
+
 
 try {
   const cached = localStorage.getItem('genius_translations');
@@ -2903,7 +3037,7 @@ function applyUILanguage(lang) {
 
   // Play button
   const playBtn = document.getElementById('play-btn');
-  if (playBtn) playBtn.innerHTML = `<i class="fa-solid fa-gamepad"></i> ${L.play}`;
+  if (playBtn) playBtn.querySelector('.play-btn-inner-top').innerHTML = `<i class="fa-solid fa-gamepad" style="font-size:22px;margin-left:10px"></i><span style="font-size:21px;font-weight:800;letter-spacing:-0.5px">${L.play}</span>`;
 
   // Search text
   const searchText = document.getElementById('search-text');
@@ -3057,78 +3191,6 @@ function getTranslatedQuestion(q) {
 })();
 
 // Add toast animation style
-
-// ══════════════ GIFTS / MODALS ══════════════
-function openGiftAdModal() { document.getElementById('modal-ad').classList.add('show'); }
-function openGiftShareModal() { document.getElementById('modal-share').classList.add('show'); }
-function openGiftLegendModal() { document.getElementById('modal-legend').classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-// Close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('show');
-  });
-});
-
-function shareWhatsApp() {
-  const url = encodeURIComponent(window.location.href);
-  const msg = encodeURIComponent('🧠 جرّب دوري العباقرة — تحدّى أشخاصاً حقيقيين في أسئلة ثقافية! ' + window.location.href);
-  window.open('https://wa.me/?text=' + msg, '_blank');
-}
-
-async function submitLegendShare() {
-  const urlInput = document.getElementById('legend-channel-url');
-  const msgEl = document.getElementById('legend-msg');
-  const channelUrl = urlInput.value.trim();
-
-  if (!channelUrl || !channelUrl.startsWith('http')) {
-    msgEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i> يرجى إدخال رابط صحيح يبدأ بـ http</div>';
-    return;
-  }
-
-  if (!currentUser) {
-    msgEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-user" style="margin-left:6px"></i> يجب تسجيل الدخول أولاً</div>';
-    return;
-  }
-
-  const submitBtn = document.querySelector('#modal-legend .btn-primary');
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
-
-  try {
-    const res = await sbFetch('/rest/v1/web-sharing', {
-      method: 'POST',
-      body: JSON.stringify({
-        user_id: currentUser.id,
-        username: currentUser.username || currentUser.name || '',
-        channel_url: channelUrl,
-        status: 'pending',
-        submitted_at: new Date().toISOString()
-      })
-    });
-
-    if (res && !res.__error) {
-      msgEl.innerHTML = `<div class="msg success" style="margin-top:0">
-        <i class="fa-solid fa-check-circle" style="margin-left:6px;color:var(--green)"></i>
-        <strong>تم الإرسال!</strong> سيراجع الفريق مشاركة الموقع في قناتك ثم ستحصل على هديتك قريباً.
-        <br><span style="font-size:12px;margin-top:4px;display:block;color:var(--ink3)">
-          <i class="fa-solid fa-lightbulb" style="margin-left:4px;color:var(--gold)"></i>
-          كلما كانت قناتك أكبر، كلما زادت نقاطك (حتى 450 نقطة)!
-        </span>
-      </div>`;
-      urlInput.value = '';
-      submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> تم الإرسال';
-    } else {
-      throw new Error('فشل الإرسال');
-    }
-  } catch(e) {
-    msgEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i> حدث خطأ، يرجى المحاولة مرة أخرى</div>';
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال للمراجعة';
-  }
-}
-
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }`;
 document.head.appendChild(toastStyle);
