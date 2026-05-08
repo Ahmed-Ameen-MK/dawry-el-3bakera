@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سودوكو — دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=SF+Pro+Display:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f7;
+    --bg3: #e8e8ed;
+    --ink: #1d1d1f;
+    --ink2: #3d3d3f;
+    --ink3: #6e6e73;
+    --line: #d2d2d7;
+    --line2: rgba(0,0,0,0.06);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --blue-light: #e8f0fd;
+    --green: #1d8348;
+    --green-bg: #f0faf4;
+    --red: #c0392b;
+    --red-bg: #fef1ef;
+    --gold: #b5882e;
+    --gold-bg: #fdf6e3;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+    --cell-size: 52px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 860px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .brand {
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+  }
+  .brand i { color: var(--blue); font-size: 15px; }
+
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg2); border: 1px solid var(--line);
+    border-radius: 30px; padding: 6px 14px 6px 6px;
+    font-size: 13px; font-weight: 500; color: var(--ink2);
+    gap: 8px;
+  }
+  .user-pill-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .user-pill-pts {
+    display: flex; align-items: center; gap: 4px;
+    color: var(--blue); font-weight: 700;
+  }
+  .user-pill-pts i { font-size: 10px; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 52px 24px 36px;
+    border-bottom: 1px solid var(--line2);
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2); color: var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 700; line-height: 1.05;
+    letter-spacing: -1.5px; color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero p { font-size: 16px; color: var(--ink3); font-weight: 400; line-height: 1.5; }
+
+  /* ── NOT LOGGED IN ── */
+  #not-logged-in {
+    max-width: 420px; margin: 48px auto; text-align: center;
+    padding: 40px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  #not-logged-in i { font-size: 48px; color: var(--ink3); margin-bottom: 20px; display: block; }
+  #not-logged-in h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  #not-logged-in p { color: var(--ink3); margin-bottom: 24px; font-size: 15px; }
+  #not-logged-in a {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #fff;
+    padding: 13px 32px; border-radius: 50px;
+    font-size: 15px; font-weight: 600; text-decoration: none;
+    transition: all 0.15s;
+  }
+  #not-logged-in a:hover { background: var(--blue-hover); }
+
+  /* ── GAME AREA ── */
+  #game-area { padding: 32px 0; }
+
+  /* ── DIFFICULTY + POINTS ── */
+  .game-meta {
+    display: flex; align-items: stretch; gap: 12px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .meta-card {
+    flex: 1; min-width: 140px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .meta-card .mc-label {
+    font-size: 11px; font-weight: 600; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .meta-card .mc-value {
+    font-size: 22px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+  .meta-card .mc-sub { font-size: 12px; color: var(--ink3); margin-top: 3px; }
+  .diff-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    margin-top: 6px;
+  }
+  .diff-easy { background: var(--green-bg); color: var(--green); }
+  .diff-medium { background: var(--gold-bg); color: var(--gold); }
+  .diff-hard { background: #fef1ef; color: #c0392b; }
+  .diff-expert { background: #f0eaff; color: #6c3ebf; }
+
+  /* ── TIMER ── */
+  .timer-display {
+    font-size: 32px; font-weight: 700; letter-spacing: -1px;
+    color: var(--ink); font-variant-numeric: tabular-nums;
+    font-family: 'SF Pro Display', 'IBM Plex Sans Arabic', monospace;
+  }
+  .timer-display.warning { color: var(--gold); }
+  .timer-display.danger { color: var(--red); animation: pulse 0.5s ease infinite alternate; }
+  @keyframes pulse { from{opacity:1} to{opacity:0.5} }
+
+  /* ── BOARD ── */
+  .board-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 24px;
+  }
+  .sudoku-board {
+    display: grid; grid-template-columns: repeat(9, var(--cell-size));
+    border: 3px solid var(--ink);
+    border-radius: 6px; overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    background: var(--bg);
+    user-select: none;
+  }
+  .sudoku-cell {
+    width: var(--cell-size); height: var(--cell-size);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 600; font-family: 'SF Pro Display', monospace;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+  /* thick borders for 3x3 boxes */
+  .sudoku-cell:nth-child(9n+1) { border-right-width: 1px; }
+  .sudoku-cell:nth-child(9n+3) { border-right: 3px solid var(--ink2); }
+  .sudoku-cell:nth-child(9n+6) { border-right: 3px solid var(--ink2); }
+  .sudoku-cell:nth-child(9n+9) { border-right: none; }
+  .sudoku-cell.row-3 { border-bottom: 3px solid var(--ink2); }
+  .sudoku-cell.row-6 { border-bottom: 3px solid var(--ink2); }
+  .sudoku-cell.last-row { border-bottom: none; }
+
+  .sudoku-cell.given { color: var(--ink); cursor: default; font-weight: 700; }
+  .sudoku-cell.selected { background: var(--blue-light) !important; }
+  .sudoku-cell.highlighted { background: #f0f4ff; }
+  .sudoku-cell.same-num { background: #dce9ff; }
+  .sudoku-cell.error { color: var(--red) !important; }
+  .sudoku-cell.user-filled { color: var(--blue); }
+  .sudoku-cell:hover:not(.given):not(.selected) { background: var(--bg2); }
+
+  /* notes mode */
+  .cell-notes {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    width: 100%; height: 100%; padding: 1px;
+  }
+  .note-num {
+    font-size: 9px; font-weight: 500; color: var(--ink3);
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .note-num.active { color: var(--blue); font-weight: 700; }
+
+  /* ── NUMPAD ── */
+  .numpad {
+    display: grid; grid-template-columns: repeat(9, 1fr);
+    gap: 6px; width: 100%; max-width: calc(var(--cell-size) * 9 + 24px);
+  }
+  .num-btn {
+    aspect-ratio: 1; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); background: var(--bg2);
+    font-size: 18px; font-weight: 700; color: var(--ink);
+    cursor: pointer; transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'SF Pro Display', monospace;
+  }
+  .num-btn:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+  .num-btn:active { transform: scale(0.93); }
+  .num-btn.completed { opacity: 0.3; pointer-events: none; }
+
+  /* ── CONTROLS ── */
+  .controls-row {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    width: 100%; max-width: calc(var(--cell-size) * 9 + 24px);
+  }
+  .ctrl-btn {
+    flex: 1; min-width: 80px;
+    padding: 11px 12px;
+    border: 1px solid var(--line); background: var(--bg2);
+    border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--ink2);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .ctrl-btn:hover { background: var(--bg3); }
+  .ctrl-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .ctrl-btn.erase:hover { background: var(--red-bg); color: var(--red); border-color: rgba(192,57,43,0.25); }
+  .ctrl-btn i { font-size: 12px; }
+
+  /* ── START SCREEN ── */
+  #start-screen { padding: 32px 0; }
+  .difficulty-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 12px; max-width: 500px; margin: 24px auto;
+  }
+  .diff-card {
+    background: var(--bg); border: 1.5px solid var(--line);
+    border-radius: var(--radius); padding: 24px;
+    cursor: pointer; transition: all 0.18s; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .diff-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .diff-card.selected-diff { border-color: var(--blue); background: var(--blue-light); }
+  .diff-card .diff-icon { font-size: 28px; margin-bottom: 10px; }
+  .diff-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .diff-card p { font-size: 13px; color: var(--ink3); }
+  .diff-card .diff-pts { font-size: 12px; color: var(--blue); font-weight: 600; margin-top: 8px; }
+  .diff-card.locked { opacity: 0.5; cursor: not-allowed; }
+  .diff-card.locked:hover { transform: none; border-color: var(--line); }
+
+  .pts-info-box {
+    background: var(--bg2); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 24px;
+    max-width: 500px; margin: 0 auto 24px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .pts-info-box i { font-size: 20px; color: var(--blue); flex-shrink: 0; margin-top: 2px; }
+  .pts-info-box p { font-size: 14px; color: var(--ink2); line-height: 1.6; }
+  .pts-info-box strong { color: var(--ink); }
+
+  .level-msg {
+    background: linear-gradient(135deg, #0071e3 0%, #3a94ff 100%);
+    color: #fff; border-radius: var(--radius); padding: 18px 24px;
+    max-width: 500px; margin: 0 auto 20px;
+    font-size: 14px; font-weight: 500; line-height: 1.6;
+    text-align: center;
+  }
+  .level-msg strong { font-size: 16px; display: block; margin-bottom: 4px; }
+
+  .btn-start {
+    display: block; width: 100%; max-width: 300px; margin: 0 auto;
+    padding: 16px; border: none; border-radius: 50px;
+    background: var(--blue); color: #fff;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; letter-spacing: -0.3px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-start:hover { background: var(--blue-hover); transform: scale(1.02); }
+  .btn-start:active { transform: scale(0.98); }
+
+  /* ── WIN/LOSE OVERLAY ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 100; display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .overlay.show { display: flex; }
+  .overlay-box {
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 24px; padding: 48px 40px;
+    text-align: center; max-width: 380px; width: 100%;
+    box-shadow: var(--shadow-lg);
+    animation: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop { from{transform:scale(0.82);opacity:0} to{transform:scale(1);opacity:1} }
+  .overlay-icon { font-size: 56px; margin-bottom: 16px; }
+  .overlay-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .overlay-sub { font-size: 15px; color: var(--ink3); margin-bottom: 8px; line-height: 1.5; }
+  .pts-change {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 20px; border-radius: 20px;
+    font-size: 16px; font-weight: 700; margin: 12px 0 24px;
+  }
+  .pts-change.gain { background: var(--green-bg); color: var(--green); }
+  .pts-change.lose { background: var(--red-bg); color: var(--red); }
+  .overlay-btn {
+    width: 100%; padding: 13px;
+    border: none; border-radius: 50px;
+    background: var(--blue); color: #fff;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.15s; margin-bottom: 10px;
+  }
+  .overlay-btn:hover { background: var(--blue-hover); }
+  .overlay-btn.secondary {
+    background: var(--bg2); color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .overlay-btn.secondary:hover { background: var(--bg3); }
+
+  /* confetti */
+  .confetti-piece {
+    position: fixed; top: -10px;
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: confettiFall linear forwards;
+    z-index: 200; pointer-events: none;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── ERROR COUNT ── */
+  .errors-display {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--ink3);
+  }
+  .error-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--line); transition: background 0.2s;
+  }
+  .error-dot.filled { background: var(--red); }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+    margin-bottom: 4px; color: var(--ink); text-align: center;
+  }
+  .section-sub { font-size: 15px; color: var(--ink3); margin-bottom: 28px; text-align: center; }
+
+  @media (max-width: 520px) {
+    :root { --cell-size: 36px; }
+    .numpad { gap: 4px; }
+    .num-btn { font-size: 14px; }
+    .meta-card { padding: 14px 16px; }
+    .timer-display { font-size: 26px; }
+    .sudoku-cell { font-size: 15px; }
+    .note-num { font-size: 7px; }
+    .difficulty-grid { grid-template-columns: 1fr 1fr; }
+    .overlay-box { padding: 36px 24px; }
+  }
+
+  @media (max-width: 380px) {
+    :root { --cell-size: 32px; }
+    .sudoku-cell { font-size: 13px; }
+    .num-btn { font-size: 12px; }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .anim { animation: fadeUp 0.35s ease; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 12px 22px;
+    border-radius: 40px; font-size: 14px; font-weight: 500;
+    z-index: 300; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: toastIn 0.3s ease;
+  }
+  @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+  /* ── MISTAKE FLASH ── */
+  @keyframes cellShake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-4px)}
+    60%{transform:translateX(4px)}
+  }
+  .cell-shake { animation: cellShake 0.3s ease; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-brain"></i> دوري العباقرة
+    </a>
+    <div class="user-pill" id="user-pill" style="display:none">
+      <div class="user-pill-avatar" id="pill-avatar"></div>
+      <span id="pill-name"></span>
+      <div class="user-pill-pts">
+        <i class="fa-solid fa-ranking-star"></i>
+        <span id="pill-pts">0</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-eyebrow"><i class="fa-th"></i> لعبة الأرقام</div>
+    <h1>سودوكو<br><span>بنقاط الصدارة</span></h1>
+    <p>مستوى الصعوبة يتأقلم مع مستواك — هل أنت مستعد؟</p>
+  </div>
+
+  <!-- NOT LOGGED IN -->
+  <div id="not-logged-in" style="display:none">
+    <i class="fa-solid fa-lock"></i>
+    <h2>سجّل دخولك أولاً</h2>
+    <p>تحتاج إلى حساب في دوري العباقرة للعب سودوكو وكسب نقاط الصدارة</p>
+    <a href="index.html"><i class="fa-solid fa-arrow-right-to-bracket"></i> الذهاب لتسجيل الدخول</a>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="start-screen" style="display:none" class="anim">
+    <h2 class="section-title">اختر مستوى الصعوبة</h2>
+    <p class="section-sub">صعوبة اللعبة تعتمد على مستواك في نقاط الصدارة</p>
+
+    <div class="level-msg" id="level-msg"></div>
+
+    <div class="pts-info-box">
+      <i class="fa-solid fa-info-circle"></i>
+      <p>
+        <strong>نظام النقاط:</strong>
+        الفوز يمنحك <strong>+3 نقاط صدارة</strong> ⭐
+        والخسارة (استنفاد الوقت أو 3 أخطاء) تخصم <strong>-2 نقاط</strong>.
+        كلما ارتفع مستواك، زادت صعوبة اللوحات!
+      </p>
+    </div>
+
+    <div class="difficulty-grid" id="diff-grid">
+      <!-- generated by JS -->
+    </div>
+
+    <button class="btn-start" id="btn-start-game" onclick="startGame()">
+      <i class="fa-solid fa-play"></i> ابدأ اللعبة
+    </button>
+  </div>
+
+  <!-- GAME AREA -->
+  <div id="game-area" style="display:none" class="anim">
+
+    <div class="game-meta">
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-clock"></i> الوقت المتبقي</div>
+        <div class="timer-display" id="timer-display">00:00</div>
+        <div class="mc-sub" id="timer-sub"></div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-layer-group"></i> المستوى</div>
+        <div class="mc-value" id="game-diff-name">سهل</div>
+        <div id="game-diff-badge"></div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-times-circle"></i> الأخطاء</div>
+        <div class="errors-display">
+          <div class="error-dot" id="err1"></div>
+          <div class="error-dot" id="err2"></div>
+          <div class="error-dot" id="err3"></div>
+        </div>
+        <div class="mc-sub">الحد الأقصى 3 أخطاء</div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-ranking-star"></i> نقاطك الحالية</div>
+        <div class="mc-value" id="game-pts">0</div>
+        <div class="mc-sub">نقطة صدارة</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="sudoku-board" id="sudoku-board"></div>
+
+      <div class="controls-row">
+        <button class="ctrl-btn" id="btn-notes" onclick="toggleNotes()">
+          <i class="fa-solid fa-pencil"></i> ملاحظات
+        </button>
+        <button class="ctrl-btn erase" onclick="eraseCell()">
+          <i class="fa-solid fa-eraser"></i> مسح
+        </button>
+        <button class="ctrl-btn" onclick="useHint()" id="btn-hint">
+          <i class="fa-solid fa-lightbulb"></i> تلميح (<span id="hints-left">3</span>)
+        </button>
+        <button class="ctrl-btn erase" onclick="confirmGiveUp()">
+          <i class="fa-solid fa-flag"></i> استسلام
+        </button>
+      </div>
+
+      <div class="numpad" id="numpad"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay" id="win-overlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">🏆</div>
+    <div class="overlay-title">أحسنت!</div>
+    <div class="overlay-sub" id="win-sub">لقد أكملت اللوحة بنجاح</div>
+    <div class="pts-change gain" id="pts-change-display">
+      <i class="fa-solid fa-ranking-star"></i> +3 نقاط صدارة
+    </div>
+    <div class="overlay-sub" id="new-pts-display" style="margin-bottom:16px"></div>
+    <button class="overlay-btn" onclick="goToStart()">
+      <i class="fa-solid fa-rotate-right" style="margin-left:6px"></i> لعبة جديدة
+    </button>
+    <button class="overlay-btn secondary" onclick="goHome()">
+      <i class="fa-solid fa-home" style="margin-left:6px"></i> الرئيسية
+    </button>
+  </div>
+</div>
+
+<!-- LOSE OVERLAY -->
+<div class="overlay" id="lose-overlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">😔</div>
+    <div class="overlay-title">انتهت اللعبة</div>
+    <div class="overlay-sub" id="lose-sub">لا تستسلم، حاول مرة أخرى!</div>
+    <div class="pts-change lose" id="pts-lose-display">
+      <i class="fa-solid fa-ranking-star"></i> -2 نقاط صدارة
+    </div>
+    <div class="overlay-sub" id="new-pts-lose-display" style="margin-bottom:16px"></div>
+    <button class="overlay-btn" onclick="goToStart()">
+      <i class="fa-solid fa-rotate-right" style="margin-left:6px"></i> حاول مجدداً
+    </button>
+    <button class="overlay-btn secondary" onclick="goHome()">
+      <i class="fa-solid fa-home" style="margin-left:6px"></i> الرئيسية
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE CONFIG (from index.html)
+// ============================================================
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const Q_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, opts = {}) {
+  try {
+    const res = await fetch(SB_URL + path, { ...opts, headers: { ...Q_HEADERS, ...(opts.headers || {}) } });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return null; }
+  } catch { return null; }
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let selectedDiff = null;
+let board = []; // 9x9 current state (0 = empty)
+let solution = []; // 9x9 solution
+let givenCells = []; // 9x9 boolean
+let selectedCell = null; // {r,c}
+let errors = 0;
+let maxErrors = 3;
+let notesMode = false;
+let notes = []; // 9x9 array of Set
+let hints = 3;
+let timerInterval = null;
+let timeLeft = 0;
+let gameActive = false;
+
+// ============================================================
+// DIFFICULTY CONFIG
+// ============================================================
+const DIFFICULTIES = [
+  { id: 'easy',   name: 'سهل',    icon: '😊', givens: 45, time: 600,  pts_req: 0,   color: 'diff-easy',   desc: 'للمبتدئين، أرقام كثيرة مكشوفة' },
+  { id: 'medium', name: 'متوسط',  icon: '🤔', givens: 35, time: 480,  pts_req: 15,  color: 'diff-medium', desc: 'تحدٍّ متوازن للاعبين المتمرسين' },
+  { id: 'hard',   name: 'صعب',    icon: '😤', givens: 27, time: 360,  pts_req: 40,  color: 'diff-hard',   desc: 'لمن يريد اختبار حدوده الحقيقية' },
+  { id: 'expert', name: 'خبير',   icon: '🔥', givens: 22, time: 300,  pts_req: 80,  color: 'diff-expert', desc: 'مستوى الماهرين فقط — بدون رحمة' },
+];
+
+function getDiffForLevel(pts) {
+  if (pts >= 80) return 'expert';
+  if (pts >= 40) return 'hard';
+  if (pts >= 15) return 'medium';
+  return 'easy';
+}
+
+function getLevelMessage(pts) {
+  if (pts >= 80) return { title: '🔥 أنت على مستوى الخبراء!', sub: 'نقاطك العالية تجعل لوحات السودوكو أكثر تحدياً وأقل أرقاماً مكشوفة.' };
+  if (pts >= 40) return { title: '😤 مستوى صعب — أنت تتقدم!', sub: 'بلغت مرحلة اللاعبين المحترفين. اللوحات الصعبة تنتظرك.' };
+  if (pts >= 15) return { title: '🤔 مستوى متوسط — مستمر في التطور!', sub: 'مع كل فوز تفتح مستويات أعلى. استمر!' };
+  return { title: '😊 مرحباً بك في سودوكو!', sub: 'ابدأ بالمستوى السهل وارفع مستواك مع كل فوز. +3 نقاط لكل انتصار!' };
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('genius_user');
+  if (!saved) {
+    document.getElementById('not-logged-in').style.display = 'block';
+    return;
+  }
+  try {
+    currentUser = JSON.parse(saved);
+    // refresh from server
+    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=*`, { method: 'GET' }).then(res => {
+      if (res && res[0]) {
+        currentUser = res[0];
+        localStorage.setItem('genius_user', JSON.stringify(currentUser));
+      }
+      initUI();
+    });
+  } catch {
+    document.getElementById('not-logged-in').style.display = 'block';
+  }
+});
+
+function initUI() {
+  // pill
+  const pill = document.getElementById('user-pill');
+  pill.style.display = 'flex';
+  const av = document.getElementById('pill-avatar');
+  if (currentUser.avatar_url) {
+    av.innerHTML = `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    av.textContent = (currentUser.name || '?')[0].toUpperCase();
+  }
+  document.getElementById('pill-name').textContent = currentUser.name || '';
+  const pts = currentUser.level || 0;
+  document.getElementById('pill-pts').textContent = pts;
+
+  showStartScreen();
+}
+
+function showStartScreen() {
+  document.getElementById('start-screen').style.display = 'block';
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('not-logged-in').style.display = 'none';
+
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const lvl = getLevelMessage(pts);
+  document.getElementById('level-msg').innerHTML = `<strong>${lvl.title}</strong>${lvl.sub}`;
+
+  const recDiff = getDiffForLevel(pts);
+  renderDiffGrid(pts, recDiff);
+  selectedDiff = recDiff;
+}
+
+function renderDiffGrid(pts, recommended) {
+  const grid = document.getElementById('diff-grid');
+  grid.innerHTML = '';
+  DIFFICULTIES.forEach(d => {
+    const locked = pts < d.pts_req;
+    const isRec = d.id === recommended;
+    const div = document.createElement('div');
+    div.className = `diff-card ${locked ? 'locked' : ''} ${isRec ? 'selected-diff' : ''}`;
+    div.innerHTML = `
+      <div class="diff-icon">${locked ? '🔒' : d.icon}</div>
+      <h3>${d.name}</h3>
+      <p>${locked ? `يتطلب ${d.pts_req} نقطة` : d.desc}</p>
+      <div class="diff-pts">${locked ? `🔒 مقفل` : `⏱ ${Math.floor(d.time/60)} دقيقة`}</div>
+    `;
+    if (!locked) {
+      div.onclick = () => {
+        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected-diff'));
+        div.classList.add('selected-diff');
+        selectedDiff = d.id;
+      };
+    }
+    grid.appendChild(div);
+  });
+}
+
+// ============================================================
+// SUDOKU GENERATOR
+// ============================================================
+function generateSudoku(givensCount) {
+  // Generate a solved board
+  const sol = Array.from({length: 9}, () => Array(9).fill(0));
+  solveSudoku(sol, true);
+
+  // Create puzzle by removing cells
+  const puzzle = sol.map(r => [...r]);
+  const cells = [];
+  for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) cells.push([r, c]);
+  shuffleArray(cells);
+
+  let removed = 0;
+  const target = 81 - givensCount;
+  for (const [r, c] of cells) {
+    if (removed >= target) break;
+    const val = puzzle[r][c];
+    puzzle[r][c] = 0;
+    // Check uniqueness (simplified — just check it's still solvable)
+    const test = puzzle.map(row => [...row]);
+    if (countSolutions(test) === 1) {
+      removed++;
+    } else {
+      puzzle[r][c] = val; // restore
+    }
+  }
+
+  return { puzzle, solution: sol };
+}
+
+function solveSudoku(board, randomize = false) {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] === 0) {
+        let nums = [1,2,3,4,5,6,7,8,9];
+        if (randomize) shuffleArray(nums);
+        for (const n of nums) {
+          if (isValid(board, r, c, n)) {
+            board[r][c] = n;
+            if (solveSudoku(board, randomize)) return true;
+            board[r][c] = 0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function countSolutions(board, max = 2) {
+  let count = 0;
+  function solve(b) {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (b[r][c] === 0) {
+          for (let n = 1; n <= 9; n++) {
+            if (isValid(b, r, c, n)) {
+              b[r][c] = n;
+              solve(b);
+              b[r][c] = 0;
+              if (count >= max) return;
+            }
+          }
+          return;
+        }
+      }
+    }
+    count++;
+  }
+  solve(board.map(r => [...r]));
+  return count;
+}
+
+function isValid(board, row, col, num) {
+  for (let i = 0; i < 9; i++) {
+    if (board[row][i] === num) return false;
+    if (board[i][col] === num) return false;
+    const br = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+    const bc = 3 * Math.floor(col / 3) + (i % 3);
+    if (board[br][bc] === num) return false;
+  }
+  return true;
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+// START GAME
+// ============================================================
+function startGame() {
+  const diff = DIFFICULTIES.find(d => d.id === selectedDiff);
+  if (!diff) { showToast('اختر مستوى أولاً'); return; }
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  if (pts < diff.pts_req) { showToast('هذا المستوى مقفل'); return; }
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+
+  // Set diff info
+  document.getElementById('game-diff-name').textContent = diff.name;
+  document.getElementById('game-diff-badge').innerHTML = `<div class="diff-badge ${diff.color}" style="margin-top:6px">${diff.icon} ${diff.name}</div>`;
+  document.getElementById('game-pts').textContent = pts;
+
+  // Generate puzzle
+  const { puzzle, solution: sol } = generateSudoku(diff.givens);
+  board = puzzle.map(r => [...r]);
+  solution = sol.map(r => [...r]);
+  givenCells = puzzle.map(r => r.map(v => v !== 0));
+  notes = Array.from({length: 9}, () => Array.from({length: 9}, () => new Set()));
+
+  errors = 0;
+  hints = 3;
+  notesMode = false;
+  selectedCell = null;
+  gameActive = true;
+  document.getElementById('hints-left').textContent = hints;
+  updateErrorDots();
+  updateNotesBtn();
+
+  renderBoard();
+  buildNumpad();
+
+  // Timer
+  timeLeft = diff.time;
+  updateTimer();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endGame(false, 'timeout');
+    }
+  }, 1000);
+}
+
+// ============================================================
+// RENDER BOARD
+// ============================================================
+function renderBoard() {
+  const boardEl = document.getElementById('sudoku-board');
+  boardEl.innerHTML = '';
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'sudoku-cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+
+      // border classes
+      if (r === 2) cell.classList.add('row-3');
+      if (r === 5) cell.classList.add('row-6');
+      if (r === 8) cell.classList.add('last-row');
+
+      if (givenCells[r][c]) {
+        cell.classList.add('given');
+        cell.textContent = board[r][c];
+      } else if (board[r][c] !== 0) {
+        const isErr = board[r][c] !== solution[r][c];
+        cell.classList.add(isErr ? 'error' : 'user-filled');
+        cell.textContent = board[r][c];
+      } else {
+        // notes
+        const noteSet = notes[r][c];
+        if (noteSet.size > 0) {
+          const noteDiv = document.createElement('div');
+          noteDiv.className = 'cell-notes';
+          for (let n = 1; n <= 9; n++) {
+            const nd = document.createElement('div');
+            nd.className = 'note-num' + (noteSet.has(n) ? ' active' : '');
+            nd.textContent = noteSet.has(n) ? n : '';
+            noteDiv.appendChild(nd);
+          }
+          cell.appendChild(noteDiv);
+        }
+      }
+
+      cell.addEventListener('click', () => selectCell(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+  highlightSelection();
+}
+
+function getCellEl(r, c) {
+  return document.querySelector(`.sudoku-cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function selectCell(r, c) {
+  if (!gameActive) return;
+  selectedCell = { r, c };
+  highlightSelection();
+}
+
+function highlightSelection() {
+  document.querySelectorAll('.sudoku-cell').forEach(el => {
+    el.classList.remove('selected', 'highlighted', 'same-num');
+  });
+  if (!selectedCell) return;
+  const { r, c } = selectedCell;
+  const selVal = board[r][c];
+
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      const el = getCellEl(i, j);
+      if (!el) continue;
+      if (i === r && j === c) {
+        el.classList.add('selected');
+      } else if (i === r || j === c || (Math.floor(i/3) === Math.floor(r/3) && Math.floor(j/3) === Math.floor(c/3))) {
+        el.classList.add('highlighted');
+      }
+      if (selVal && selVal !== 0 && board[i][j] === selVal) {
+        el.classList.add('same-num');
+      }
+    }
+  }
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+function placeNumber(num) {
+  if (!gameActive || !selectedCell) return;
+  const { r, c } = selectedCell;
+  if (givenCells[r][c]) return;
+
+  if (notesMode) {
+    if (board[r][c] !== 0) return;
+    const noteSet = notes[r][c];
+    if (noteSet.has(num)) noteSet.delete(num);
+    else noteSet.add(num);
+    renderBoard();
+    selectCell(r, c);
+    return;
+  }
+
+  // clear notes for this cell
+  notes[r][c].clear();
+  board[r][c] = num;
+
+  if (num !== solution[r][c]) {
+    errors++;
+    updateErrorDots();
+    const el = getCellEl(r, c);
+    if (el) { el.classList.add('cell-shake'); setTimeout(() => el.classList.remove('cell-shake'), 400); }
+    showToast('❌ خطأ!');
+    if (errors >= maxErrors) {
+      renderBoard();
+      highlightSelection();
+      setTimeout(() => endGame(false, 'errors'), 600);
+      return;
+    }
+  } else {
+    // remove notes from same row/col/box
+    clearNoteFromPeers(r, c, num);
+  }
+
+  renderBoard();
+  selectCell(r, c);
+  updateNumpad();
+
+  if (isBoardComplete()) {
+    clearInterval(timerInterval);
+    setTimeout(() => endGame(true), 400);
+  }
+}
+
+function eraseCell() {
+  if (!gameActive || !selectedCell) return;
+  const { r, c } = selectedCell;
+  if (givenCells[r][c]) return;
+  board[r][c] = 0;
+  notes[r][c].clear();
+  renderBoard();
+  selectCell(r, c);
+  updateNumpad();
+}
+
+function clearNoteFromPeers(row, col, num) {
+  for (let i = 0; i < 9; i++) {
+    notes[row][i].delete(num);
+    notes[i][col].delete(num);
+    const br = 3 * Math.floor(row/3) + Math.floor(i/3);
+    const bc = 3 * Math.floor(col/3) + (i%3);
+    notes[br][bc].delete(num);
+  }
+}
+
+function useHint() {
+  if (!gameActive || hints <= 0 || !selectedCell) { showToast('اختر خلية فارغة أولاً'); return; }
+  const { r, c } = selectedCell;
+  if (givenCells[r][c] || board[r][c] === solution[r][c]) { showToast('هذه الخلية مكتملة بالفعل'); return; }
+  hints--;
+  document.getElementById('hints-left').textContent = hints;
+  if (hints <= 0) document.getElementById('btn-hint').classList.add('completed');
+  notes[r][c].clear();
+  board[r][c] = solution[r][c];
+  givenCells[r][c] = true;
+  renderBoard();
+  selectCell(r, c);
+  updateNumpad();
+  if (isBoardComplete()) { clearInterval(timerInterval); setTimeout(() => endGame(true), 400); }
+}
+
+function toggleNotes() {
+  notesMode = !notesMode;
+  updateNotesBtn();
+}
+
+function updateNotesBtn() {
+  const btn = document.getElementById('btn-notes');
+  btn.classList.toggle('active', notesMode);
+  btn.innerHTML = notesMode
+    ? '<i class="fa-solid fa-pencil"></i> ملاحظات <span style="font-size:10px;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;margin-right:4px">ON</span>'
+    : '<i class="fa-solid fa-pencil"></i> ملاحظات';
+}
+
+function isBoardComplete() {
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++)
+      if (board[r][c] !== solution[r][c]) return false;
+  return true;
+}
+
+// ============================================================
+// NUMPAD
+// ============================================================
+function buildNumpad() {
+  const np = document.getElementById('numpad');
+  np.innerHTML = '';
+  for (let n = 1; n <= 9; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = n;
+    btn.id = `num-btn-${n}`;
+    btn.onclick = () => placeNumber(n);
+    np.appendChild(btn);
+  }
+  updateNumpad();
+}
+
+function updateNumpad() {
+  for (let n = 1; n <= 9; n++) {
+    const count = board.flat().filter(v => v === n).length;
+    const btn = document.getElementById(`num-btn-${n}`);
+    if (btn) btn.classList.toggle('completed', count >= 9);
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function updateTimer() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const s = (timeLeft % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timer-display');
+  el.textContent = `${m}:${s}`;
+  el.className = 'timer-display';
+  if (timeLeft <= 60) el.classList.add('danger');
+  else if (timeLeft <= 120) el.classList.add('warning');
+}
+
+// ============================================================
+// ERRORS
+// ============================================================
+function updateErrorDots() {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById(`err${i}`);
+    if (dot) dot.classList.toggle('filled', i <= errors);
+  }
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+async function endGame(won, reason = '') {
+  gameActive = false;
+  clearInterval(timerInterval);
+
+  const pts = currentUser.level || 0;
+  const delta = won ? 3 : -2;
+  const newPts = Math.max(0, pts + delta);
+
+  // Update server
+  currentUser.level = newPts;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  document.getElementById('pill-pts').textContent = newPts;
+
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ level: newPts })
+  });
+
+  if (won) {
+    launchConfetti();
+    const diff = DIFFICULTIES.find(d => d.id === selectedDiff);
+    const elapsed = diff ? diff.time - timeLeft : 0;
+    const mins = Math.floor(elapsed/60), secs = elapsed%60;
+    document.getElementById('win-sub').textContent = `أكملت اللوحة في ${mins}:${secs.toString().padStart(2,'0')} دقيقة 🎉`;
+    document.getElementById('pts-change-display').innerHTML = `<i class="fa-solid fa-ranking-star"></i> +3 نقاط صدارة`;
+    document.getElementById('new-pts-display').textContent = `مجموع نقاطك الآن: ${newPts} نقطة`;
+    document.getElementById('win-overlay').classList.add('show');
+  } else {
+    const reasonText = reason === 'timeout' ? 'انتهى الوقت!' : 'وصلت إلى 3 أخطاء!';
+    document.getElementById('lose-sub').textContent = `${reasonText} لا تستسلم، حاول مرة أخرى!`;
+    document.getElementById('pts-lose-display').innerHTML = `<i class="fa-solid fa-ranking-star"></i> -2 نقاط صدارة`;
+    document.getElementById('new-pts-lose-display').textContent = `مجموع نقاطك الآن: ${newPts} نقطة`;
+    document.getElementById('lose-overlay').classList.add('show');
+  }
+}
+
+function confirmGiveUp() {
+  if (!gameActive) return;
+  if (confirm('هل تريد الاستسلام؟ ستخسر 2 نقطة من الصدارة.')) {
+    clearInterval(timerInterval);
+    endGame(false, 'giveup');
+  }
+}
+
+function goToStart() {
+  document.getElementById('win-overlay').classList.remove('show');
+  document.getElementById('lose-overlay').classList.remove('show');
+  showStartScreen();
+}
+
+function goHome() {
+  window.location.href = 'index.html';
+}
+
+// ============================================================
+// KEYBOARD INPUT
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (!gameActive) return;
+  if (e.key >= '1' && e.key <= '9') { placeNumber(parseInt(e.key)); return; }
+  if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { eraseCell(); return; }
+  if (e.key === 'n' || e.key === 'N') { toggleNotes(); return; }
+  if (!selectedCell) return;
+  let { r, c } = selectedCell;
+  if (e.key === 'ArrowUp' && r > 0) selectCell(r-1, c);
+  if (e.key === 'ArrowDown' && r < 8) selectCell(r+1, c);
+  if (e.key === 'ArrowLeft' && c < 8) selectCell(r, c+1);
+  if (e.key === 'ArrowRight' && c > 0) selectCell(r, c-1);
+});
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const colors = ['#0071e3','#34c759','#ff9f0a','#ff3b30','#5856d6','#32ade6'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (Math.random() * 8 + 5) + 'px';
+      piece.style.height = (Math.random() * 8 + 5) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>
