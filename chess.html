@@ -1056,8 +1056,9 @@ function initBoard() {
   inCheck = null;
 
   const setup = (color) => {
+    const prefix = color === 'white' ? 'w' : 'b';
     Object.entries(PIECE_IDS[color]).forEach(([id, info]) => {
-      board[info.startRow][info.startCol] = { color, type: info.type, id, moved: false };
+      board[info.startRow][info.startCol] = { color, type: info.type, id: prefix+id, moved: false };
     });
   };
   setup('white');
@@ -1067,17 +1068,20 @@ function initBoard() {
 // Load board from DB columns
 function boardFromDB(row) {
   const newBoard = Array.from({length:8}, ()=>Array(8).fill(null));
-  const allIds = Object.keys(PIECE_IDS.white).concat(Object.keys(PIECE_IDS.black));
-  for (const id of allIds) {
-    const color = Object.keys(PIECE_IDS.white).includes(id) ? 'white' : 'black';
-    const val = row[id];
-    if (!val || val === 'died') continue;
-    const sq = parseInt(val);
-    if (isNaN(sq)) continue;
-    const {row: r, col: c} = sqFromNum(sq);
-    if (r < 0 || r > 7 || c < 0 || c > 7) continue;
-    newBoard[r][c] = { color, type: PIECE_IDS[color][id].type, id, moved: true };
-  }
+  // الأعمدة: wKing, wPawn1... bKing, bPawn1...
+  ['white','black'].forEach(color => {
+    const prefix = color === 'white' ? 'w' : 'b';
+    Object.entries(PIECE_IDS[color]).forEach(([baseName, info]) => {
+      const colId = prefix + baseName;
+      const val = row[colId];
+      if (!val || val === 'died') return;
+      const sq = parseInt(val);
+      if (isNaN(sq)) return;
+      const {row: r, col: c} = sqFromNum(sq);
+      if (r < 0 || r > 7 || c < 0 || c > 7) return;
+      newBoard[r][c] = { color, type: info.type, id: colId, moved: true };
+    });
+  });
   return newBoard;
 }
 
@@ -1085,20 +1089,16 @@ function boardFromDB(row) {
 //  WRITE INITIAL BOARD TO DB
 // ═══════════════════════════════════════════════
 async function writeInitialBoard() {
-  const myPieces = {};
-  Object.entries(PIECE_IDS[myColor]).forEach(([id, info]) => {
-    myPieces[id] = sqNum(info.startRow, info.startCol);
+  const allPieces = {};
+  ['white','black'].forEach(color => {
+    const prefix = color === 'white' ? 'w' : 'b';
+    Object.entries(PIECE_IDS[color]).forEach(([id, info]) => {
+      allPieces[prefix+id] = sqNum(info.startRow, info.startCol);
+    });
   });
-  const oppColor = myColor === 'white' ? 'black' : 'white';
-  const oppPieces = {};
-  Object.entries(PIECE_IDS[oppColor]).forEach(([id, info]) => {
-    oppPieces[id] = sqNum(info.startRow, info.startCol);
-  });
-
-  // Write to my row
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({...myPieces, ...oppPieces}) });
-  // Write to opponent row (mirror)
-  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`, { method:'PATCH', body: JSON.stringify({...myPieces, ...oppPieces}) });
+  // اكتب الـ board الأولي في صف الاتنين (مرة واحدة فقط في البداية)
+  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify(allPieces) });
+  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`,    { method:'PATCH', body: JSON.stringify(allPieces) });
 }
 
 // ═══════════════════════════════════════════════
@@ -1419,8 +1419,10 @@ async function pollForMove() {
   if (!isInMatch || !opponent) return;
   if (currentTurn === myColor) return; // my turn, no need to poll
 
-  const cols = Object.keys(PIECE_IDS.white).concat(Object.keys(PIECE_IDS.black)).join(',');
-  // اقرأ من صف الخصم — هو اللي كتب حركته هناك
+  const wCols = Object.keys(PIECE_IDS.white).map(id=>'w'+id);
+  const bCols = Object.keys(PIECE_IDS.black).map(id=>'b'+id);
+  const cols = wCols.concat(bCols).join(',');
+  // اقرأ من صف الخصم — هو كتب حركته في صفه
   const row = await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}&select=match-message,${cols},end-result`, { method:'GET' });
   if (!row || !row[0]) return;
 
@@ -1458,9 +1460,9 @@ async function pollForMove() {
 
   // ── تتبع المأكولات ──
   if (msg.captured) {
-    const captColor = Object.keys(PIECE_IDS.white).includes(msg.captured) ? 'white' : 'black';
-    const captType  = PIECE_IDS[captColor][msg.captured].type;
-    // القطعة المأكولة لونها = لوني → أكل خصمي منها
+    const captColor = msg.captured.startsWith('w') ? 'white' : 'black';
+    const baseName  = msg.captured.slice(1);
+    const captType  = (PIECE_IDS[captColor][baseName] || {type:'pawn'}).type;
     if (captColor === myColor) capturedByOpp.push({ color: captColor, type: captType });
     else                       capturedByMe.push({ color: captColor, type: captType });
     playCapture();
