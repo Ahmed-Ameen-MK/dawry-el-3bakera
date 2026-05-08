@@ -1016,6 +1016,9 @@ async function startMatch(opp, starterID) {
   // الأبيض فقط هو اللي يكتب الـ board الأولي في DB
   if (myColor === 'white') {
     await writeInitialBoard();
+  } else {
+    // الأسود ينتظر الأبيض يكتب الـ board في DB ويقرأه (مع retry)
+    await waitForInitialBoard();
   }
 
   // Setup header
@@ -1062,6 +1065,24 @@ function initBoard() {
   };
   setup('white');
   setup('black');
+}
+
+// انتظر حتى يكتب الأبيض الـ board الأولي في DB (للاعب الأسود فقط)
+async function waitForInitialBoard() {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    await new Promise(r => setTimeout(r, 500));
+    const cols = Object.keys(PIECE_IDS.white).concat(Object.keys(PIECE_IDS.black)).join(',');
+    const row = await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}&select=${cols}`, { method:'GET' });
+    if (!row || !row[0]) continue;
+    // تحقق أن على الأقل الملك الأبيض موجود في DB
+    const kingVal = row[0]['King'];
+    if (kingVal && kingVal !== 'died' && !isNaN(parseInt(kingVal))) {
+      board = boardFromDB(row[0]);
+      return;
+    }
+  }
+  // إذا فشل، استخدم board المحلي كـ fallback
+  console.warn('waitForInitialBoard: timeout, using local board');
 }
 
 // Load board from DB columns
@@ -1377,6 +1398,9 @@ async function executeMove(fromRow, fromCol, toRow, toCol) {
 //  DB WRITE (single move)
 // ═══════════════════════════════════════════════
 async function writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, special) {
+  // دائماً نحوّل الإحداثيات إلى منظور الأبيض المطلق قبل التخزين
+  // الأبيض: row كما هو. الأسود: row = 7 - row (لأن الـ board الداخلي مشترك)
+  // في الواقع board الداخلي موحّد (row0=أعلى) لكليهما، فلا نحتاج تحويل
   const newSq    = sqNum(toRow, toCol);
   const fromSq   = sqNum(fromRow, fromCol);
   const update   = {};
@@ -1393,15 +1417,15 @@ async function writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, sp
   const moveMsg = JSON.stringify({
     turn:     currentTurn,          // دور مين دلوقتي (لاعب الانتظار)
     pieceId:  piece.id,             // اسم القطعة اللي اتحركت
-    from:     fromSq,               // المربع اللي جت منه
-    to:       newSq,                // المربع اللي راحت ليه
+    from:     fromSq,               // المربع اللي جت منه (إحداثيات مطلقة)
+    to:       newSq,                // المربع اللي راحت ليه (إحداثيات مطلقة)
     captured: captured ? captured.id : null,
     special:  special || null,
     ts:       Date.now()
   });
   update['match-message'] = moveMsg;
 
-  // اكتب في صف الاتنين
+  // اكتب في صف الاتنين بنفس البيانات (إحداثيات مطلقة موحّدة)
   await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify(update) });
   await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`,    { method:'PATCH', body: JSON.stringify(update) });
 }
