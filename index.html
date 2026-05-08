@@ -527,6 +527,176 @@
     .vs-header { padding: 16px; }
   }
 
+  /* ── LARGER PLAY BUTTON ── */
+  .btn-play {
+    padding: 20px 56px !important;
+    font-size: 20px !important;
+    border-radius: 60px !important;
+    box-shadow: 0 4px 24px rgba(0,113,227,0.35) !important;
+  }
+  .btn-play i { font-size: 18px !important; }
+
+  /* ── PLAY SUBTITLE ── */
+  .play-subtitle {
+    font-size: 13px;
+    color: var(--ink3);
+    margin-top: 10px;
+    font-weight: 400;
+    letter-spacing: 0.1px;
+  }
+
+  /* ── LIVE STATS ROW ── */
+  .live-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .live-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid;
+    transition: all 0.3s;
+    /* Glassmorphism */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .live-stat-pill.green {
+    background: rgba(29,131,72,0.08);
+    border-color: rgba(29,131,72,0.25);
+    color: var(--green);
+  }
+  .live-stat-pill.red-state {
+    background: rgba(192,57,43,0.08);
+    border-color: rgba(192,57,43,0.25);
+    color: var(--red);
+  }
+  .pulse-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    display: inline-block;
+  }
+  .pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    animation: pulseRing 1.4s ease-out infinite;
+  }
+  .pulse-dot.green-dot { background: #1d8348; }
+  .pulse-dot.green-dot::after { background: rgba(29,131,72,0.3); }
+  .pulse-dot.red-dot { background: var(--red); }
+  .pulse-dot.red-dot::after { background: rgba(192,57,43,0.3); }
+  @keyframes pulseRing {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* ── SHARE BUTTON ── */
+  .btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 40px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: var(--ink2);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    margin-top: 14px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+  }
+  .btn-share:hover {
+    background: rgba(0,113,227,0.07);
+    border-color: var(--blue);
+    color: var(--blue);
+    transform: scale(1.02);
+  }
+  .btn-share i { font-size: 12px; }
+
+  /* ── OFFLINE GAMES GRID ── */
+  .offline-games-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .offline-game-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    text-decoration: none;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+  }
+  .offline-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    border-color: var(--blue);
+    background: rgba(0,113,227,0.04);
+  }
+  .offline-game-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .offline-game-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .offline-game-sub {
+    font-size: 11px;
+    color: var(--ink3);
+    font-weight: 400;
+  }
+  .offline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink3);
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+
+  /* ── APPLE GLASS CARD upgrade ── */
+  .glass-card {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
   /* ── MOBILE NAV: رموز فقط في الشاشات الضيقة ── */
   @media (max-width: 520px) {
     nav button .nav-text { display: none; }
@@ -824,6 +994,43 @@
           <button class="btn-play" id="play-btn" onclick="startSearch()">
             <i class="fa-solid fa-play"></i> العب مباراة
           </button>
+          <p class="play-subtitle">تحدّى الأسئلة مع أناس حقيقيين</p>
+
+          <!-- Live Stats -->
+          <div class="live-stats-row" id="live-stats-row">
+            <div class="live-stat-pill green" id="searching-pill">
+              <span class="pulse-dot green-dot" id="searching-dot"></span>
+              <span id="searching-count">0</span> لاعب متاح للمنافسة
+            </div>
+            <div class="live-stat-pill green" id="matches-pill">
+              <span class="pulse-dot green-dot" id="matches-dot"></span>
+              <span id="matches-count">0</span> مباراة نشطة الآن
+            </div>
+          </div>
+
+          <!-- Share Button -->
+          <div style="text-align:center">
+            <button class="btn-share" onclick="shareWebsite()">
+              <i class="fa-solid fa-share-nodes"></i> شارك الموقع ليزداد عدد اللاعبين
+            </button>
+          </div>
+
+          <!-- Offline Games -->
+          <div class="offline-games-grid">
+            <a href="kanji-memory.html" class="offline-game-btn glass-card">
+              <div class="offline-game-icon">🀄</div>
+              <div class="offline-game-title">ذاكرة الكانجي</div>
+              <div class="offline-game-sub">تحدّ الذاكرة</div>
+              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+            </a>
+            <a href="sudoku.html" class="offline-game-btn glass-card">
+              <div class="offline-game-icon">🔢</div>
+              <div class="offline-game-title">السودوكو</div>
+              <div class="offline-game-sub">ألعاب العباقرة</div>
+              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+            </a>
+          </div>
+
           <div class="searching-anim" id="searching-anim">
             <div class="search-ring"></div>
             <div class="search-timer-text" id="search-text">جاري البحث عن خصم...</div>
@@ -1193,6 +1400,7 @@ function showDashboard() {
   document.getElementById('stat-country').textContent = u.country || '';
   loadRank();
   updateNavAvatar();
+  startLiveStats();
 }
 
 function updateNavAvatar() {
@@ -2225,7 +2433,131 @@ const LANG_LABELS = {
   tr: { name: 'Türkçe', dir: 'ltr', play: 'Maç Oyna', search: 'Rakip aranıyor...', q: 'Soru', pts: 'Puan', rank: 'Sıralaman', leaders: 'Sıralama', account: 'Hesabım', home: 'Ana Sayfa', back: 'Ana Sayfaya Dön', win: 'Kazandın!', lose: 'Kaybettin', draw: 'Berabere!', forfeit: 'Maçı Terk Et', send: '', chat: 'Maç Sohbeti', chatph: 'Mesaj gönder...', timer: 'Süre', searching: 'Aranıyor', stop: 'İptal' }
 };
 
-let currentLang = localStorage.getItem('genius_lang') || 'ar';
+// ── LIVE STATS (polling every 0.5s) ──
+let liveStatsInterval = null;
+
+async function fetchLiveStats() {
+  try {
+    // Searching players: status = 'searching'
+    const [searchRes, matchRes] = await Promise.all([
+      sbFetch('/rest/v1/system?status=eq.searching&select=id', { method: 'GET' }),
+      sbFetch('/rest/v1/system?match=not.is.null&select=id,match', { method: 'GET' })
+    ]);
+
+    const searchingCount = Array.isArray(searchRes) ? searchRes.length : 0;
+
+    // Active matches: rows where match column has an opponent player id
+    let activeMatchIds = new Set();
+    if (Array.isArray(matchRes)) {
+      matchRes.forEach(row => {
+        if (row.match && String(row.match).trim() !== '') {
+          activeMatchIds.add(row.match);
+        }
+      });
+    }
+    const activeMatches = Math.floor(activeMatchIds.size); // each match counted once (2 players share 1 match)
+
+    updateLiveStatsPills(searchingCount, activeMatches);
+  } catch(e) {
+    // silently fail
+  }
+}
+
+function updateLiveStatsPills(searching, matches) {
+  const sPill = document.getElementById('searching-pill');
+  const mPill = document.getElementById('matches-pill');
+  const sDot = document.getElementById('searching-dot');
+  const mDot = document.getElementById('matches-dot');
+  const sCount = document.getElementById('searching-count');
+  const mCount = document.getElementById('matches-count');
+
+  if (!sPill || !mPill) return;
+
+  if (sCount) sCount.textContent = searching;
+  if (mCount) mCount.textContent = matches;
+
+  // Color: green if >0, red if 0
+  [sPill, sDot].forEach(el => {
+    if (!el) return;
+    if (searching > 0) {
+      sPill.classList.remove('red-state'); sPill.classList.add('green');
+      sDot.classList.remove('red-dot'); sDot.classList.add('green-dot');
+    } else {
+      sPill.classList.remove('green'); sPill.classList.add('red-state');
+      sDot.classList.remove('green-dot'); sDot.classList.add('red-dot');
+    }
+  });
+
+  if (matches > 0) {
+    mPill.classList.remove('red-state'); mPill.classList.add('green');
+    mDot.classList.remove('red-dot'); mDot.classList.add('green-dot');
+  } else {
+    mPill.classList.remove('green'); mPill.classList.add('red-state');
+    mDot.classList.remove('green-dot'); mDot.classList.add('red-dot');
+  }
+}
+
+function startLiveStats() {
+  fetchLiveStats();
+  if (!liveStatsInterval) {
+    liveStatsInterval = setInterval(fetchLiveStats, 500);
+  }
+}
+
+function stopLiveStats() {
+  if (liveStatsInterval) {
+    clearInterval(liveStatsInterval);
+    liveStatsInterval = null;
+  }
+}
+
+// Start polling whenever dashboard is visible
+const _origShowDashboard = window.showDashboard;
+if (typeof showDashboard === 'function') {
+  const __sd = showDashboard;
+  window.showDashboard = function(...args) {
+    __sd.apply(this, args);
+    startLiveStats();
+  };
+}
+
+// Also start on DOMContentLoaded if user is already logged in
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('dashboard-section') &&
+      document.getElementById('dashboard-section').style.display !== 'none') {
+    startLiveStats();
+  }
+});
+
+// Fallback: start polling 1s after page load
+setTimeout(() => {
+  if (document.getElementById('live-stats-row')) startLiveStats();
+}, 1000);
+
+// ── SHARE WEBSITE ──
+function shareWebsite() {
+  const shareData = {
+    title: 'دوري العباقرة',
+    text: 'تحدّى أسئلة المعرفة مع لاعبين حقيقيين من حول العالم! العب الآن 🧠',
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.querySelector('.btn-share');
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> تم نسخ الرابط!';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    }).catch(() => {
+      prompt('انسخ الرابط:', window.location.href);
+    });
+  }
+}
+
+
 let translationCache = {};
 
 try {
