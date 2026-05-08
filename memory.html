@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة الذاكرة — دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f5f7;
+  --bg3: #e8e8ed;
+  --ink: #1d1d1f;
+  --ink2: #3d3d3f;
+  --ink3: #6e6e73;
+  --line: #d2d2d7;
+  --line2: rgba(0,0,0,0.06);
+  --blue: #0071e3;
+  --blue-hover: #0077ed;
+  --blue-light: #e8f0fd;
+  --green: #1d8348;
+  --green-bg: #f0faf4;
+  --red: #c0392b;
+  --red-bg: #fef1ef;
+  --gold: #b5882e;
+  --gold-bg: #fdf6e3;
+  --radius: 18px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 0 24px;
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.header-inner {
+  max-width: 860px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.brand {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.3px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none;
+}
+.brand i { color: var(--blue); font-size: 15px; }
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 30px; padding: 6px 14px 6px 6px;
+  font-size: 13px; font-weight: 500; color: var(--ink2);
+}
+.user-pill-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--ink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px; flex-shrink: 0;
+  overflow: hidden;
+}
+.user-pill-pts { display: flex; align-items: center; gap: 4px; color: var(--blue); font-weight: 700; }
+.user-pill-pts i { font-size: 10px; }
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 52px 24px 36px;
+  border-bottom: 1px solid var(--line2);
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--bg2); color: var(--blue);
+  border: 1px solid var(--line);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -1.5px; color: var(--ink);
+  margin-bottom: 10px;
+}
+.hero h1 span { color: var(--blue); }
+.hero p { font-size: 16px; color: var(--ink3); font-weight: 400; line-height: 1.5; }
+
+/* ── NOT LOGGED IN ── */
+#not-logged-in {
+  max-width: 420px; margin: 48px auto; text-align: center;
+  padding: 40px;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+#not-logged-in i { font-size: 48px; color: var(--ink3); margin-bottom: 20px; display: block; }
+#not-logged-in h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+#not-logged-in p { color: var(--ink3); margin-bottom: 24px; font-size: 15px; }
+#not-logged-in a {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue); color: #fff;
+  padding: 13px 32px; border-radius: 50px;
+  font-size: 15px; font-weight: 600; text-decoration: none;
+  transition: all 0.15s;
+}
+#not-logged-in a:hover { background: var(--blue-hover); }
+
+/* ── START SCREEN ── */
+#start-screen { padding: 36px 0; }
+.section-title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; color: var(--ink); text-align: center; }
+.section-sub { font-size: 15px; color: var(--ink3); margin-bottom: 28px; text-align: center; }
+
+.level-msg {
+  background: linear-gradient(135deg, #0071e3 0%, #3a94ff 100%);
+  color: #fff; border-radius: var(--radius); padding: 18px 24px;
+  max-width: 500px; margin: 0 auto 20px;
+  font-size: 14px; font-weight: 500; line-height: 1.6;
+  text-align: center;
+}
+.level-msg strong { font-size: 16px; display: block; margin-bottom: 4px; }
+
+.pts-info-box {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px 24px;
+  max-width: 500px; margin: 0 auto 24px;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.pts-info-box i { font-size: 20px; color: var(--blue); flex-shrink: 0; margin-top: 2px; }
+.pts-info-box p { font-size: 14px; color: var(--ink2); line-height: 1.6; }
+.pts-info-box strong { color: var(--ink); }
+
+/* diff preview card */
+#auto-diff-wrap { max-width: 320px; margin: 0 auto 28px; }
+.diff-preview {
+  background: var(--bg); border: 2px solid var(--blue);
+  border-radius: var(--radius); padding: 28px 24px;
+  text-align: center; box-shadow: var(--shadow);
+  background: var(--blue-light);
+}
+.diff-preview .dp-icon { font-size: 40px; margin-bottom: 12px; }
+.diff-preview h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.diff-preview p { font-size: 14px; color: var(--ink3); margin-bottom: 10px; }
+.diff-preview .dp-meta { font-size: 13px; color: var(--blue); font-weight: 600; display: flex; justify-content: center; gap: 16px; }
+
+.btn-start {
+  display: flex; width: 100%; max-width: 300px; margin: 0 auto;
+  padding: 16px; border: none; border-radius: 50px;
+  background: var(--blue); color: #fff;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 17px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; letter-spacing: -0.3px;
+  align-items: center; justify-content: center; gap: 10px;
+}
+.btn-start:hover { background: var(--blue-hover); transform: scale(1.02); }
+.btn-start:active { transform: scale(0.98); }
+
+/* ── GAME AREA ── */
+#game-area { padding: 28px 0; }
+
+.game-meta {
+  display: flex; align-items: stretch; gap: 12px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.meta-card {
+  flex: 1; min-width: 130px;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.meta-card .mc-label {
+  font-size: 11px; font-weight: 600; color: var(--ink3);
+  text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 5px;
+}
+.meta-card .mc-value {
+  font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.5px;
+}
+.meta-card .mc-sub { font-size: 12px; color: var(--ink3); margin-top: 3px; }
+
+.timer-display {
+  font-size: 32px; font-weight: 700; letter-spacing: -1px;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.timer-display.warning { color: var(--gold); }
+.timer-display.danger { color: var(--red); animation: pulse 0.5s ease infinite alternate; }
+@keyframes pulse { from{opacity:1} to{opacity:0.5} }
+
+/* ── MEMORY GRID ── */
+.board-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+
+.memory-grid {
+  display: grid;
+  gap: 10px;
+  direction: ltr;
+}
+
+/* ── CARD ── */
+.mem-card {
+  aspect-ratio: 3/4;
+  cursor: pointer;
+  perspective: 800px;
+  position: relative;
+}
+
+.card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+}
+
+.mem-card.flipped .card-inner,
+.mem-card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+/* BACK face */
+.card-back {
+  background: var(--ink);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+.card-back-pattern {
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 12px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 12px);
+}
+.card-back-logo {
+  position: relative; z-index: 1;
+  font-size: 22px; color: rgba(255,255,255,0.15);
+  letter-spacing: -1px;
+}
+
+/* FRONT face */
+.card-front {
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  transform: rotateY(180deg);
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.kanji-char {
+  font-size: clamp(28px, 5vw, 48px);
+  line-height: 1;
+  color: var(--ink);
+  font-weight: 400;
+  direction: ltr;
+}
+
+.kanji-meaning {
+  font-size: clamp(9px, 1.5vw, 12px);
+  color: var(--ink3);
+  font-weight: 500;
+  text-align: center;
+  padding: 0 6px;
+  direction: rtl;
+}
+
+/* matched state */
+.mem-card.matched .card-front {
+  background: var(--green-bg);
+  border-color: rgba(29, 131, 72, 0.3);
+}
+.mem-card.matched .kanji-char { color: var(--green); }
+
+/* error flash */
+.mem-card.error-flash .card-inner {
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%,100%{transform:rotateY(180deg) translateX(0)}
+  25%{transform:rotateY(180deg) translateX(-5px)}
+  75%{transform:rotateY(180deg) translateX(5px)}
+}
+.mem-card.error-flash .card-front {
+  background: var(--red-bg);
+  border-color: rgba(192,57,43,0.3);
+}
+.mem-card.error-flash .kanji-char { color: var(--red); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  width: 100%; max-width: 560px;
+  background: var(--bg2); border-radius: 20px;
+  height: 6px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; border-radius: 20px;
+  background: var(--blue);
+  transition: width 0.4s ease;
+}
+
+/* ── CONTROLS ── */
+.game-controls {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  width: 100%; max-width: 560px;
+}
+.ctrl-btn {
+  flex: 1; min-width: 100px;
+  padding: 11px 14px; border: 1px solid var(--line);
+  background: var(--bg2); border-radius: var(--radius-sm);
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--ink2);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.ctrl-btn:hover { background: var(--bg3); }
+.ctrl-btn.danger-btn:hover { background: var(--red-bg); color: var(--red); border-color: rgba(192,57,43,0.25); }
+.ctrl-btn i { font-size: 12px; }
+
+/* ── OVERLAYS ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100; display: none;
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.overlay.show { display: flex; }
+.overlay-box {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: 24px; padding: 48px 40px;
+  text-align: center; max-width: 380px; width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pop { from{transform:scale(0.82);opacity:0} to{transform:scale(1);opacity:1} }
+.overlay-icon { font-size: 56px; margin-bottom: 16px; }
+.overlay-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+.overlay-sub { font-size: 15px; color: var(--ink3); margin-bottom: 8px; line-height: 1.5; }
+.pts-change {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px; border-radius: 20px;
+  font-size: 16px; font-weight: 700; margin: 12px 0 24px;
+}
+.pts-change.gain { background: var(--green-bg); color: var(--green); }
+.pts-change.lose { background: var(--red-bg); color: var(--red); }
+.overlay-btn {
+  width: 100%; padding: 13px; border: none; border-radius: 50px;
+  background: var(--blue); color: #fff;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; margin-bottom: 10px;
+}
+.overlay-btn:hover { background: var(--blue-hover); }
+.overlay-btn.secondary {
+  background: var(--bg2); color: var(--ink); border: 1px solid var(--line);
+}
+.overlay-btn.secondary:hover { background: var(--bg3); }
+
+/* ── CONFETTI ── */
+.confetti-piece {
+  position: fixed; top: -10px;
+  width: 8px; height: 8px; border-radius: 50%;
+  animation: confettiFall linear forwards;
+  z-index: 200; pointer-events: none;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 12px 22px;
+  border-radius: 40px; font-size: 14px; font-weight: 500;
+  z-index: 300; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+/* ── DIFF BADGE ── */
+.diff-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; margin-top: 6px;
+}
+.diff-easy   { background: var(--green-bg); color: var(--green); }
+.diff-medium { background: var(--gold-bg);  color: var(--gold); }
+.diff-hard   { background: #fef1ef; color: #c0392b; }
+.diff-expert { background: #f0eaff; color: #6c3ebf; }
+
+/* ── ANIM ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.anim { animation: fadeUp 0.35s ease; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 520px) {
+  .meta-card { padding: 12px 14px; }
+  .timer-display { font-size: 26px; }
+  .overlay-box { padding: 36px 24px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-brain"></i> دوري العباقرة
+    </a>
+    <div class="user-pill" id="user-pill" style="display:none">
+      <div class="user-pill-avatar" id="pill-avatar"></div>
+      <span id="pill-name"></span>
+      <div class="user-pill-pts">
+        <i class="fa-solid fa-ranking-star"></i>
+        <span id="pill-pts">0</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-eyebrow"><i class="fa-solid fa-layer-group"></i> لعبة الذاكرة</div>
+    <h1>كانجي<br><span>تحدّي الذاكرة</span></h1>
+    <p>اكتشف الأزواج المتطابقة قبل نفاد الوقت — هل تتذكر؟</p>
+  </div>
+
+  <!-- NOT LOGGED IN -->
+  <div id="not-logged-in" style="display:none">
+    <i class="fa-solid fa-lock"></i>
+    <h2>سجّل دخولك أولاً</h2>
+    <p>تحتاج إلى حساب في دوري العباقرة للعب وكسب نقاط الصدارة</p>
+    <a href="index.html"><i class="fa-solid fa-arrow-right-to-bracket"></i> الذهاب لتسجيل الدخول</a>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="start-screen" style="display:none" class="anim">
+    <h2 class="section-title">مستواك المحدد تلقائياً</h2>
+    <p class="section-sub">نختار عدد البطاقات بناءً على نقاط صدارتك</p>
+
+    <div class="level-msg" id="level-msg"></div>
+
+    <div class="pts-info-box">
+      <i class="fa-solid fa-circle-info"></i>
+      <p>
+        <strong>نظام النقاط:</strong>
+        الفوز يمنحك <strong>+3 نقاط صدارة</strong> <i class="fa-solid fa-star" style="color:var(--gold)"></i>
+        والخسارة (انتهاء الوقت) تخصم <strong>-2 نقاط</strong>.
+        كلما ارتفع مستواك، زاد عدد البطاقات!
+      </p>
+    </div>
+
+    <div id="auto-diff-wrap"></div>
+
+    <button class="btn-start" onclick="startGame()">
+      <i class="fa-solid fa-play"></i> ابدأ اللعبة
+    </button>
+  </div>
+
+  <!-- GAME AREA -->
+  <div id="game-area" style="display:none" class="anim">
+    <div class="game-meta">
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-clock"></i> الوقت المتبقي</div>
+        <div class="timer-display" id="timer-display">00:00</div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-layer-group"></i> المستوى</div>
+        <div class="mc-value" id="game-diff-name">—</div>
+        <div id="game-diff-badge"></div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-check-double"></i> الأزواج</div>
+        <div class="mc-value"><span id="matched-count">0</span> / <span id="total-pairs">0</span></div>
+      </div>
+      <div class="meta-card">
+        <div class="mc-label"><i class="fa-solid fa-ranking-star"></i> نقاطك</div>
+        <div class="mc-value" id="game-pts">0</div>
+        <div class="mc-sub">نقطة صدارة</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="memory-grid" id="memory-grid"></div>
+      <div class="game-controls">
+        <button class="ctrl-btn danger-btn" onclick="confirmGiveUp()">
+          <i class="fa-solid fa-flag"></i> استسلام
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- WIN OVERLAY -->
+<div class="overlay" id="win-overlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">🎌</div>
+    <div class="overlay-title">أحسنت!</div>
+    <div class="overlay-sub" id="win-sub">أكملت جميع الأزواج!</div>
+    <div class="pts-change gain" id="pts-win-display">
+      <i class="fa-solid fa-ranking-star"></i> +3 نقاط صدارة
+    </div>
+    <div class="overlay-sub" id="new-pts-display" style="margin-bottom:16px"></div>
+    <button class="overlay-btn" onclick="goToStart()">
+      <i class="fa-solid fa-rotate-right" style="margin-left:6px"></i> لعبة جديدة
+    </button>
+    <button class="overlay-btn secondary" onclick="goHome()">
+      <i class="fa-solid fa-home" style="margin-left:6px"></i> الرئيسية
+    </button>
+  </div>
+</div>
+
+<!-- LOSE OVERLAY -->
+<div class="overlay" id="lose-overlay">
+  <div class="overlay-box">
+    <div class="overlay-icon">⏰</div>
+    <div class="overlay-title">انتهت اللعبة</div>
+    <div class="overlay-sub" id="lose-sub">انتهى الوقت! لا تستسلم، حاول مجدداً.</div>
+    <div class="pts-change lose" id="pts-lose-display">
+      <i class="fa-solid fa-ranking-star"></i> -2 نقاط صدارة
+    </div>
+    <div class="overlay-sub" id="new-pts-lose-display" style="margin-bottom:16px"></div>
+    <button class="overlay-btn" onclick="goToStart()">
+      <i class="fa-solid fa-rotate-right" style="margin-left:6px"></i> حاول مجدداً
+    </button>
+    <button class="overlay-btn secondary" onclick="goHome()">
+      <i class="fa-solid fa-home" style="margin-left:6px"></i> الرئيسية
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const Q_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, opts = {}) {
+  try {
+    const res = await fetch(SB_URL + path, { ...opts, headers: { ...Q_HEADERS, ...(opts.headers || {}) } });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return null; }
+  } catch { return null; }
+}
+
+// ============================================================
+// KANJI DATA — 40 pairs available
+// ============================================================
+const ALL_KANJI = [
+  { char: '火', meaning: 'نار' },
+  { char: '水', meaning: 'ماء' },
+  { char: '木', meaning: 'شجرة' },
+  { char: '金', meaning: 'ذهب' },
+  { char: '土', meaning: 'تراب' },
+  { char: '日', meaning: 'شمس' },
+  { char: '月', meaning: 'قمر' },
+  { char: '山', meaning: 'جبل' },
+  { char: '川', meaning: 'نهر' },
+  { char: '風', meaning: 'ريح' },
+  { char: '雨', meaning: 'مطر' },
+  { char: '雪', meaning: 'ثلج' },
+  { char: '花', meaning: 'زهرة' },
+  { char: '鳥', meaning: 'طير' },
+  { char: '魚', meaning: 'سمكة' },
+  { char: '犬', meaning: 'كلب' },
+  { char: '猫', meaning: 'قطة' },
+  { char: '馬', meaning: 'حصان' },
+  { char: '空', meaning: 'سماء' },
+  { char: '海', meaning: 'بحر' },
+  { char: '心', meaning: 'قلب' },
+  { char: '夢', meaning: 'حلم' },
+  { char: '光', meaning: 'ضوء' },
+  { char: '愛', meaning: 'حب' },
+  { char: '力', meaning: 'قوة' },
+  { char: '道', meaning: 'طريق' },
+  { char: '星', meaning: 'نجمة' },
+  { char: '雷', meaning: 'رعد' },
+  { char: '森', meaning: 'غابة' },
+  { char: '石', meaning: 'حجر' },
+];
+
+// ============================================================
+// DIFFICULTY CONFIG
+// ============================================================
+const DIFFICULTIES = [
+  { id: 'easy',   name: 'سهل',    icon: 'fa-solid fa-seedling',           pairs: 6,  cols: 4, time: 90,  pts_req: 0,  color: 'diff-easy',   desc: '6 أزواج — للمبتدئين' },
+  { id: 'medium', name: 'متوسط',  icon: 'fa-solid fa-brain',              pairs: 10, cols: 5, time: 120, pts_req: 15, color: 'diff-medium', desc: '10 أزواج — تحدٍّ متوازن' },
+  { id: 'hard',   name: 'صعب',    icon: 'fa-solid fa-skull',              pairs: 16, cols: 6, time: 150, pts_req: 40, color: 'diff-hard',   desc: '16 زوجاً — اختبار حقيقي' },
+  { id: 'expert', name: 'خبير',   icon: 'fa-solid fa-fire-flame-curved',  pairs: 24, cols: 8, time: 180, pts_req: 80, color: 'diff-expert', desc: '24 زوجاً — بدون رحمة' },
+];
+
+function getDiffForLevel(pts) {
+  if (pts >= 80) return 'expert';
+  if (pts >= 40) return 'hard';
+  if (pts >= 15) return 'medium';
+  return 'easy';
+}
+
+function getLevelMessage(pts) {
+  if (pts >= 80) return { title: '<i class="fa-solid fa-fire-flame-curved"></i> أنت على مستوى الخبراء!', sub: '24 زوجاً في انتظارك — تحدٍّ لمن يثق بذاكرته.' };
+  if (pts >= 40) return { title: '<i class="fa-solid fa-skull"></i> مستوى صعب — أنت تتقدم!', sub: '16 زوجاً تحتاج تركيزاً كاملاً. هل أنت مستعد؟' };
+  if (pts >= 15) return { title: '<i class="fa-solid fa-brain"></i> مستوى متوسط — مستمر في التطور!', sub: '10 أزواج لاختبار ذاكرتك. استمر!' };
+  return { title: '<i class="fa-solid fa-seedling"></i> مرحباً بك في لعبة الذاكرة!', sub: 'ابدأ بـ 6 أزواج وارفع مستواك مع كل فوز. +3 نقاط لكل انتصار!' };
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let selectedDiff = null;
+let cards = [];           // array of {id, kanji, pairId, flipped, matched}
+let flippedCards = [];    // max 2 at a time
+let lockBoard = false;
+let matchedPairs = 0;
+let totalPairs = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let gameActive = false;
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('genius_user');
+  if (!saved) {
+    document.getElementById('not-logged-in').style.display = 'block';
+    return;
+  }
+  try {
+    currentUser = JSON.parse(saved);
+    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=*`, { method: 'GET' }).then(res => {
+      if (res && res[0]) {
+        currentUser = res[0];
+        localStorage.setItem('genius_user', JSON.stringify(currentUser));
+      }
+      initUI();
+    });
+  } catch {
+    document.getElementById('not-logged-in').style.display = 'block';
+  }
+});
+
+function initUI() {
+  const pill = document.getElementById('user-pill');
+  pill.style.display = 'flex';
+  const av = document.getElementById('pill-avatar');
+  if (currentUser.avatar_url) {
+    av.innerHTML = `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    av.textContent = (currentUser.name || '?')[0].toUpperCase();
+  }
+  document.getElementById('pill-name').textContent = currentUser.name || '';
+  document.getElementById('pill-pts').textContent = currentUser.level || 0;
+  showStartScreen();
+}
+
+// ============================================================
+// START SCREEN
+// ============================================================
+function showStartScreen() {
+  document.getElementById('start-screen').style.display = 'block';
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('not-logged-in').style.display = 'none';
+
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const lvl = getLevelMessage(pts);
+  document.getElementById('level-msg').innerHTML = `<strong>${lvl.title}</strong> ${lvl.sub}`;
+
+  const diffId = getDiffForLevel(pts);
+  selectedDiff = diffId;
+  renderAutoDiffCard(pts, diffId);
+}
+
+function renderAutoDiffCard(pts, diffId) {
+  const wrap = document.getElementById('auto-diff-wrap');
+  const d = DIFFICULTIES.find(x => x.id === diffId);
+  if (!wrap || !d) return;
+  wrap.innerHTML = `
+    <div class="diff-preview">
+      <div class="dp-icon"><i class="${d.icon}"></i></div>
+      <h3>${d.name}</h3>
+      <p>${d.desc}</p>
+      <div class="dp-meta">
+        <span><i class="fa-solid fa-clock"></i> ${d.time} ثانية</span>
+        <span><i class="fa-solid fa-layer-group"></i> ${d.pairs} زوجاً</span>
+        <span><i class="fa-solid fa-ranking-star"></i> ${pts} نقطة</span>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// START GAME
+// ============================================================
+function startGame() {
+  const diff = DIFFICULTIES.find(d => d.id === selectedDiff);
+  if (!diff) return;
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  document.getElementById('game-diff-name').textContent = diff.name;
+  document.getElementById('game-diff-badge').innerHTML = `<div class="diff-badge ${diff.color}"><i class="${diff.icon}"></i> ${diff.name}</div>`;
+  document.getElementById('game-pts').textContent = pts;
+
+  totalPairs = diff.pairs;
+  matchedPairs = 0;
+  flippedCards = [];
+  lockBoard = false;
+  gameActive = true;
+
+  document.getElementById('total-pairs').textContent = totalPairs;
+  document.getElementById('matched-count').textContent = 0;
+  updateProgress();
+
+  buildCards(diff);
+
+  // Timer
+  timeLeft = diff.time;
+  updateTimer();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      endGame(false, 'timeout');
+    }
+  }, 1000);
+
+  // Brief preview: show all cards for 1.5s then flip back
+  setTimeout(() => {
+    document.querySelectorAll('.mem-card').forEach(c => c.classList.add('flipped'));
+    setTimeout(() => {
+      document.querySelectorAll('.mem-card:not(.matched)').forEach(c => c.classList.remove('flipped'));
+    }, 1200);
+  }, 300);
+}
+
+// ============================================================
+// BUILD CARDS
+// ============================================================
+function buildCards(diff) {
+  const grid = document.getElementById('memory-grid');
+  grid.innerHTML = '';
+
+  // Pick random kanji
+  const shuffled = [...ALL_KANJI].sort(() => Math.random() - 0.5).slice(0, diff.pairs);
+
+  // Create pairs
+  cards = [];
+  shuffled.forEach((k, i) => {
+    cards.push({ id: i * 2,     kanji: k, pairId: i });
+    cards.push({ id: i * 2 + 1, kanji: k, pairId: i });
+  });
+
+  // Shuffle
+  cards.sort(() => Math.random() - 0.5);
+
+  // Responsive cols
+  const cols = diff.cols;
+  const viewW = Math.min(window.innerWidth - 48, 820);
+  const gap = 10;
+  const cellW = Math.floor((viewW - gap * (cols - 1)) / cols);
+  const cellW_clamped = Math.min(cellW, 100);
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cellW_clamped}px)`;
+
+  cards.forEach(card => {
+    const el = document.createElement('div');
+    el.className = 'mem-card';
+    el.dataset.id = card.id;
+    el.style.width = cellW_clamped + 'px';
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back">
+          <div class="card-back-pattern"></div>
+          <div class="card-back-logo">漢字</div>
+        </div>
+        <div class="card-face card-front">
+          <div class="kanji-char">${card.kanji.char}</div>
+          <div class="kanji-meaning">${card.kanji.meaning}</div>
+        </div>
+      </div>
+    `;
+    el.addEventListener('click', () => onCardClick(card.id));
+    grid.appendChild(el);
+  });
+}
+
+// ============================================================
+// CARD CLICK
+// ============================================================
+function onCardClick(cardId) {
+  if (!gameActive || lockBoard) return;
+
+  const card = cards.find(c => c.id === cardId);
+  if (!card || card.matched) return;
+
+  // Already in flipped list
+  if (flippedCards.find(c => c.id === cardId)) return;
+
+  const el = document.querySelector(`.mem-card[data-id="${cardId}"]`);
+  el.classList.add('flipped');
+  flippedCards.push(card);
+
+  if (flippedCards.length === 2) {
+    lockBoard = true;
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const [a, b] = flippedCards;
+  if (a.pairId === b.pairId) {
+    // Match!
+    matchedPairs++;
+    document.getElementById('matched-count').textContent = matchedPairs;
+    updateProgress();
+
+    const elA = document.querySelector(`.mem-card[data-id="${a.id}"]`);
+    const elB = document.querySelector(`.mem-card[data-id="${b.id}"]`);
+    elA.classList.add('matched');
+    elB.classList.add('matched');
+    a.matched = true;
+    b.matched = true;
+
+    flippedCards = [];
+    lockBoard = false;
+
+    if (matchedPairs === totalPairs) {
+      clearInterval(timerInterval);
+      setTimeout(() => endGame(true), 500);
+    }
+  } else {
+    // No match
+    const elA = document.querySelector(`.mem-card[data-id="${a.id}"]`);
+    const elB = document.querySelector(`.mem-card[data-id="${b.id}"]`);
+    elA.classList.add('error-flash');
+    elB.classList.add('error-flash');
+
+    setTimeout(() => {
+      elA.classList.remove('flipped', 'error-flash');
+      elB.classList.remove('flipped', 'error-flash');
+      flippedCards = [];
+      lockBoard = false;
+    }, 900);
+  }
+}
+
+function updateProgress() {
+  const pct = totalPairs > 0 ? (matchedPairs / totalPairs) * 100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function updateTimer() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const s = (timeLeft % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timer-display');
+  el.textContent = `${m}:${s}`;
+  el.className = 'timer-display';
+  if (timeLeft <= 15) el.classList.add('danger');
+  else if (timeLeft <= 30) el.classList.add('warning');
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+async function endGame(won, reason = '') {
+  gameActive = false;
+  clearInterval(timerInterval);
+
+  const pts = currentUser.level || 0;
+  const delta = won ? 3 : -2;
+  const newPts = Math.max(0, pts + delta);
+
+  currentUser.level = newPts;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  document.getElementById('pill-pts').textContent = newPts;
+
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ level: newPts })
+  });
+
+  if (won) {
+    launchConfetti();
+    const diff = DIFFICULTIES.find(d => d.id === selectedDiff);
+    const elapsed = diff ? diff.time - timeLeft : 0;
+    const mins = Math.floor(elapsed / 60), secs = elapsed % 60;
+    document.getElementById('win-sub').textContent = `أكملت ${totalPairs} زوجاً في ${mins}:${secs.toString().padStart(2, '0')} دقيقة`;
+    document.getElementById('new-pts-display').textContent = `مجموع نقاطك الآن: ${newPts} نقطة`;
+    document.getElementById('win-overlay').classList.add('show');
+  } else {
+    document.getElementById('lose-sub').textContent = `انتهى الوقت! اكتشفت ${matchedPairs} من ${totalPairs} أزواج`;
+    document.getElementById('new-pts-lose-display').textContent = `مجموع نقاطك الآن: ${newPts} نقطة`;
+    document.getElementById('lose-overlay').classList.add('show');
+  }
+}
+
+function confirmGiveUp() {
+  if (!gameActive) return;
+  if (confirm('هل تريد الاستسلام؟ ستخسر 2 نقطة من الصدارة.')) {
+    clearInterval(timerInterval);
+    endGame(false, 'giveup');
+  }
+}
+
+function goToStart() {
+  document.getElementById('win-overlay').classList.remove('show');
+  document.getElementById('lose-overlay').classList.remove('show');
+  // refresh user
+  const saved = localStorage.getItem('genius_user');
+  if (saved) currentUser = JSON.parse(saved);
+  showStartScreen();
+}
+
+function goHome() { window.location.href = 'index.html'; }
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const colors = ['#0071e3','#34c759','#ff9f0a','#ff3b30','#5856d6','#32ade6'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (Math.random() * 8 + 5) + 'px';
+      piece.style.height = (Math.random() * 8 + 5) + 'px';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>
