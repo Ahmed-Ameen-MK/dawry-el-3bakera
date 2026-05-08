@@ -1377,22 +1377,33 @@ async function executeMove(fromRow, fromCol, toRow, toCol) {
 //  DB WRITE (single move)
 // ═══════════════════════════════════════════════
 async function writeMoveToDB(piece, fromRow, fromCol, toRow, toCol, captured, special) {
-  const newSq = sqNum(toRow, toCol);
-  const update = {};
+  const newSq    = sqNum(toRow, toCol);
+  const fromSq   = sqNum(fromRow, fromCol);
+  const update   = {};
+
+  // تحديث موضع القطعة
   update[piece.id] = newSq;
 
-  // Mark captured piece as died
+  // القطعة المأكولة → died
   if (captured) {
     update[captured.id] = 'died';
   }
 
-  // Store turn + special in match-message for opponent to detect
-  const msg = JSON.stringify({ turn: currentTurn, last: `${piece.id}:${newSq}`, captured: captured ? captured.id : null, special: special || null, ts: Date.now() });
-  update['match-message'] = msg;
+  // move-message: كل بيانات الحركة بالتفصيل للاعب الثاني
+  const moveMsg = JSON.stringify({
+    turn:     currentTurn,          // دور مين دلوقتي (لاعب الانتظار)
+    pieceId:  piece.id,             // اسم القطعة اللي اتحركت
+    from:     fromSq,               // المربع اللي جت منه
+    to:       newSq,                // المربع اللي راحت ليه
+    captured: captured ? captured.id : null,
+    special:  special || null,
+    ts:       Date.now()
+  });
+  update['match-message'] = moveMsg;
 
-  // Write to MY row AND opponent's row
+  // اكتب في صف الاتنين
   await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify(update) });
-  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`, { method:'PATCH', body: JSON.stringify(update) });
+  await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}`,    { method:'PATCH', body: JSON.stringify(update) });
 }
 
 // ═══════════════════════════════════════════════
@@ -1422,38 +1433,51 @@ async function pollForMove() {
     return;
   }
 
-  // Check for new move via match-message
+  // تحقق من وجود حركة جديدة عبر match-message
   const msgStr = row[0]['match-message'];
   if (!msgStr) return;
   let msg;
   try { msg = JSON.parse(msgStr); } catch(e) { return; }
-  if (!msg.ts || msg.ts <= lastMoveTs) return;
-  if (msg.turn !== myColor) return; // message says it's now my turn
+
+  // تجاهل رسائل الدردشة
+  if (!msg.ts || !msg.pieceId) return;
+  // تجاهل الرسائل القديمة
+  if (msg.ts <= lastMoveTs) return;
+  // الرسالة تقول إن الدور انتقل لي
+  if (msg.turn !== myColor) return;
+
   lastMoveTs = msg.ts;
 
-  // Reconstruct board from DB columns
+  // ── إعادة بناء الـ board من أعمدة DB ──
   board = boardFromDB(row[0]);
 
-  // Update captured tracking
+  // ── تحديث lastMove للتظليل الأصفر ──
+  const fromPos = sqFromNum(msg.from);
+  const toPos   = sqFromNum(msg.to);
+  lastMove = { from: fromPos, to: toPos };
+
+  // ── تتبع المأكولات ──
   if (msg.captured) {
-    // Find piece by id
     const captColor = Object.keys(PIECE_IDS.white).includes(msg.captured) ? 'white' : 'black';
-    const captType = PIECE_IDS[captColor][msg.captured].type;
-    if (captColor === myColor) capturedByOpp.push({color: captColor, type: captType});
-    else capturedByMe.push({color: captColor, type: captType});
+    const captType  = PIECE_IDS[captColor][msg.captured].type;
+    // القطعة المأكولة لونها = لوني → أكل خصمي منها
+    if (captColor === myColor) capturedByOpp.push({ color: captColor, type: captType });
+    else                       capturedByMe.push({ color: captColor, type: captType });
     playCapture();
-  } else { playMove(); }
+  } else {
+    playMove();
+  }
 
   currentTurn = myColor;
-  lastMove = null; // Will highlight after parsing
 
+  // ── كش مات ──
   if (msg.special === 'checkmate') {
     renderBoard();
     await endMatch('lose');
     return;
   }
 
-  // Check detection for my king
+  // ── كش ملك ──
   inCheck = isInCheckState(myColor) ? myColor : null;
   if (inCheck) {
     showCheckAlert();
@@ -1499,21 +1523,18 @@ function startChatPolling() {
   clearInterval(chatPollInterval);
   chatPollInterval = setInterval(async () => {
     if (!isInMatch || !opponent) return;
-    const row = await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}&select=match-message`, { method:'GET' });
+    // الدردشة تُقرأ من صف الخصم في عمود chat-message
+    const row = await sbFetch(`/rest/v1/chess?id=eq.${opponent.id}&select=chat-message`, { method:'GET' });
     if (!row || !row[0]) return;
-    const msgStr = row[0]['match-message'];
+    const msgStr = row[0]['chat-message'];
     if (!msgStr) return;
-    // Chat messages are stored separately — check if it starts with CHAT:
-    if (msgStr.startsWith('CHAT:')) {
-      const chatData = msgStr.slice(5);
-      const parts = chatData.split('|');
-      const ts = parseInt(parts[0]);
-      const text = parts.slice(1).join('|');
-      if (ts > lastChatTs) {
-        lastChatTs = ts;
-        appendChat(opponent.name, text, false);
+    try {
+      const parsed = JSON.parse(msgStr);
+      if (parsed.ts && parsed.ts > lastChatTs) {
+        lastChatTs = parsed.ts;
+        appendChat(opponent.name, parsed.text, false);
       }
-    }
+    } catch(e) {}
   }, 1000);
 }
 
@@ -1524,8 +1545,9 @@ async function sendChat() {
   input.value = '';
   const ts = Date.now();
   lastChatTs = ts;
-  const msg = `CHAT:${ts}|${text}`;
-  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({'match-message': msg}) });
+  // اكتب في عمود chat-message في صفي أنا فقط (الخصم يقرأ منه)
+  const msg = JSON.stringify({ ts, text });
+  await sbFetch(`/rest/v1/chess?id=eq.${currentUser.id}`, { method:'PATCH', body: JSON.stringify({'chat-message': msg}) });
   appendChat('أنا', text, true);
 }
 
