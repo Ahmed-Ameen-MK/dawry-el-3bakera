@@ -1031,53 +1031,56 @@ function buildBoardFromDefaults() {
 //  الخصم يكتب حركاته في صفي → أنا أقرأها من هنا
 // ═══════════════════════════════════════════════════════════
 async function pollMyRow() {
-  if (!isInMatch) return;
-  const cols = PIECE_COLS.join(',');
-  const rows = await sb(`/rest/v1/chess?id=eq.${currentUser.id}&select=${cols},match-message,match`,{method:'GET'});
-  if (!rows || !rows[0]) return;
-  const row = rows[0];
+  if (!isInMatch || !opponent) return;
 
-  // لو الماتش انتهى
-  if (row.match === 'off' || row.match === 'lost' || row.match === 'won') {
-    if (row.match === 'lost') { clearAll(); showResult('lose'); }
-    else if (row.match === 'won') { clearAll(); showResult('win'); }
-    return;
+  // (أ) اقرأ صفي — للتحقق من رسائل النهاية اللي يكتبها الخصم عندي
+  const myRows = await sb(`/rest/v1/chess?id=eq.${currentUser.id}&select=match-message,match`,{method:'GET'});
+  if (myRows && myRows[0]) {
+    const myRow = myRows[0];
+    // فحص match-message: لو فيه رسالة نهاية (الخصم كتبها في صفي)
+    const msgStr = myRow['match-message'];
+    if (msgStr && msgStr.startsWith('END:')) {
+      const result = msgStr.replace('END:','');
+      clearAll();
+      showResult(result === 'lose' ? 'win' : 'lose');
+      return;
+    }
+    // لو الماتش أُطفئ من صفي
+    if (myRow.match === 'off') { clearAll(); showHome(); return; }
   }
 
-  // فحص match-message: لو فيه رسالة نهاية
-  const msgStr = row['match-message'];
-  if (msgStr && msgStr.startsWith('END:')) {
-    const result = msgStr.replace('END:','');
-    clearAll();
-    showResult(result === 'lose' ? 'win' : 'lose'); // الخصم بيقول لي نتيجته، أنا العكس
-    return;
-  }
-
-  // لو مش دور الخصم (دوري أنا) → مفيش حاجة نقرأها
+  // لو مش دور الخصم → مفيش حاجة نقرأها
   if (currentTurn !== 'opp') return;
 
+  // (ب) اقرأ صف الخصم — عشان نجيب مواضع قطعه الجديدة
+  const cols = PIECE_COLS.join(',');
+  const oppRows = await sb(`/rest/v1/chess?id=eq.${opponent.id}&select=${cols}`,{method:'GET'});
+  if (!oppRows || !oppRows[0]) return;
+  const oppRow = oppRows[0];
+
   // مقارنة الـ row الحالي بالأخير عشان نكتشف تغيير
-  const rowStr = JSON.stringify(row);
+  const rowStr = JSON.stringify(oppRow);
   if (rowStr === lastKnownRow) return; // مفيش تغيير
   lastKnownRow = rowStr;
 
-  // اكتشاف القطعة اللي اتحركت
-  applyOpponentMove(row);
+  // اكتشاف القطعة اللي اتحركت وتطبيق الحركة
+  applyOpponentMove(oppRow);
 }
 
 // ═══════════════════════════════════════════════════════════
 //  تطبيق حركة الخصم
-//  الخصم كتب في صفي المربع من منظوره → نحوله لمنظوري (mirrorSq)
+//  الخصم كتب مواضع قطعه في صفه هو من منظوره → نقرأ صفه ونعكس المواضع
 // ═══════════════════════════════════════════════════════════
 function applyOpponentMove(dbRow) {
   // نبني board جديد من بيانات DB
   const newBoard = Array.from({length:8}, () => Array(8).fill(null));
 
-  // قطع الخصم — هو كتبها في صفي من منظوره → نعكسها لمنظوري
+  // قطع الخصم — هو كتبها في صفه من منظوره → نعكسها لمنظوري
   for (const col of PIECE_COLS) {
     const val = dbRow[col];
     if (!val || val === 'died' || val === 0) continue;
     const oppSqFromHisPerspective = Number(val);
+    if (isNaN(oppSqFromHisPerspective) || oppSqFromHisPerspective < 1 || oppSqFromHisPerspective > 64) continue;
     const mySq = mirrorSq(oppSqFromHisPerspective); // من منظوري
     const {row, col: c} = sqToRC(mySq);
     if (row < 0 || row > 7 || c < 0 || c > 7) continue;
@@ -1202,19 +1205,26 @@ async function doMove(fromRow, fromCol, toRow, toCol) {
 //  الخصم يقرأ صفه الخاص → نكتب له المربع من منظوره (mirrorSq)
 // ═══════════════════════════════════════════════════════════
 async function sendMoveToOpp(piece, fromRow, fromCol, toRow, toCol, captured, special) {
-  const toSqMine = sqNum(toRow, toCol);          // من منظوري
-  const toSqOpp  = mirrorSq(toSqMine);           // من منظور الخصم
-
   const update = {};
-  // نكتب موضع القطعة في عمودها في صف الخصم — من منظوره
-  update[piece.col] = toSqOpp;
 
-  // القطعة المأكولة → died
+  // نكتب مواضع كل قطعنا الحالية في صفنا الخاص من منظورنا
+  // الخصم يقرأ صفنا ويعكس المواضع لمنظوره
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p && p.owner === 'me') {
+        const sq = sqNum(r, c); // موضعي من منظوري
+        update[p.col] = sq;
+      }
+    }
+  }
+
+  // القطع المأكولة → died
   if (captured) {
     update[captured.col] = 'died';
   }
 
-  // رسالة المباراة (للنهاية)
+  // رسالة المباراة (للنهاية) — نكتبها في صف الخصم
   if (special === 'checkmate') {
     update['match-message'] = 'END:lose';
     update['match'] = 'off';
@@ -1222,7 +1232,13 @@ async function sendMoveToOpp(piece, fromRow, fromCol, toRow, toCol, captured, sp
     update['match-message'] = 'MOVE:' + Date.now();
   }
 
-  await sb(`/rest/v1/chess?id=eq.${opponent.id}`, {method:'PATCH', body: JSON.stringify(update)});
+  // نكتب في صفنا (عشان الخصم يقرأه)
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`, {method:'PATCH', body: JSON.stringify(update)});
+
+  // لو كش مات — نكتب رسالة النهاية في صف الخصم كمان
+  if (special === 'checkmate') {
+    await sb(`/rest/v1/chess?id=eq.${opponent.id}`, {method:'PATCH', body: JSON.stringify({'match-message':'END:lose','match':'off'})});
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1287,7 +1303,7 @@ function getPseudo(row, col, b) {
   const piece = b[row][col];
   if (!piece) return [];
   const moves = [];
-  const type  = PIECE_TYPE[piece.col] || (piece.promotedType ? 'queen' : 'pawn');
+  const type  = piece.promotedType ? piece.promotedType : (PIECE_TYPE[piece.col] || 'pawn');
   const owner = piece.owner;
   const opp   = owner === 'me' ? 'opp' : 'me';
   const dir   = owner === 'me' ? -1 : 1; // بيادقي تتحرك للأعلى (row تنقص)
@@ -1435,7 +1451,7 @@ async function endMatch(reason) {
   currentUser.level = newLevel;
   localStorage.setItem('chess_user', JSON.stringify(currentUser));
   await sb(`/rest/v1/system?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({level:newLevel})});
-  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'off','match-message':''})});
+  await sb(`/rest/v1/chess?id=eq.${currentUser.id}`,{method:'PATCH',body:JSON.stringify({match:'off','match-message':'','King':null,'Queen':null,'Rook1':null,'Rook2':null,'Bishop1':null,'Bishop2':null,'Knight1':null,'Knight2':null,'Pawn1':null,'Pawn2':null,'Pawn3':null,'Pawn4':null,'Pawn5':null,'Pawn6':null,'Pawn7':null,'Pawn8':null})});
 }
 
 function showResult(result) {
@@ -1468,8 +1484,8 @@ function closeMatch() {
 async function confirmForfeit() {
   if (!confirm('هل تريد الانسحاب؟ ستُعدّ خاسراً.')) return;
   if (!isInMatch||!opponent) return;
-  // أعلم الخصم أنه فاز
-  await sb(`/rest/v1/chess?id=eq.${opponent.id}`,{method:'PATCH',body:JSON.stringify({'match-message':'END:lose','match':'off'})});
+  // أعلم الخصم أنه فاز — نكتب في صفه match-message فقط بدون ما نغير الـ match
+  await sb(`/rest/v1/chess?id=eq.${opponent.id}`,{method:'PATCH',body:JSON.stringify({'match-message':'END:lose'})});
   showResult('lose');
 }
 
