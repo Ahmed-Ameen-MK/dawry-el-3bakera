@@ -522,8 +522,8 @@ header {
       <div class="search-pulse">
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
-      <div class="searching-title">جاري البحث عن خصم...</div>
-      <div class="searching-sub">ننتظر لاعباً آخر يبحث عن مباراة</div>
+      <div class="searching-title" id="searching-title">جاري البحث عن خصم...</div>
+      <div class="searching-sub" id="searching-sub">ننتظر لاعباً آخر يبحث عن مباراة</div>
       <div class="search-timer"><span id="search-sec">60</span> ثانية متبقية</div>
       <div class="timer-bar"><div class="timer-fill" id="search-fill" style="width:100%"></div></div>
       <button class="btn-cancel" onclick="cancelSearch()">
@@ -740,24 +740,36 @@ async function startSearch() {
   searching = true;
   document.getElementById('btn-search').disabled = true;
   showScreen('searching');
+  document.getElementById('search-sec').textContent = '60';
 
-  // سجّل في الجدول
+  // سجّل في الجدول — أرسل أبسط بيانات ممكنة أولاً
+  const payload = {
+    user_id: String(me.id),
+    name: me.name || 'لاعب',
+    match: 'searching'
+  };
+
+  console.log('POST payload:', payload);
+
   const res = await sb(`/rest/v1/${TABLE}`, {
     method: 'POST',
-    body: JSON.stringify({
-      user_id: String(me.id),
-      name: me.name,
-      avatar: me.avatar_url || '',
-      match: 'searching',
-      'xo-role': '',
-      "1":null,"2":null,"3":null,"4":null,"5":null,"6":null,"7":null,"8":null,"9":null,
-      matched_with: null,
-      match_id: null,
-      turn: null
-    })
+    body: JSON.stringify(payload)
   });
-  if (!res || !res[0]) { searching = false; cancelSearch(); return; }
+
+  console.log('POST result:', res);
+
+  if (!res || res.__error || !res[0]) {
+    // أظهر الخطأ للمستخدم بدل الرجوع الصامت
+    const errMsg = res?.__error ? (res.message || res.hint || JSON.stringify(res)) : 'تعذر الاتصال بالخادم';
+    document.getElementById('searching-title').textContent = 'خطأ في الاتصال';
+    document.getElementById('searching-sub').textContent = errMsg;
+    console.error('Search insert failed:', res);
+    searching = false;
+    document.getElementById('btn-search').disabled = false;
+    return;
+  }
   myRowId = res[0].id;
+  console.log('My row ID:', myRowId);
 
   searchTimeLeft = 60;
   searchInterval = setInterval(searchTick, 2000);
