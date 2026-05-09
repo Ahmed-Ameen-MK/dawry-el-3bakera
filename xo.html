@@ -634,9 +634,6 @@ header {
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
 const HEADERS = {
@@ -646,50 +643,52 @@ const HEADERS = {
   'Prefer': 'return=representation'
 };
 
-const TABLE = 'xo-searching'; // جدول البحث والمباريات
-const MOVE_TIME = 10; // ثوانٍ للحركة
-const WIN_ROUNDS = 3; // عدد الجولات للفوز
-const WIN_PTS = 2;
-const LOSE_PTS = -2;
-
+const MOVE_TIME  = 10;
+const WIN_ROUNDS = 3;
+const WIN_PTS    = 2;
+const LOSE_PTS   = -2;
 const WIN_COMBOS = [[1,2,3],[4,5,6],[7,8,9],[1,4,7],[2,5,8],[3,6,9],[1,5,9],[3,5,7]];
 
-// ════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════
-let me = null;        // current user from localStorage
-let myRole = null;    // 'X' or 'O'
-let oppRole = null;
-let myRowId = null;   // my row id in xo-searching
-let oppRowId = null;
-let matchId = null;   // shared match identifier = smaller id
-let amIFirst = false; // صاحب الأصغر id يبدأ
+// ════ STATE ════
+let me = null;
+let opp = null;        // {id, name, avatar_url}
+let mySymbol  = null;  // 'X' or 'O'
+let oppSymbol = null;
+let amIFirst  = false;
 
-let myWins = 0;
-let oppWins = 0;
-let currentRound = 1;
+let myWins = 0, oppWins = 0, currentRound = 1;
 let isMyTurn = false;
-let board = {};       // {1..9: 'X'|'O'|null}
-let moveTimer = null;
-let moveTimeLeft = MOVE_TIME;
+let board = {};
+let moveTimer = null, moveTimeLeft = MOVE_TIME;
 let pollInterval = null;
-let searchInterval = null;
-let searchTimeLeft = 60;
+let searchInterval = null, searchTimeLeft = 60;
 let gameEnded = false;
+let searching = false;
 
-// ════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════
+// xo-role يخزن آخر خلية لعبها كل لاعب: "X:5" أو "O:3" إلخ
+// نقرأها عند كل poll لنعرف الحركة الجديدة
+
+// ════ UTILS ════
 async function sb(path, opts={}) {
   try {
-    const res = await fetch(SB_URL + path, {
-      ...opts,
-      headers: { ...HEADERS, ...(opts.headers||{}) }
+    const r = await fetch(SB_URL + path, {
+      ...opts, headers: { ...HEADERS, ...(opts.headers||{}) }
     });
-    const text = await res.text();
-    try { return JSON.parse(text); }
-    catch { return null; }
-  } catch(e) { console.error('sb error:', e); return null; }
+    const t = await r.text();
+    try { return JSON.parse(t); } catch { return null; }
+  } catch(e) { console.error(e); return null; }
+}
+
+async function patchMe(data) {
+  return sb(`/rest/v1/system?id=eq.${me.id}`, {
+    method: 'PATCH', body: JSON.stringify(data)
+  });
+}
+
+async function getOppRow() {
+  if (!opp) return null;
+  const r = await sb(`/rest/v1/system?id=eq.${opp.id}&select=match,"xo-role",points`);
+  return r && r[0] ? r[0] : null;
 }
 
 function showScreen(name) {
@@ -701,75 +700,40 @@ function resetBoard() {
   board = {1:null,2:null,3:null,4:null,5:null,6:null,7:null,8:null,9:null};
   for (let i=1; i<=9; i++) {
     const c = document.getElementById('cell-'+i);
-    c.textContent = '';
-    c.className = 'cell';
+    c.textContent = ''; c.className = 'cell';
   }
   document.getElementById('g-round-result').style.display = 'none';
   document.getElementById('g-opp-left').style.display = 'none';
 }
 
-// ════════════════════════════════════════════════
-// INIT — load user from localStorage
-// ════════════════════════════════════════════════
+// ════ INIT ════
 function init() {
   const stored = localStorage.getItem('genius_user');
   if (!stored) { showScreen('noauth'); return; }
   try { me = JSON.parse(stored); } catch { showScreen('noauth'); return; }
-  if (!me || !me.id) { showScreen('noauth'); return; }
+  if (!me?.id) { showScreen('noauth'); return; }
 
-  // fill lobby UI
   const av = document.getElementById('lobby-avatar');
-  if (me.avatar_url) {
-    av.innerHTML = `<img src="${me.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
-  } else {
-    av.textContent = (me.name||'?')[0].toUpperCase();
-  }
+  if (me.avatar_url) av.innerHTML = `<img src="${me.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
+  else av.textContent = (me.name||'?')[0].toUpperCase();
   document.getElementById('lobby-name').textContent = me.name || 'لاعب';
   document.getElementById('lobby-pts').textContent = me.points || 0;
-
   showScreen('lobby');
 }
 
-// ════════════════════════════════════════════════
-// SEARCH
-// ════════════════════════════════════════════════
-let searching = false; // منع التكرار
-
+// ════ SEARCH ════
 async function startSearch() {
   if (!me || searching) return;
   searching = true;
+  gameEnded = false;
   document.getElementById('btn-search').disabled = true;
   showScreen('searching');
   document.getElementById('search-sec').textContent = '60';
+  document.getElementById('searching-title').textContent = 'جاري البحث عن خصم...';
+  document.getElementById('searching-sub').textContent = 'ننتظر لاعباً آخر يبحث عن مباراة';
 
-  // سجّل في الجدول — أرسل أبسط بيانات ممكنة أولاً
-  const payload = {
-    user_id: String(me.id),
-    name: me.name || 'لاعب',
-    match: 'searching'
-  };
-
-  console.log('POST payload:', payload);
-
-  const res = await sb(`/rest/v1/${TABLE}`, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-
-  console.log('POST result:', res);
-
-  if (!res || res.__error || !res[0]) {
-    // أظهر الخطأ للمستخدم بدل الرجوع الصامت
-    const errMsg = res?.__error ? (res.message || res.hint || JSON.stringify(res)) : 'تعذر الاتصال بالخادم';
-    document.getElementById('searching-title').textContent = 'خطأ في الاتصال';
-    document.getElementById('searching-sub').textContent = errMsg;
-    console.error('Search insert failed:', res);
-    searching = false;
-    document.getElementById('btn-search').disabled = false;
-    return;
-  }
-  myRowId = res[0].id;
-  console.log('My row ID:', myRowId);
+  // اكتب xo-searching في عمود match الخاص بي
+  await patchMe({ match: 'xo-searching', 'xo-role': '' });
 
   searchTimeLeft = 60;
   searchInterval = setInterval(searchTick, 2000);
@@ -777,143 +741,99 @@ async function startSearch() {
 
 async function searchTick() {
   searchTimeLeft -= 2;
-  document.getElementById('search-sec').textContent = Math.max(0, searchTimeLeft);
-  document.getElementById('search-fill').style.width = (Math.max(0,searchTimeLeft)/60*100)+'%';
+  const sec = Math.max(0, searchTimeLeft);
+  document.getElementById('search-sec').textContent = sec;
+  document.getElementById('search-fill').style.width = (sec/60*100)+'%';
+  if (sec <= 0) { cancelSearch(); return; }
 
-  if (searchTimeLeft <= 0) { cancelSearch(); return; }
+  // أولاً: هل أحد أقرنني بالفعل؟ (أنا الـ O — شخص آخر غيّر match-message ليكتب id الخصم)
+  const myRow = await sb(`/rest/v1/system?id=eq.${me.id}&select=match,"match-message","xo-role"`);
+  if (!myRow || !myRow[0]) return;
+  const myData = myRow[0];
 
-  // أولاً: تحقق إذا كان شخص آخر قام بـ pair معي بالفعل (أنا الـ O)
-  const myRow = await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`);
-  if (!myRow || myRow.length === 0) { cancelSearch(); return; }
-  if (myRow[0].match === 'playing' && myRow[0].matched_with) {
-    // تم إقراني من قِبَل الخصم — ابدأ اللعب مباشرة
+  if (myData.match === 'xo-playing' && myData['match-message']) {
+    // تم إقراني — match-message يحتوي على id الخصم
     clearInterval(searchInterval);
     searching = false;
-    await joinAsSecond(myRow[0]);
+    const oppId = myData['match-message'];
+    const oppRow = await sb(`/rest/v1/system?id=eq.${oppId}&select=id,name,avatar_url,points`);
+    if (!oppRow || !oppRow[0]) { goLobby(); return; }
+    opp = oppRow[0];
+    // أنا الثاني — الخصم صاحب الـ id الأصغر يبدأ كـ X
+    amIFirst = Number(me.id) < Number(opp.id);
+    mySymbol  = amIFirst ? 'X' : 'O';
+    oppSymbol = amIFirst ? 'O' : 'X';
+    startGame();
     return;
   }
 
-  // ثانياً: ابحث بنفسي عن لاعب آخر (أنا من سأقوم بالـ pairing)
-  const others = await sb(`/rest/v1/${TABLE}?match=eq.searching&user_id=neq.${String(me.id)}&order=id.asc&limit=1`);
-  if (others && others.length > 0) {
-    clearInterval(searchInterval);
-    searching = false;
-    await pairMatch(others[0]);
-  }
-}
+  // ثانياً: ابحث عن لاعب آخر يبحث
+  const others = await sb(`/rest/v1/system?match=eq.xo-searching&id=neq.${me.id}&order=id.asc&limit=1&select=id,name,avatar_url,points`);
+  if (!others || others.length === 0) return;
 
-// أنا وجدت الخصم وسأقوم بالـ pairing
-async function pairMatch(opp) {
-  oppRowId = opp.id;
-  const myId = Number(me.id);
-  const oppId = Number(opp.user_id);
-  amIFirst = myId < oppId;
-  myRole = amIFirst ? 'X' : 'O';
-  oppRole = amIFirst ? 'O' : 'X';
-  matchId = Math.min(myId, oppId) + '_' + Math.max(myId, oppId);
-  const firstTurn = String(amIFirst ? myId : oppId);
+  // وجدت خصماً — أنا من سيقوم بالـ pairing
+  clearInterval(searchInterval);
+  searching = false;
+  opp = others[0];
+  amIFirst = Number(me.id) < Number(opp.id);
+  mySymbol  = amIFirst ? 'X' : 'O';
+  oppSymbol = amIFirst ? 'O' : 'X';
 
-  // حدّث صفي أولاً
-  await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, {
+  // أخبر الخصم بـ id-ي عبر match-message وغيّر match للاثنين
+  await sb(`/rest/v1/system?id=eq.${opp.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({
-      match: 'playing',
-      matched_with: String(opp.user_id),
-      match_id: matchId,
-      'xo-role': myRole,
-      turn: firstTurn
-    })
+    body: JSON.stringify({ match: 'xo-playing', 'match-message': String(me.id), 'xo-role': '' })
   });
+  await patchMe({ match: 'xo-playing', 'match-message': String(opp.id), 'xo-role': '' });
 
-  // حدّث صف الخصم
-  await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({
-      match: 'playing',
-      matched_with: String(me.id),
-      match_id: matchId,
-      'xo-role': oppRole,
-      turn: firstTurn
-    })
-  });
-
-  startGame({ id: oppRowId, user_id: opp.user_id, name: opp.name, avatar: opp.avatar });
-}
-
-// الخصم قام بالـ pairing — أنا فقط أقرأ بياناته وأبدأ
-async function joinAsSecond(myRow) {
-  oppRowId = null;
-  myRole = myRow['xo-role'];
-  oppRole = myRole === 'X' ? 'O' : 'X';
-  amIFirst = myRole === 'X';
-  matchId = myRow.match_id;
-
-  // اجلب بيانات الخصم
-  const oppRows = await sb(`/rest/v1/${TABLE}?user_id=eq.${myRow.matched_with}&match_id=eq.${matchId}`);
-  if (oppRows && oppRows.length > 0) {
-    const opp = oppRows[0];
-    oppRowId = opp.id;
-    startGame({ id: opp.id, user_id: opp.user_id, name: opp.name, avatar: opp.avatar });
-  } else {
-    // جرب بـ matched_with فقط
-    const opp2 = await sb(`/rest/v1/${TABLE}?user_id=eq.${myRow.matched_with}&limit=1`);
-    if (opp2 && opp2.length > 0) {
-      oppRowId = opp2[0].id;
-      startGame({ id: opp2[0].id, user_id: opp2[0].user_id, name: opp2[0].name, avatar: opp2[0].avatar });
-    } else {
-      goLobby();
-    }
-  }
+  startGame();
 }
 
 async function cancelSearch() {
   clearInterval(searchInterval);
   searching = false;
-  if (myRowId) {
-    await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, { method: 'DELETE' });
-    myRowId = null;
-  }
+  await patchMe({ match: 'off', 'xo-role': '', 'match-message': '' });
   document.getElementById('btn-search').disabled = false;
   showScreen('lobby');
 }
 
-// ════════════════════════════════════════════════
-// GAME
-// ════════════════════════════════════════════════
-function startGame(opp) {
+// ════ GAME START ════
+function startGame() {
   myWins = 0; oppWins = 0; currentRound = 1; gameEnded = false;
 
-  // fill game UI
+  // fill avatars
   const myAv = document.getElementById('g-my-avatar');
   if (me.avatar_url) myAv.innerHTML = `<img src="${me.avatar_url}">`;
   else myAv.textContent = (me.name||'?')[0].toUpperCase();
   document.getElementById('g-my-name').textContent = me.name;
-  document.getElementById('g-my-role').textContent = myRole;
-  document.getElementById('g-my-role').className = 'ps-role ' + myRole.toLowerCase();
+  document.getElementById('g-my-role').textContent = mySymbol;
+  document.getElementById('g-my-role').className = 'ps-role ' + mySymbol.toLowerCase();
   document.getElementById('g-my-score').textContent = 0;
-  document.getElementById('g-my-score').className = 'ps-score ' + myRole.toLowerCase();
+  document.getElementById('g-my-score').className = 'ps-score ' + mySymbol.toLowerCase();
 
   const oppAv = document.getElementById('g-opp-avatar');
-  if (opp.avatar) oppAv.innerHTML = `<img src="${opp.avatar}">`;
+  if (opp.avatar_url) oppAv.innerHTML = `<img src="${opp.avatar_url}">`;
   else oppAv.textContent = (opp.name||'؟')[0].toUpperCase();
   document.getElementById('g-opp-name').textContent = opp.name;
-  document.getElementById('g-opp-role').textContent = oppRole;
-  document.getElementById('g-opp-role').className = 'ps-role ' + oppRole.toLowerCase();
+  document.getElementById('g-opp-role').textContent = oppSymbol;
+  document.getElementById('g-opp-role').className = 'ps-role ' + oppSymbol.toLowerCase();
   document.getElementById('g-opp-score').textContent = 0;
-  document.getElementById('g-opp-score').className = 'ps-score ' + oppRole.toLowerCase();
+  document.getElementById('g-opp-score').className = 'ps-score ' + oppSymbol.toLowerCase();
 
   showScreen('game');
   startRound();
 }
 
+// ════ ROUND ════
 function startRound() {
   resetBoard();
   document.getElementById('g-round-badge').textContent = `جولة ${currentRound}`;
+  // الجولات الفردية: X يبدأ — الزوجية: O يبدأ
+  const xStarts = (currentRound % 2 === 1);
+  isMyTurn = xStarts ? (mySymbol === 'X') : (mySymbol === 'O');
 
-  // صاحب الأصغر id يبدأ الجولة الأولى، ثم يتناوبان
-  // في الجولة الفردية يبدأ X، في الزوجية يبدأ O
-  const xStartsThisRound = (currentRound % 2 === 1);
-  isMyTurn = xStartsThisRound ? (myRole === 'X') : (myRole === 'O');
+  // امسح xo-role للاثنين لبدء جولة نظيفة
+  patchMe({ 'xo-role': 'round-start' });
 
   renderTurnUI();
   startMoveTimer();
@@ -923,7 +843,7 @@ function startRound() {
 function renderTurnUI() {
   const txt = document.getElementById('g-turn-text');
   if (isMyTurn) {
-    txt.innerHTML = `<i class="fa-solid fa-circle" style="font-size:8px;margin-left:4px"></i> دورك (${myRole})`;
+    txt.innerHTML = `<i class="fa-solid fa-circle" style="font-size:8px;margin-left:4px"></i> دورك (${mySymbol})`;
     txt.className = 'turn-text my-turn';
     enableBoard(true);
   } else {
@@ -933,42 +853,24 @@ function renderTurnUI() {
   }
 }
 
-function enableBoard(enabled) {
+function enableBoard(on) {
   for (let i=1; i<=9; i++) {
     const c = document.getElementById('cell-'+i);
-    if (!board[i]) {
-      if (enabled) c.classList.remove('disabled');
-      else c.classList.add('disabled');
-    }
+    if (!board[i]) on ? c.classList.remove('disabled') : c.classList.add('disabled');
   }
 }
 
-// ════════════════════════════════════════════════
-// MOVE
-// ════════════════════════════════════════════════
+// ════ MOVE ════
 async function makeMove(cell) {
   if (!isMyTurn || board[cell] || gameEnded) return;
 
-  board[cell] = myRole;
-  renderCell(cell, myRole);
+  board[cell] = mySymbol;
+  renderCell(cell, mySymbol);
   clearMoveTimer();
+  enableBoard(false);
 
-  // اكتب في عمود الخلية في Supabase
-  const patch = {};
-  patch[String(cell)] = myRole;
-  // غيّر الدور للخصم
-  patch['turn'] = null; // سيُحدَّث بعدها
-
-  await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(patch)
-  });
-
-  // كذلك حدّث صف الخصم بالخلية (ليراها)
-  await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(patch)
-  });
+  // اكتب "X:5" أو "O:3" في عمود xo-role الخاص بي
+  await patchMe({ 'xo-role': `${mySymbol}:${cell}` });
 
   const result = checkWinner(board);
   if (result) {
@@ -976,67 +878,68 @@ async function makeMove(cell) {
   } else {
     isMyTurn = false;
     renderTurnUI();
-    // أعد تشغيل المؤقت
     startMoveTimer();
   }
 }
 
-function renderCell(cell, role) {
+function renderCell(cell, symbol) {
   const c = document.getElementById('cell-'+cell);
-  c.innerHTML = `<span class="cell-inner">${role}</span>`;
-  c.classList.add('taken', role === 'X' ? 'x-mark' : 'o-mark');
+  c.innerHTML = `<span class="cell-inner">${symbol}</span>`;
+  c.classList.add('taken', symbol === 'X' ? 'x-mark' : 'o-mark');
 }
 
-// ════════════════════════════════════════════════
-// POLLING — اقرأ حركات الخصم
-// ════════════════════════════════════════════════
+// ════ POLLING ════
+let lastOppMove = '';
+
 function startPolling() {
   clearInterval(pollInterval);
-  pollInterval = setInterval(pollGame, 1200);
+  lastOppMove = '';
+  pollInterval = setInterval(pollGame, 1500);
 }
 
 async function pollGame() {
   if (gameEnded) { clearInterval(pollInterval); return; }
 
-  // اقرأ صف الخصم
-  const rows = await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`);
-  if (!rows || rows.length === 0) {
+  const oppRow = await getOppRow();
+  if (!oppRow) {
     // الخصم غادر
-    if (!gameEnded) { gameEnded = true; handleOppLeft(); }
+    if (!gameEnded) { gameEnded = true; clearInterval(pollInterval); handleOppLeft(); }
     return;
   }
-  const oppRow = rows[0];
 
-  // تحقق إذا الخصم لعب حركة جديدة
-  for (let i=1; i<=9; i++) {
-    if (oppRow[String(i)] && !board[i]) {
-      board[i] = oppRow[String(i)];
-      renderCell(i, board[i]);
-      clearMoveTimer();
-
-      const result = checkWinner(board);
-      if (result) {
-        clearInterval(pollInterval);
-        await handleRoundEnd(result);
-        return;
-      }
-
-      isMyTurn = true;
-      renderTurnUI();
-      startMoveTimer();
-      break;
-    }
+  // تحقق إذا الخصم غادر المباراة
+  if (oppRow.match !== 'xo-playing') {
+    if (!gameEnded) { gameEnded = true; clearInterval(pollInterval); handleOppLeft(); }
+    return;
   }
 
-  // تحقق إذا الخصم انسحب
-  if (oppRow.match === 'left' || oppRow.match === 'searching' || oppRow.match === 'off') {
-    if (!gameEnded) { gameEnded = true; handleOppLeft(); }
+  // اقرأ حركة الخصم من xo-role: "O:7" مثلاً
+  const role = oppRow['xo-role'] || '';
+  if (!role || role === 'round-start' || role === lastOppMove) return;
+  if (!role.includes(':')) return;
+
+  const [sym, cellStr] = role.split(':');
+  const cell = parseInt(cellStr);
+  if (sym !== oppSymbol || !cell || board[cell]) return;
+
+  lastOppMove = role;
+  board[cell] = oppSymbol;
+  renderCell(cell, oppSymbol);
+  clearMoveTimer();
+
+  const result = checkWinner(board);
+  if (result) {
+    clearInterval(pollInterval);
+    await handleRoundEnd(result);
+    return;
   }
+
+  isMyTurn = true;
+  renderTurnUI();
+  startMoveTimer();
 }
 
-// ════════════════════════════════════════════════
-// MOVE TIMER
-// ════════════════════════════════════════════════
+// ════ TIMER ════
 function startMoveTimer() {
   clearMoveTimer();
   moveTimeLeft = MOVE_TIME;
@@ -1047,12 +950,11 @@ function startMoveTimer() {
     moveTimeLeft--;
     document.getElementById('g-turn-timer').textContent = moveTimeLeft;
     if (moveTimeLeft <= 3) document.getElementById('g-turn-timer').classList.add('urgent');
-
     if (moveTimeLeft <= 0) {
       clearMoveTimer();
       if (isMyTurn) {
-        // انتهى وقتي — العب في أول خلية فارغة تلقائياً
-        const empty = Object.keys(board).map(Number).find(k => !board[k]);
+        // العب في أول خلية فارغة
+        const empty = [1,2,3,4,5,6,7,8,9].find(k => !board[k]);
         if (empty) await makeMove(empty);
       }
     }
@@ -1065,13 +967,10 @@ function clearMoveTimer() {
   document.getElementById('g-turn-timer').classList.remove('urgent');
 }
 
-// ════════════════════════════════════════════════
-// WIN CHECK
-// ════════════════════════════════════════════════
+// ════ WIN CHECK ════
 function checkWinner(b) {
-  for (const combo of WIN_COMBOS) {
-    const [a,c,d] = combo;
-    if (b[a] && b[a]===b[c] && b[a]===b[d]) return { winner: b[a], combo };
+  for (const [a,c,d] of WIN_COMBOS) {
+    if (b[a] && b[a]===b[c] && b[a]===b[d]) return { winner: b[a], combo: [a,c,d] };
   }
   if (Object.values(b).every(v=>v)) return { winner: 'draw', combo: [] };
   return null;
@@ -1088,12 +987,11 @@ async function handleRoundEnd(result) {
   if (result.winner === 'draw') {
     roundEl.className = 'round-result draw';
     roundEl.innerHTML = `<i class="fa-solid fa-handshake"></i> تعادل!`;
-  } else if (result.winner === myRole) {
+  } else if (result.winner === mySymbol) {
     myWins++;
     document.getElementById('g-my-score').textContent = myWins;
     roundEl.className = 'round-result win';
     roundEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> فزت بهذه الجولة!`;
-    // إضاءة الخلايا الفائزة
     result.combo.forEach(i => document.getElementById('cell-'+i).classList.add('win-cell'));
   } else {
     oppWins++;
@@ -1103,7 +1001,6 @@ async function handleRoundEnd(result) {
     result.combo.forEach(i => document.getElementById('cell-'+i).classList.add('win-cell'));
   }
 
-  // تحقق إذا انتهت المباراة
   if (myWins >= WIN_ROUNDS || oppWins >= WIN_ROUNDS) {
     setTimeout(() => endMatch(myWins >= WIN_ROUNDS ? 'win' : 'lose'), 1800);
   } else {
@@ -1114,51 +1011,34 @@ async function handleRoundEnd(result) {
 
 function handleOppLeft() {
   clearMoveTimer();
-  clearInterval(pollInterval);
   enableBoard(false);
   document.getElementById('g-opp-left').style.display = 'block';
   setTimeout(() => endMatch('win'), 2500);
 }
 
-// ════════════════════════════════════════════════
-// END MATCH
-// ════════════════════════════════════════════════
+// ════ END MATCH ════
 async function endMatch(outcome) {
   gameEnded = true;
   clearMoveTimer();
   clearInterval(pollInterval);
 
-  // احسب نقاط صدارة
-  let ptsChange = 0;
-  if (outcome === 'win') ptsChange = WIN_PTS;
-  else if (outcome === 'lose') ptsChange = LOSE_PTS;
-
-  // حدّث نقاط الصدارة في جدول system
+  const ptsChange = outcome === 'win' ? WIN_PTS : outcome === 'lose' ? LOSE_PTS : 0;
   const newPts = Math.max(0, (me.points||0) + ptsChange);
-  await sb(`/rest/v1/system?id=eq.${me.id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ points: newPts })
-  });
+
+  await patchMe({ match: 'off', 'xo-role': '', 'match-message': '', points: newPts });
   me.points = newPts;
   localStorage.setItem('genius_user', JSON.stringify(me));
 
-  // احذف صف البحث
-  if (myRowId) {
-    await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, { method: 'DELETE' });
-    myRowId = null;
-  }
-
-  // عرض نتيجة المباراة
-  const iconEl = document.getElementById('r-icon');
+  const iconEl  = document.getElementById('r-icon');
   const titleEl = document.getElementById('r-title');
-  const subEl = document.getElementById('r-sub');
-  const ptsEl = document.getElementById('r-pts');
+  const subEl   = document.getElementById('r-sub');
+  const ptsEl   = document.getElementById('r-pts');
 
   if (outcome === 'win') {
     iconEl.className = 'result-icon win';
     iconEl.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-    titleEl.textContent = 'فزت! 🏆';
-    subEl.textContent = 'أداء رائع، استمر في التقدم!';
+    titleEl.textContent = 'فزت!';
+    subEl.textContent = 'أداء رائع، استمر!';
     ptsEl.className = 'pts-change pos';
     ptsEl.innerHTML = `<i class="fa-solid fa-ranking-star"></i> +${WIN_PTS} نقطة صدارة`;
   } else if (outcome === 'lose') {
@@ -1172,36 +1052,31 @@ async function endMatch(outcome) {
     iconEl.className = 'result-icon draw';
     iconEl.innerHTML = '<i class="fa-solid fa-handshake"></i>';
     titleEl.textContent = 'تعادل!';
-    subEl.textContent = 'كانت مباراة متكافئة';
+    subEl.textContent = 'مباراة متكافئة';
     ptsEl.className = 'pts-change zero';
     ptsEl.innerHTML = `<i class="fa-solid fa-ranking-star"></i> 0 نقطة`;
   }
 
-  document.getElementById('r-my-score').textContent = myWins;
-  document.getElementById('r-my-name').textContent = me.name;
+  document.getElementById('r-my-score').textContent  = myWins;
+  document.getElementById('r-my-name').textContent   = me.name;
   document.getElementById('r-opp-score').textContent = oppWins;
-  document.getElementById('r-opp-name').textContent = document.getElementById('g-opp-name').textContent;
-
+  document.getElementById('r-opp-name').textContent  = opp?.name || 'الخصم';
   showScreen('result');
 }
 
-// ════════════════════════════════════════════════
-// LOBBY RETURN
-// ════════════════════════════════════════════════
+// ════ LOBBY ════
 function goLobby() {
   gameEnded = true;
   clearMoveTimer();
   clearInterval(pollInterval);
   clearInterval(searchInterval);
-  // حدّث نقاط الصدارة في الـ lobby
+  searching = false;
   document.getElementById('lobby-pts').textContent = me.points || 0;
   document.getElementById('btn-search').disabled = false;
   showScreen('lobby');
 }
 
-// ════════════════════════════════════════════════
-// BOOT
-// ════════════════════════════════════════════════
+// ════ BOOT ════
 init();
 </script>
 </body>
