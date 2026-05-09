@@ -697,7 +697,94 @@
     box-shadow: 0 4px 32px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.8);
   }
 
-  /* ── MOBILE NAV: رموز فقط في الشاشات الضيقة ── */
+  /* ── CONTACT FLOATING BUTTON ── */
+  .contact-fab {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 200;
+  }
+  .contact-fab-btn {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--blue);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,113,227,0.4);
+    transition: all 0.2s;
+    color: #fff; font-size: 20px;
+  }
+  .contact-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
+  .contact-fab-btn.open { background: var(--ink); transform: rotate(45deg); }
+  .contact-fab-popup {
+    position: absolute;
+    bottom: 68px; left: 0;
+    width: 340px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    display: none;
+    animation: up 0.25s ease;
+  }
+  .contact-fab-popup.open { display: block; }
+  .contact-tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg2);
+  }
+  .contact-tab {
+    flex: 1; padding: 10px 4px;
+    border: none; background: none; cursor: pointer;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 11px; font-weight: 600; color: var(--ink3);
+    transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    border-bottom: 2px solid transparent;
+  }
+  .contact-tab i { font-size: 14px; }
+  .contact-tab:hover { color: var(--ink); }
+  .contact-tab.active { color: var(--blue); border-bottom-color: var(--blue); background: #fff; }
+  .contact-panel { display: none; padding: 20px; }
+  .contact-panel.active { display: block; }
+  .contact-panel label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--ink2); margin-bottom: 6px;
+  }
+  .contact-panel textarea, .contact-panel input, .contact-panel select {
+    width: 100%; background: var(--bg2); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 14px;
+    color: var(--ink); outline: none; resize: none;
+    transition: border-color 0.15s;
+    margin-bottom: 10px;
+  }
+  .contact-panel textarea:focus, .contact-panel input:focus, .contact-panel select:focus {
+    border-color: var(--blue);
+  }
+  .star-rating { display: flex; gap: 6px; margin-bottom: 12px; direction: ltr; }
+  .star-rating span {
+    font-size: 24px; cursor: pointer; color: var(--line);
+    transition: color 0.15s;
+  }
+  .star-rating span.active, .star-rating span:hover ~ span { color: inherit; }
+  .star-rating:hover span { color: var(--gold); }
+  .star-rating span:hover ~ span { color: var(--line) !important; }
+  .contact-send-btn {
+    width: 100%; padding: 10px;
+    background: var(--blue); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center;
+    justify-content: center; gap: 7px;
+  }
+  .contact-send-btn:hover { background: var(--blue-hover); }
+  .contact-success { text-align: center; padding: 16px 0 4px; font-size: 13px; color: var(--green); }
+  .price-row { display: flex; gap: 8px; }
+  .price-row input { flex: 1; }
+  .price-row select { width: 130px; flex-shrink: 0; }
+
   @media (max-width: 520px) {
     nav button .nav-text { display: none; }
     nav button { padding: 6px 10px; }
@@ -1295,6 +1382,12 @@
               <div class="offline-game-sub">ألعاب العباقرة</div>
               <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
             </a>
+            <a href="xo.html" class="offline-game-btn glass-card" style="grid-column: 1 / -1;">
+              <div class="offline-game-icon">❌⭕</div>
+              <div class="offline-game-title">العب اكس-أوو مع العباقرة الآخرين</div>
+              <div class="offline-game-sub">تحدّ أصدقاءك في لعبة X O</div>
+              <span class="offline-badge"><i class="fa-solid fa-users" style="font-size:9px"></i> متعدد اللاعبين</span>
+            </a>
           </div>
 
           <div id="search-msg" style="text-align:center;margin-top:10px"></div>
@@ -1529,25 +1622,24 @@
       <i class="fa-solid fa-xmark"></i>
     </div>
     <div class="modal-icon"><i class="fa-solid fa-tv"></i></div>
-    <div class="modal-title">اكسب نقطة صدارة بمشاهدة إعلان</div>
+    <div class="modal-title">تمت إضافة نقطة صدارة!</div>
     <div class="modal-steps">
       <div class="modal-step">
-        <span class="step-num">١</span>
-        <span>اضغط على زر "مشاهدة الإعلان" بالأسفل</span>
+        <span class="step-num" style="background:var(--green)"><i class="fa-solid fa-check" style="font-size:10px"></i></span>
+        <span>تم فتح صفحة الإعلان في تبويب جديد</span>
       </div>
       <div class="modal-step">
-        <span class="step-num">٢</span>
-        <span>شاهد الإعلان حتى النهاية في الصفحة التي ستفتح</span>
+        <span class="step-num" style="background:var(--green)"><i class="fa-solid fa-check" style="font-size:10px"></i></span>
+        <span>تمت إضافة نقطة صدارة لحسابك</span>
       </div>
       <div class="modal-step">
         <span class="step-num">٣</span>
-        <span>ارجع لهذا الموقع وستجد نقطتك قد أضيفت تلقائياً</span>
+        <span>شاهد الإعلان ثم ارجع للموقع للاستمتاع بنقاطك</span>
       </div>
     </div>
-    <a href="https://nafezly.com/service/69231?ref=69f507b3714b4" target="_blank" class="btn-watch-ad" onclick="document.getElementById('modal-ad').classList.remove('show')">
-      <i class="fa-solid fa-play"></i> مشاهدة الإعلان الآن
-    </a>
-    <p class="modal-tip"><i class="fa-solid fa-circle-info" style="margin-left:4px"></i> بعد مشاهدة الإعلان أعد فتح الموقع لتظهر نقطتك</p>
+    <button class="btn-watch-ad" onclick="document.getElementById('modal-ad').classList.remove('show')" style="background:var(--blue)">
+      <i class="fa-solid fa-check"></i> حسناً، شكراً!
+    </button>
   </div>
 </div>
 
@@ -1606,6 +1698,72 @@
     <div id="legend-msg" style="margin-top:10px;text-align:center;font-size:13px"></div>
   </div>
 </div>
+<!-- CONTACT FLOATING BUTTON -->
+<div class="contact-fab" id="contact-fab">
+  <div class="contact-fab-popup" id="contact-popup">
+    <div class="contact-tab-bar">
+      <button class="contact-tab active" onclick="switchContactTab('message')" id="ctab-message">
+        <i class="fa-solid fa-envelope"></i> رسالة
+      </button>
+      <button class="contact-tab" onclick="switchContactTab('review')" id="ctab-review">
+        <i class="fa-solid fa-star"></i> تقييم
+      </button>
+      <button class="contact-tab" onclick="switchContactTab('buy')" id="ctab-buy">
+        <i class="fa-solid fa-tag"></i> اشترِ الموقع
+      </button>
+    </div>
+
+    <!-- رسالة -->
+    <div class="contact-panel active" id="cpanel-message">
+      <label>اكتب رسالتك</label>
+      <textarea id="contact-msg-text" rows="4" placeholder="اكتب رسالتك هنا..."></textarea>
+      <button class="contact-send-btn" onclick="sendContactMessage()">
+        <i class="fa-solid fa-paper-plane"></i> إرسال الرسالة
+      </button>
+      <div id="contact-msg-result"></div>
+    </div>
+
+    <!-- تقييم -->
+    <div class="contact-panel" id="cpanel-review">
+      <label>قيّم تجربتك</label>
+      <div class="star-rating" id="star-rating">
+        <span onclick="setStars(1)" data-v="1">★</span>
+        <span onclick="setStars(2)" data-v="2">★</span>
+        <span onclick="setStars(3)" data-v="3">★</span>
+        <span onclick="setStars(4)" data-v="4">★</span>
+        <span onclick="setStars(5)" data-v="5">★</span>
+      </div>
+      <textarea id="contact-review-text" rows="3" placeholder="أضف تعليقاً على تقييمك (اختياري)..."></textarea>
+      <button class="contact-send-btn" onclick="sendContactReview()">
+        <i class="fa-solid fa-star"></i> إرسال التقييم
+      </button>
+      <div id="contact-review-result"></div>
+    </div>
+
+    <!-- شراء الموقع -->
+    <div class="contact-panel" id="cpanel-buy">
+      <label>حدد سعر عرضك</label>
+      <div class="price-row">
+        <input type="number" id="buy-price" placeholder="السعر" min="0">
+        <select id="buy-currency">
+          <option value="EGP">جنيه مصري</option>
+          <option value="USD">دولار أمريكي</option>
+        </select>
+      </div>
+      <label>أي ملاحظات؟</label>
+      <textarea id="buy-note" rows="3" placeholder="أضف أي تفاصيل أو ملاحظات..."></textarea>
+      <button class="contact-send-btn" style="background:var(--green)" onclick="sendBuyOffer()">
+        <i class="fa-solid fa-handshake"></i> إرسال العرض
+      </button>
+      <div id="contact-buy-result"></div>
+    </div>
+  </div>
+
+  <button class="contact-fab-btn" id="contact-fab-btn" onclick="toggleContactFab()" title="تواصل معنا">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+</div>
+
 <script src="questions.js"></script>
 <script>
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
@@ -1793,7 +1951,7 @@ function updateNavAvatar() {
 }
 
 async function loadRank() {
-  const all = await sbFetch('/rest/v1/system?select=id,points&order=points.desc', { method: 'GET' });
+  const all = await sbFetch('/rest/v1/system?select=id,level&order=level.desc', { method: 'GET' });
   if (all) {
     const idx = all.findIndex(u => u.id === currentUser.id);
     document.getElementById('stat-rank').textContent = '#' + (idx + 1);
@@ -2319,6 +2477,13 @@ function pollForOpponentAnswer() {
     // تحديث نقاط الخصم
     oppMatchPts = opp[0].points || 0;
     document.getElementById('opp-pts-m').textContent = oppMatchPts;
+
+    // تحقق من فوز الخصم بنقاط المباراة (100+)
+    if (oppMatchPts >= 100) {
+      clearInterval(poll);
+      setTimeout(() => endMatch('lose'), 500);
+      return;
+    }
 
     if (oppCorrect) {
       if (!answered) {
@@ -2936,23 +3101,62 @@ function shareWebsite() {
 
 
 // ==================== GIFTS ====================
-function openAdModal() {
-  document.getElementById('modal-ad').classList.add('show');
+async function openAdModal() {
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
+  // أضف نقطة صدارة فوراً
+  const newLevel = (currentUser.level || 0) + 1;
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ level: newLevel })
+  });
+  if (res && !res.__error) {
+    currentUser.level = newLevel;
+    localStorage.setItem('genius_user', JSON.stringify(currentUser));
+    // حدّث العرض
+    const el = document.getElementById('dash-points');
+    if (el) el.textContent = newLevel;
+    const el2 = document.getElementById('stat-pts');
+    if (el2) el2.textContent = newLevel;
+    // افتح رابط الإعلان
+    window.open('https://nafezly.com/service/69231?ref=69f507b3714b4', '_blank');
+    document.getElementById('modal-ad').classList.add('show');
+  }
 }
+
 function openWhatsappModal() {
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
   document.getElementById('modal-whatsapp').classList.add('show');
 }
+
 function openLegendModal() {
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
   document.getElementById('modal-legend').classList.add('show');
   document.getElementById('legend-msg').innerHTML = '';
   document.getElementById('legend-channel-url').value = '';
 }
-function shareWhatsapp() {
+
+async function shareWhatsapp() {
   const url = encodeURIComponent(window.location.href);
-  const text = encodeURIComponent('🎮 العب معي في دوري العباقرة! اختبر معرفتك في مسابقات مباشرة مع لاعبين من حول العالم 🏆');
+  const text = encodeURIComponent('العب معي في دوري العباقرة! اختبر معرفتك في مسابقات مباشرة مع لاعبين من حول العالم');
   window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
   document.getElementById('modal-whatsapp').classList.remove('show');
+  // أضف 5 نقاط بعد الضغط
+  if (!currentUser) return;
+  const newLevel = (currentUser.level || 0) + 5;
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ level: newLevel })
+  });
+  if (res && !res.__error) {
+    currentUser.level = newLevel;
+    localStorage.setItem('genius_user', JSON.stringify(currentUser));
+    const el = document.getElementById('dash-points');
+    if (el) el.textContent = newLevel;
+    const el2 = document.getElementById('stat-pts');
+    if (el2) el2.textContent = newLevel;
+  }
 }
+
 async function submitLegend() {
   const channelUrl = document.getElementById('legend-channel-url').value.trim();
   const msgEl = document.getElementById('legend-msg');
@@ -2969,17 +3173,18 @@ async function submitLegend() {
     return;
   }
   msgEl.innerHTML = '<span style="color:var(--blue)"><i class="fa-solid fa-spinner fa-spin" style="margin-left:4px"></i>جاري الإرسال...</span>';
+  // نحدّث عمود web-sharing في صف المستخدم في جدول system
   const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     body: JSON.stringify({ 'web-sharing': channelUrl })
   });
-  if (res && !res.__error) {
+  if (res !== null && !res?.__error) {
     msgEl.innerHTML = '<span style="color:var(--green)"><i class="fa-solid fa-circle-check" style="margin-left:4px"></i>تم الإرسال! سيراجع فريقنا مشاركة الموقع في قناتك، ثم ستحصل على هديتك قريباً.</span>';
-    setTimeout(() => {
-      document.getElementById('modal-legend').classList.remove('show');
-    }, 3500);
+    setTimeout(() => { document.getElementById('modal-legend').classList.remove('show'); }, 3500);
   } else {
     msgEl.innerHTML = '<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-left:4px"></i>حدث خطأ، يرجى المحاولة مرة أخرى</span>';
+    console.error('web-sharing error:', res);
   }
 }
 
@@ -3188,6 +3393,102 @@ function getTranslatedQuestion(q) {
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }`;
 document.head.appendChild(toastStyle);
+
+// ==================== CONTACT FAB ====================
+let contactFabOpen = false;
+let selectedStars = 0;
+
+function toggleContactFab() {
+  contactFabOpen = !contactFabOpen;
+  const popup = document.getElementById('contact-popup');
+  const btn = document.getElementById('contact-fab-btn');
+  popup.classList.toggle('open', contactFabOpen);
+  btn.classList.toggle('open', contactFabOpen);
+}
+
+// Close when clicking outside
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('contact-fab').contains(e.target)) {
+    contactFabOpen = false;
+    document.getElementById('contact-popup').classList.remove('open');
+    document.getElementById('contact-fab-btn').classList.remove('open');
+  }
+});
+
+function switchContactTab(tab) {
+  ['message','review','buy'].forEach(t => {
+    document.getElementById('ctab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('cpanel-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+function setStars(n) {
+  selectedStars = n;
+  document.querySelectorAll('#star-rating span').forEach((s, i) => {
+    s.style.color = i < n ? 'var(--gold)' : 'var(--line)';
+  });
+}
+
+async function sendContactMessage() {
+  const text = document.getElementById('contact-msg-text').value.trim();
+  const resultEl = document.getElementById('contact-msg-result');
+  if (!text) { resultEl.innerHTML = '<div class="msg error">يرجى كتابة رسالتك أولاً</div>'; return; }
+  resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
+  const sender = currentUser ? currentUser.name : 'زائر';
+  const senderId = currentUser ? currentUser.id : 'guest';
+  const res = await sbFetch('/rest/v1/contact-feedback', {
+    method: 'POST',
+    body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() })
+  });
+  if (res && !res.__error) {
+    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
+    document.getElementById('contact-msg-text').value = '';
+  } else {
+    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+  }
+}
+
+async function sendContactReview() {
+  const text = document.getElementById('contact-review-text').value.trim();
+  const resultEl = document.getElementById('contact-review-result');
+  if (!selectedStars) { resultEl.innerHTML = '<div class="msg error">يرجى اختيار تقييم بالنجوم أولاً</div>'; return; }
+  resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
+  const sender = currentUser ? currentUser.name : 'زائر';
+  const senderId = currentUser ? currentUser.id : 'guest';
+  const res = await sbFetch('/rest/v1/contact-feedback', {
+    method: 'POST',
+    body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() })
+  });
+  if (res && !res.__error) {
+    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
+    document.getElementById('contact-review-text').value = '';
+    setStars(0);
+  } else {
+    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+  }
+}
+
+async function sendBuyOffer() {
+  const price = document.getElementById('buy-price').value.trim();
+  const currency = document.getElementById('buy-currency').value;
+  const note = document.getElementById('buy-note').value.trim();
+  const resultEl = document.getElementById('contact-buy-result');
+  if (!price || isNaN(price) || Number(price) <= 0) { resultEl.innerHTML = '<div class="msg error">يرجى إدخال سعر صحيح</div>'; return; }
+  resultEl.innerHTML = '<div class="msg info">جاري إرسال عرضك...</div>';
+  const sender = currentUser ? currentUser.name : 'زائر';
+  const senderId = currentUser ? currentUser.id : 'guest';
+  const res = await sbFetch('/rest/v1/contact-feedback', {
+    method: 'POST',
+    body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() })
+  });
+  if (res && !res.__error) {
+    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
+    document.getElementById('buy-price').value = '';
+    document.getElementById('buy-note').value = '';
+  } else {
+    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+  }
+}
 
 const saved = localStorage.getItem('genius_user');
 
