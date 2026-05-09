@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X O — دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f5f5f7;
+  --bg3: #e8e8ed;
+  --ink: #1d1d1f;
+  --ink2: #3d3d3f;
+  --ink3: #6e6e73;
+  --line: #d2d2d7;
+  --blue: #0071e3;
+  --blue-hover: #0077ed;
+  --green: #1d8348;
+  --green-bg: #f0faf4;
+  --red: #c0392b;
+  --red-bg: #fef1ef;
+  --gold: #b5882e;
+  --gold-bg: #fdf6e3;
+  --radius: 18px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+  --x-color: #0071e3;
+  --o-color: #c0392b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 0 24px;
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.header-inner {
+  max-width: 860px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -0.3px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none;
+}
+.brand i { color: var(--blue); font-size: 15px; }
+.brand-xo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--ink3);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-right: 4px;
+}
+
+/* ── CONTAINER ── */
+.container { max-width: 600px; margin: 0 auto; padding: 0 24px; }
+
+/* ── SCREENS ── */
+.screen { display: none; padding: 48px 0 80px; }
+.screen.active { display: block; }
+
+/* ── NOT LOGGED IN ── */
+.not-logged {
+  text-align: center;
+  padding: 80px 24px;
+}
+.not-logged i {
+  font-size: 48px; color: var(--line);
+  margin-bottom: 20px; display: block;
+}
+.not-logged h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.not-logged p { font-size: 15px; color: var(--ink3); margin-bottom: 24px; }
+.btn-go-home {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 980px;
+  padding: 12px 24px; font-size: 15px; font-weight: 600;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s;
+}
+.btn-go-home:hover { background: var(--blue-hover); }
+
+/* ── LOBBY ── */
+.lobby-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.xo-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 72px; font-weight: 700;
+  letter-spacing: -4px;
+  line-height: 1;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+.xo-logo .x { color: var(--x-color); }
+.xo-logo .sep { color: var(--line); }
+.xo-logo .o { color: var(--o-color); }
+.lobby-title {
+  font-size: 28px; font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.lobby-sub { font-size: 16px; color: var(--ink3); }
+
+.player-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px;
+}
+.player-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--blue);
+  color: #fff; font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.player-avatar img { width:100%; height:100%; object-fit:cover; }
+.player-info { flex: 1; }
+.player-name { font-size: 16px; font-weight: 700; }
+.player-pts { font-size: 13px; color: var(--ink3); margin-top: 2px; }
+
+.btn-search {
+  width: 100%;
+  background: var(--blue);
+  color: #fff; border: none;
+  border-radius: var(--radius);
+  padding: 20px;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 18px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,113,227,0.35);
+  letter-spacing: -0.3px;
+}
+.btn-search:hover { background: var(--blue-hover); transform: translateY(-1px); }
+.btn-search:active { transform: scale(0.99); }
+.btn-search:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.rules-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px; margin-top: 28px;
+}
+.rule-item {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px 14px;
+  text-align: center;
+}
+.rule-item i { font-size: 20px; color: var(--blue); margin-bottom: 8px; display: block; }
+.rule-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.rule-sub { font-size: 11px; color: var(--ink3); }
+
+/* ── SEARCHING ── */
+.searching-wrap {
+  text-align: center;
+  padding: 60px 0;
+}
+.search-pulse {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: rgba(0,113,227,0.08);
+  border: 2px solid rgba(0,113,227,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 28px;
+  position: relative;
+  animation: pulse-ring 2s ease-out infinite;
+}
+.search-pulse::before, .search-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,113,227,0.12);
+  animation: pulse-ring 2s ease-out infinite;
+}
+.search-pulse::after { inset: -24px; animation-delay: 0.5s; }
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+.search-pulse i { font-size: 32px; color: var(--blue); }
+.searching-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.searching-sub { font-size: 15px; color: var(--ink3); margin-bottom: 32px; }
+.search-timer {
+  font-size: 13px; color: var(--ink3);
+  margin-bottom: 10px;
+}
+.timer-bar {
+  height: 3px; background: var(--bg3);
+  border-radius: 2px; overflow: hidden;
+  max-width: 200px; margin: 0 auto 28px;
+}
+.timer-fill {
+  height: 100%; background: var(--blue);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+.btn-cancel {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 980px;
+  padding: 10px 24px;
+  color: var(--ink3);
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 14px; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { background: var(--bg2); color: var(--ink); }
+
+/* ── GAME SCREEN ── */
+.game-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.player-score-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 100px;
+}
+.ps-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  overflow: hidden; border: 2px solid var(--line);
+}
+.ps-avatar img { width:100%; height:100%; object-fit:cover; }
+.ps-name { font-size: 13px; font-weight: 600; color: var(--ink2); max-width: 90px; text-align:center; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ps-role { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 9px; }
+.ps-role.x { background: rgba(0,113,227,0.1); color: var(--x-color); }
+.ps-role.o { background: rgba(192,57,43,0.1); color: var(--o-color); }
+.ps-score { font-size: 32px; font-weight: 800; letter-spacing: -1px; font-family: 'Space Grotesk', sans-serif; }
+.ps-score.x { color: var(--x-color); }
+.ps-score.o { color: var(--o-color); }
+
+.vs-area { text-align: center; }
+.vs-label { font-size: 11px; font-weight: 700; color: var(--ink3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.round-badge {
+  font-size: 13px; font-weight: 600; color: var(--ink2);
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 20px; padding: 4px 12px;
+}
+
+/* Turn indicator */
+.turn-bar {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.turn-text { font-size: 14px; font-weight: 600; }
+.turn-text.my-turn { color: var(--blue); }
+.turn-text.opp-turn { color: var(--ink3); }
+.turn-timer {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--ink);
+  transition: color 0.3s;
+}
+.turn-timer.urgent { color: var(--red); }
+
+/* XO BOARD */
+.board-wrap {
+  display: flex; justify-content: center;
+  margin-bottom: 24px;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+.cell {
+  aspect-ratio: 1;
+  background: var(--bg2);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 52px; font-weight: 700;
+  transition: all 0.15s;
+  position: relative;
+  user-select: none;
+}
+.cell:hover:not(.taken):not(.disabled) {
+  background: var(--bg3);
+  border-color: var(--blue);
+  transform: scale(0.97);
+}
+.cell.taken { cursor: default; }
+.cell.disabled { cursor: not-allowed; }
+.cell.x-mark { color: var(--x-color); }
+.cell.o-mark { color: var(--o-color); }
+.cell.win-cell {
+  background: rgba(0,113,227,0.08);
+  border-color: var(--blue);
+  animation: win-pulse 0.5s ease;
+}
+.cell.win-cell.o-mark {
+  background: rgba(192,57,43,0.08);
+  border-color: var(--o-color);
+}
+@keyframes win-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.cell-inner {
+  animation: pop-in 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Round result */
+.round-result {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  text-align: center;
+  font-size: 15px; font-weight: 600;
+  margin-bottom: 16px;
+  min-height: 50px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+}
+.round-result.win { background: var(--green-bg); border-color: rgba(29,131,72,0.2); color: var(--green); }
+.round-result.lose { background: var(--red-bg); border-color: rgba(192,57,43,0.2); color: var(--red); }
+.round-result.draw { background: var(--gold-bg); border-color: rgba(181,136,46,0.2); color: var(--gold); }
+
+/* ── RESULT SCREEN ── */
+.result-wrap {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+.result-icon {
+  width: 96px; height: 96px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 40px;
+}
+.result-icon.win { background: var(--green-bg); color: var(--green); }
+.result-icon.lose { background: var(--red-bg); color: var(--red); }
+.result-icon.draw { background: var(--gold-bg); color: var(--gold); }
+.result-title { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+.result-sub { font-size: 16px; color: var(--ink3); margin-bottom: 32px; }
+.pts-change {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 980px; padding: 8px 20px;
+  font-size: 16px; font-weight: 700; margin-bottom: 32px;
+}
+.pts-change.pos { background: var(--green-bg); color: var(--green); }
+.pts-change.neg { background: var(--red-bg); color: var(--red); }
+.pts-change.zero { background: var(--gold-bg); color: var(--gold); }
+.score-summary {
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px;
+  margin-bottom: 32px;
+}
+.ss-item { text-align: center; }
+.ss-num { font-size: 32px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; }
+.ss-num.x { color: var(--x-color); }
+.ss-num.o { color: var(--o-color); }
+.ss-label { font-size: 12px; color: var(--ink3); font-weight: 500; margin-top: 2px; }
+.ss-div { width: 1px; height: 40px; background: var(--line); }
+.btn-play-again {
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 980px;
+  padding: 14px 32px;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-play-again:hover { background: var(--blue-hover); }
+.btn-back {
+  background: none; color: var(--ink3);
+  border: 1px solid var(--line); border-radius: 980px;
+  padding: 12px 24px; margin-right: 10px;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  font-size: 15px; cursor: pointer; transition: all 0.15s;
+}
+.btn-back:hover { background: var(--bg2); color: var(--ink); }
+
+/* ── OPPONENT LEFT ── */
+.opp-left {
+  text-align: center; padding: 40px 20px;
+  background: var(--red-bg);
+  border: 1px solid rgba(192,57,43,0.15);
+  border-radius: var(--radius);
+  margin: 40px 0;
+}
+.opp-left i { font-size: 36px; color: var(--red); margin-bottom: 12px; display:block; }
+.opp-left h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.opp-left p { font-size: 14px; color: var(--ink3); }
+
+/* ── ANIMATIONS ── */
+@keyframes pop { from { transform:scale(0.85); opacity:0; } to { transform:scale(1); opacity:1; } }
+.pop { animation: pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .rules-grid { grid-template-columns: 1fr 1fr; }
+  .xo-logo { font-size: 56px; }
+  .cell { font-size: 40px; border-radius: 12px; }
+  .board { gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-crown"></i>
+      دوري العباقرة
+    </a>
+    <span class="brand-xo">X O</span>
+  </div>
+</header>
+
+<!-- SCREEN: NOT LOGGED IN -->
+<div class="screen active" id="screen-noauth">
+  <div class="container">
+    <div class="not-logged">
+      <i class="fa-solid fa-lock"></i>
+      <h2>يجب تسجيل الدخول أولاً</h2>
+      <p>سجّل دخولك من الصفحة الرئيسية ثم ارجع هنا للعب</p>
+      <a href="index.html" class="btn-go-home">
+        <i class="fa-solid fa-house"></i> الصفحة الرئيسية
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: LOBBY -->
+<div class="screen" id="screen-lobby">
+  <div class="container">
+    <div class="lobby-hero">
+      <div class="xo-logo">
+        <span class="x">X</span><span class="sep"> </span><span class="o">O</span>
+      </div>
+      <div class="lobby-title">إكس أو مع أناس حقيقيين</div>
+      <div class="lobby-sub">تحدّى خصمك في لعبة إكس أو الكلاسيكية</div>
+    </div>
+
+    <div class="player-card" id="lobby-player-card">
+      <div class="player-avatar" id="lobby-avatar">?</div>
+      <div class="player-info">
+        <div class="player-name" id="lobby-name">—</div>
+        <div class="player-pts"><i class="fa-solid fa-ranking-star" style="font-size:10px;margin-left:3px"></i> <span id="lobby-pts">0</span> نقطة صدارة</div>
+      </div>
+    </div>
+
+    <button class="btn-search" id="btn-search" onclick="startSearch()">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      ابحث عن خصم
+    </button>
+
+    <div class="rules-grid">
+      <div class="rule-item">
+        <i class="fa-solid fa-trophy"></i>
+        <div class="rule-title">الفوز بـ 3 جولات</div>
+        <div class="rule-sub">أول من يفوز بـ 3 جولات يفوز</div>
+      </div>
+      <div class="rule-item">
+        <i class="fa-solid fa-clock"></i>
+        <div class="rule-title">10 ثوانٍ للحركة</div>
+        <div class="rule-sub">كل حركة لها 10 ثوانٍ فقط</div>
+      </div>
+      <div class="rule-item">
+        <i class="fa-solid fa-ranking-star"></i>
+        <div class="rule-title">+2 / −2 نقطة</div>
+        <div class="rule-sub">فوز +2 صدارة، خسارة −2</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: SEARCHING -->
+<div class="screen" id="screen-searching">
+  <div class="container">
+    <div class="searching-wrap">
+      <div class="search-pulse">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <div class="searching-title">جاري البحث عن خصم...</div>
+      <div class="searching-sub">ننتظر لاعباً آخر يبحث عن مباراة</div>
+      <div class="search-timer"><span id="search-sec">60</span> ثانية متبقية</div>
+      <div class="timer-bar"><div class="timer-fill" id="search-fill" style="width:100%"></div></div>
+      <button class="btn-cancel" onclick="cancelSearch()">
+        <i class="fa-solid fa-xmark"></i> إلغاء البحث
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: GAME -->
+<div class="screen" id="screen-game">
+  <div class="container">
+
+    <!-- Players scoreboard -->
+    <div class="game-header">
+      <!-- ME -->
+      <div class="player-score-card">
+        <div class="ps-avatar" id="g-my-avatar">?</div>
+        <div class="ps-name" id="g-my-name">أنا</div>
+        <div class="ps-role x" id="g-my-role">X</div>
+        <div class="ps-score x" id="g-my-score">0</div>
+      </div>
+
+      <!-- VS -->
+      <div class="vs-area">
+        <div class="vs-label">VS</div>
+        <div class="round-badge" id="g-round-badge">جولة 1</div>
+      </div>
+
+      <!-- OPP -->
+      <div class="player-score-card">
+        <div class="ps-avatar" id="g-opp-avatar">؟</div>
+        <div class="ps-name" id="g-opp-name">الخصم</div>
+        <div class="ps-role o" id="g-opp-role">O</div>
+        <div class="ps-score o" id="g-opp-score">0</div>
+      </div>
+    </div>
+
+    <!-- Turn bar -->
+    <div class="turn-bar">
+      <span class="turn-text my-turn" id="g-turn-text">
+        <i class="fa-solid fa-circle" style="font-size:8px;margin-left:4px"></i> دورك
+      </span>
+      <span class="turn-timer" id="g-turn-timer">10</span>
+    </div>
+
+    <!-- Board -->
+    <div class="board-wrap">
+      <div class="board" id="xo-board">
+        <div class="cell" id="cell-1" onclick="makeMove(1)"></div>
+        <div class="cell" id="cell-2" onclick="makeMove(2)"></div>
+        <div class="cell" id="cell-3" onclick="makeMove(3)"></div>
+        <div class="cell" id="cell-4" onclick="makeMove(4)"></div>
+        <div class="cell" id="cell-5" onclick="makeMove(5)"></div>
+        <div class="cell" id="cell-6" onclick="makeMove(6)"></div>
+        <div class="cell" id="cell-7" onclick="makeMove(7)"></div>
+        <div class="cell" id="cell-8" onclick="makeMove(8)"></div>
+        <div class="cell" id="cell-9" onclick="makeMove(9)"></div>
+      </div>
+    </div>
+
+    <!-- Round result -->
+    <div class="round-result" id="g-round-result" style="display:none"></div>
+
+    <!-- Opponent left -->
+    <div class="opp-left" id="g-opp-left" style="display:none">
+      <i class="fa-solid fa-person-walking-arrow-right"></i>
+      <h3>غادر الخصم المباراة</h3>
+      <p>فزت بسبب انسحاب الخصم</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCREEN: RESULT -->
+<div class="screen" id="screen-result">
+  <div class="container">
+    <div class="result-wrap">
+      <div class="result-icon" id="r-icon"><i class="fa-solid fa-trophy"></i></div>
+      <div class="result-title" id="r-title">فزت!</div>
+      <div class="result-sub" id="r-sub">لعبت بشكل رائع</div>
+      <div class="pts-change" id="r-pts"><i class="fa-solid fa-ranking-star"></i> +2 نقطة صدارة</div>
+      <div class="score-summary">
+        <div class="ss-item">
+          <div class="ss-num x" id="r-my-score">0</div>
+          <div class="ss-label" id="r-my-name">أنا</div>
+        </div>
+        <div class="ss-div"></div>
+        <div class="ss-item">
+          <div class="ss-num" style="color:var(--ink3)">:</div>
+        </div>
+        <div class="ss-div"></div>
+        <div class="ss-item">
+          <div class="ss-num o" id="r-opp-score">0</div>
+          <div class="ss-label" id="r-opp-name">الخصم</div>
+        </div>
+      </div>
+      <div>
+        <button class="btn-back" onclick="goLobby()">
+          <i class="fa-solid fa-house"></i>
+        </button>
+        <button class="btn-play-again" onclick="goLobby(); setTimeout(startSearch,200)">
+          <i class="fa-solid fa-rotate-right"></i> العب مجدداً
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
+
+const TABLE = 'xo-searching'; // جدول البحث والمباريات
+const MOVE_TIME = 10; // ثوانٍ للحركة
+const WIN_ROUNDS = 3; // عدد الجولات للفوز
+const WIN_PTS = 2;
+const LOSE_PTS = -2;
+
+const WIN_COMBOS = [[1,2,3],[4,5,6],[7,8,9],[1,4,7],[2,5,8],[3,6,9],[1,5,9],[3,5,7]];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let me = null;        // current user from localStorage
+let myRole = null;    // 'X' or 'O'
+let oppRole = null;
+let myRowId = null;   // my row id in xo-searching
+let oppRowId = null;
+let matchId = null;   // shared match identifier = smaller id
+let amIFirst = false; // صاحب الأصغر id يبدأ
+
+let myWins = 0;
+let oppWins = 0;
+let currentRound = 1;
+let isMyTurn = false;
+let board = {};       // {1..9: 'X'|'O'|null}
+let moveTimer = null;
+let moveTimeLeft = MOVE_TIME;
+let pollInterval = null;
+let searchInterval = null;
+let searchTimeLeft = 60;
+let gameEnded = false;
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+async function sb(path, opts={}) {
+  try {
+    const res = await fetch(SB_URL + path, {
+      ...opts,
+      headers: { ...HEADERS, ...(opts.headers||{}) }
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch { return null; }
+  } catch(e) { console.error('sb error:', e); return null; }
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function resetBoard() {
+  board = {1:null,2:null,3:null,4:null,5:null,6:null,7:null,8:null,9:null};
+  for (let i=1; i<=9; i++) {
+    const c = document.getElementById('cell-'+i);
+    c.textContent = '';
+    c.className = 'cell';
+  }
+  document.getElementById('g-round-result').style.display = 'none';
+  document.getElementById('g-opp-left').style.display = 'none';
+}
+
+// ════════════════════════════════════════════════
+// INIT — load user from localStorage
+// ════════════════════════════════════════════════
+function init() {
+  const stored = localStorage.getItem('genius_user');
+  if (!stored) { showScreen('noauth'); return; }
+  try { me = JSON.parse(stored); } catch { showScreen('noauth'); return; }
+  if (!me || !me.id) { showScreen('noauth'); return; }
+
+  // fill lobby UI
+  const av = document.getElementById('lobby-avatar');
+  if (me.avatar_url) {
+    av.innerHTML = `<img src="${me.avatar_url}" style="width:100%;height:100%;object-fit:cover">`;
+  } else {
+    av.textContent = (me.name||'?')[0].toUpperCase();
+  }
+  document.getElementById('lobby-name').textContent = me.name || 'لاعب';
+  document.getElementById('lobby-pts').textContent = me.points || 0;
+
+  showScreen('lobby');
+}
+
+// ════════════════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════════════════
+async function startSearch() {
+  if (!me) return;
+  document.getElementById('btn-search').disabled = true;
+  showScreen('searching');
+
+  // سجّل في الجدول
+  const res = await sb(`/rest/v1/${TABLE}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      user_id: me.id,
+      name: me.name,
+      avatar: me.avatar_url || '',
+      match: 'searching',
+      'xo-role': '',
+      "1":null,"2":null,"3":null,"4":null,"5":null,"6":null,"7":null,"8":null,"9":null,
+      matched_with: null,
+      match_id: null,
+      turn: null
+    })
+  });
+  if (!res || !res[0]) { cancelSearch(); return; }
+  myRowId = res[0].id;
+
+  // timer
+  searchTimeLeft = 60;
+  searchInterval = setInterval(async () => {
+    searchTimeLeft--;
+    document.getElementById('search-sec').textContent = searchTimeLeft;
+    document.getElementById('search-fill').style.width = (searchTimeLeft/60*100)+'%';
+
+    if (searchTimeLeft <= 0) { cancelSearch(); return; }
+
+    // ابحث عن لاعب آخر يبحث
+    const others = await sb(`/rest/v1/${TABLE}?match=eq.searching&user_id=neq.${me.id}&order=id.asc&limit=1`);
+    if (others && others.length > 0) {
+      const opp = others[0];
+      // أنا وجدت خصماً — أصغر id يبدأ كـ X
+      clearInterval(searchInterval);
+      await pairMatch(opp);
+    }
+  }, 1500);
+}
+
+async function pairMatch(opp) {
+  oppRowId = opp.id;
+  const myId = parseInt(me.id);
+  const oppId = parseInt(opp.user_id);
+  amIFirst = myId < oppId;
+  myRole = amIFirst ? 'X' : 'O';
+  oppRole = amIFirst ? 'O' : 'X';
+  matchId = Math.min(myId, oppId) + '_' + Math.max(myId, oppId);
+
+  // حدّث صفي
+  await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      match: 'playing',
+      matched_with: opp.user_id,
+      match_id: matchId,
+      'xo-role': myRole,
+      turn: amIFirst ? me.id : opp.user_id
+    })
+  });
+
+  // حدّث صف الخصم
+  await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      match: 'playing',
+      matched_with: me.id,
+      match_id: matchId,
+      'xo-role': oppRole,
+      turn: amIFirst ? me.id : opp.user_id
+    })
+  });
+
+  startGame(opp);
+}
+
+async function cancelSearch() {
+  clearInterval(searchInterval);
+  if (myRowId) {
+    await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, { method: 'DELETE' });
+    myRowId = null;
+  }
+  document.getElementById('btn-search').disabled = false;
+  showScreen('lobby');
+}
+
+// ════════════════════════════════════════════════
+// GAME
+// ════════════════════════════════════════════════
+function startGame(opp) {
+  myWins = 0; oppWins = 0; currentRound = 1; gameEnded = false;
+
+  // fill game UI
+  const myAv = document.getElementById('g-my-avatar');
+  if (me.avatar_url) myAv.innerHTML = `<img src="${me.avatar_url}">`;
+  else myAv.textContent = (me.name||'?')[0].toUpperCase();
+  document.getElementById('g-my-name').textContent = me.name;
+  document.getElementById('g-my-role').textContent = myRole;
+  document.getElementById('g-my-role').className = 'ps-role ' + myRole.toLowerCase();
+  document.getElementById('g-my-score').textContent = 0;
+  document.getElementById('g-my-score').className = 'ps-score ' + myRole.toLowerCase();
+
+  const oppAv = document.getElementById('g-opp-avatar');
+  if (opp.avatar) oppAv.innerHTML = `<img src="${opp.avatar}">`;
+  else oppAv.textContent = (opp.name||'؟')[0].toUpperCase();
+  document.getElementById('g-opp-name').textContent = opp.name;
+  document.getElementById('g-opp-role').textContent = oppRole;
+  document.getElementById('g-opp-role').className = 'ps-role ' + oppRole.toLowerCase();
+  document.getElementById('g-opp-score').textContent = 0;
+  document.getElementById('g-opp-score').className = 'ps-score ' + oppRole.toLowerCase();
+
+  showScreen('game');
+  startRound();
+}
+
+function startRound() {
+  resetBoard();
+  document.getElementById('g-round-badge').textContent = `جولة ${currentRound}`;
+
+  // صاحب الأصغر id يبدأ الجولة الأولى، ثم يتناوبان
+  // في الجولة الفردية يبدأ X، في الزوجية يبدأ O
+  const xStartsThisRound = (currentRound % 2 === 1);
+  isMyTurn = xStartsThisRound ? (myRole === 'X') : (myRole === 'O');
+
+  renderTurnUI();
+  startMoveTimer();
+  startPolling();
+}
+
+function renderTurnUI() {
+  const txt = document.getElementById('g-turn-text');
+  if (isMyTurn) {
+    txt.innerHTML = `<i class="fa-solid fa-circle" style="font-size:8px;margin-left:4px"></i> دورك (${myRole})`;
+    txt.className = 'turn-text my-turn';
+    enableBoard(true);
+  } else {
+    txt.innerHTML = `<i class="fa-solid fa-circle" style="font-size:8px;margin-left:4px;color:var(--ink3)"></i> دور الخصم...`;
+    txt.className = 'turn-text opp-turn';
+    enableBoard(false);
+  }
+}
+
+function enableBoard(enabled) {
+  for (let i=1; i<=9; i++) {
+    const c = document.getElementById('cell-'+i);
+    if (!board[i]) {
+      if (enabled) c.classList.remove('disabled');
+      else c.classList.add('disabled');
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+// MOVE
+// ════════════════════════════════════════════════
+async function makeMove(cell) {
+  if (!isMyTurn || board[cell] || gameEnded) return;
+
+  board[cell] = myRole;
+  renderCell(cell, myRole);
+  clearMoveTimer();
+
+  // اكتب في عمود الخلية في Supabase
+  const patch = {};
+  patch[String(cell)] = myRole;
+  // غيّر الدور للخصم
+  patch['turn'] = null; // سيُحدَّث بعدها
+
+  await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch)
+  });
+
+  // كذلك حدّث صف الخصم بالخلية (ليراها)
+  await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch)
+  });
+
+  const result = checkWinner(board);
+  if (result) {
+    await handleRoundEnd(result);
+  } else {
+    isMyTurn = false;
+    renderTurnUI();
+    // أعد تشغيل المؤقت
+    startMoveTimer();
+  }
+}
+
+function renderCell(cell, role) {
+  const c = document.getElementById('cell-'+cell);
+  c.innerHTML = `<span class="cell-inner">${role}</span>`;
+  c.classList.add('taken', role === 'X' ? 'x-mark' : 'o-mark');
+}
+
+// ════════════════════════════════════════════════
+// POLLING — اقرأ حركات الخصم
+// ════════════════════════════════════════════════
+function startPolling() {
+  clearInterval(pollInterval);
+  pollInterval = setInterval(pollGame, 1200);
+}
+
+async function pollGame() {
+  if (gameEnded) { clearInterval(pollInterval); return; }
+
+  // اقرأ صف الخصم
+  const rows = await sb(`/rest/v1/${TABLE}?id=eq.${oppRowId}`);
+  if (!rows || rows.length === 0) {
+    // الخصم غادر
+    if (!gameEnded) { gameEnded = true; handleOppLeft(); }
+    return;
+  }
+  const oppRow = rows[0];
+
+  // تحقق إذا الخصم لعب حركة جديدة
+  for (let i=1; i<=9; i++) {
+    if (oppRow[String(i)] && !board[i]) {
+      board[i] = oppRow[String(i)];
+      renderCell(i, board[i]);
+      clearMoveTimer();
+
+      const result = checkWinner(board);
+      if (result) {
+        clearInterval(pollInterval);
+        await handleRoundEnd(result);
+        return;
+      }
+
+      isMyTurn = true;
+      renderTurnUI();
+      startMoveTimer();
+      break;
+    }
+  }
+
+  // تحقق إذا الخصم انسحب
+  if (oppRow.match === 'left' || oppRow.match === 'searching' || oppRow.match === 'off') {
+    if (!gameEnded) { gameEnded = true; handleOppLeft(); }
+  }
+}
+
+// ════════════════════════════════════════════════
+// MOVE TIMER
+// ════════════════════════════════════════════════
+function startMoveTimer() {
+  clearMoveTimer();
+  moveTimeLeft = MOVE_TIME;
+  document.getElementById('g-turn-timer').textContent = moveTimeLeft;
+  document.getElementById('g-turn-timer').classList.remove('urgent');
+
+  moveTimer = setInterval(async () => {
+    moveTimeLeft--;
+    document.getElementById('g-turn-timer').textContent = moveTimeLeft;
+    if (moveTimeLeft <= 3) document.getElementById('g-turn-timer').classList.add('urgent');
+
+    if (moveTimeLeft <= 0) {
+      clearMoveTimer();
+      if (isMyTurn) {
+        // انتهى وقتي — العب في أول خلية فارغة تلقائياً
+        const empty = Object.keys(board).map(Number).find(k => !board[k]);
+        if (empty) await makeMove(empty);
+      }
+    }
+  }, 1000);
+}
+
+function clearMoveTimer() {
+  clearInterval(moveTimer);
+  document.getElementById('g-turn-timer').textContent = MOVE_TIME;
+  document.getElementById('g-turn-timer').classList.remove('urgent');
+}
+
+// ════════════════════════════════════════════════
+// WIN CHECK
+// ════════════════════════════════════════════════
+function checkWinner(b) {
+  for (const combo of WIN_COMBOS) {
+    const [a,c,d] = combo;
+    if (b[a] && b[a]===b[c] && b[a]===b[d]) return { winner: b[a], combo };
+  }
+  if (Object.values(b).every(v=>v)) return { winner: 'draw', combo: [] };
+  return null;
+}
+
+async function handleRoundEnd(result) {
+  clearMoveTimer();
+  clearInterval(pollInterval);
+  enableBoard(false);
+
+  const roundEl = document.getElementById('g-round-result');
+  roundEl.style.display = 'flex';
+
+  if (result.winner === 'draw') {
+    roundEl.className = 'round-result draw';
+    roundEl.innerHTML = `<i class="fa-solid fa-handshake"></i> تعادل!`;
+  } else if (result.winner === myRole) {
+    myWins++;
+    document.getElementById('g-my-score').textContent = myWins;
+    roundEl.className = 'round-result win';
+    roundEl.innerHTML = `<i class="fa-solid fa-check-circle"></i> فزت بهذه الجولة!`;
+    // إضاءة الخلايا الفائزة
+    result.combo.forEach(i => document.getElementById('cell-'+i).classList.add('win-cell'));
+  } else {
+    oppWins++;
+    document.getElementById('g-opp-score').textContent = oppWins;
+    roundEl.className = 'round-result lose';
+    roundEl.innerHTML = `<i class="fa-solid fa-times-circle"></i> خسرت هذه الجولة`;
+    result.combo.forEach(i => document.getElementById('cell-'+i).classList.add('win-cell'));
+  }
+
+  // تحقق إذا انتهت المباراة
+  if (myWins >= WIN_ROUNDS || oppWins >= WIN_ROUNDS) {
+    setTimeout(() => endMatch(myWins >= WIN_ROUNDS ? 'win' : 'lose'), 1800);
+  } else {
+    currentRound++;
+    setTimeout(() => startRound(), 2200);
+  }
+}
+
+function handleOppLeft() {
+  clearMoveTimer();
+  clearInterval(pollInterval);
+  enableBoard(false);
+  document.getElementById('g-opp-left').style.display = 'block';
+  setTimeout(() => endMatch('win'), 2500);
+}
+
+// ════════════════════════════════════════════════
+// END MATCH
+// ════════════════════════════════════════════════
+async function endMatch(outcome) {
+  gameEnded = true;
+  clearMoveTimer();
+  clearInterval(pollInterval);
+
+  // احسب نقاط صدارة
+  let ptsChange = 0;
+  if (outcome === 'win') ptsChange = WIN_PTS;
+  else if (outcome === 'lose') ptsChange = LOSE_PTS;
+
+  // حدّث نقاط الصدارة في جدول system
+  const newPts = Math.max(0, (me.points||0) + ptsChange);
+  await sb(`/rest/v1/system?id=eq.${me.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ points: newPts })
+  });
+  me.points = newPts;
+  localStorage.setItem('genius_user', JSON.stringify(me));
+
+  // احذف صف البحث
+  if (myRowId) {
+    await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, { method: 'DELETE' });
+    myRowId = null;
+  }
+
+  // عرض نتيجة المباراة
+  const iconEl = document.getElementById('r-icon');
+  const titleEl = document.getElementById('r-title');
+  const subEl = document.getElementById('r-sub');
+  const ptsEl = document.getElementById('r-pts');
+
+  if (outcome === 'win') {
+    iconEl.className = 'result-icon win';
+    iconEl.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+    titleEl.textContent = 'فزت! 🏆';
+    subEl.textContent = 'أداء رائع، استمر في التقدم!';
+    ptsEl.className = 'pts-change pos';
+    ptsEl.innerHTML = `<i class="fa-solid fa-ranking-star"></i> +${WIN_PTS} نقطة صدارة`;
+  } else if (outcome === 'lose') {
+    iconEl.className = 'result-icon lose';
+    iconEl.innerHTML = '<i class="fa-solid fa-face-sad-tear"></i>';
+    titleEl.textContent = 'خسرت';
+    subEl.textContent = 'حظاً أوفر في المرة القادمة!';
+    ptsEl.className = 'pts-change neg';
+    ptsEl.innerHTML = `<i class="fa-solid fa-ranking-star"></i> ${LOSE_PTS} نقطة صدارة`;
+  } else {
+    iconEl.className = 'result-icon draw';
+    iconEl.innerHTML = '<i class="fa-solid fa-handshake"></i>';
+    titleEl.textContent = 'تعادل!';
+    subEl.textContent = 'كانت مباراة متكافئة';
+    ptsEl.className = 'pts-change zero';
+    ptsEl.innerHTML = `<i class="fa-solid fa-ranking-star"></i> 0 نقطة`;
+  }
+
+  document.getElementById('r-my-score').textContent = myWins;
+  document.getElementById('r-my-name').textContent = me.name;
+  document.getElementById('r-opp-score').textContent = oppWins;
+  document.getElementById('r-opp-name').textContent = document.getElementById('g-opp-name').textContent;
+
+  showScreen('result');
+}
+
+// ════════════════════════════════════════════════
+// LOBBY RETURN
+// ════════════════════════════════════════════════
+function goLobby() {
+  gameEnded = true;
+  clearMoveTimer();
+  clearInterval(pollInterval);
+  clearInterval(searchInterval);
+  // حدّث نقاط الصدارة في الـ lobby
+  document.getElementById('lobby-pts').textContent = me.points || 0;
+  document.getElementById('btn-search').disabled = false;
+  showScreen('lobby');
+}
+
+// ════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
