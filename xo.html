@@ -733,8 +733,11 @@ function init() {
 // ════════════════════════════════════════════════
 // SEARCH
 // ════════════════════════════════════════════════
+let searching = false; // منع التكرار
+
 async function startSearch() {
-  if (!me) return;
+  if (!me || searching) return;
+  searching = true;
   document.getElementById('btn-search').disabled = true;
   showScreen('searching');
 
@@ -742,7 +745,7 @@ async function startSearch() {
   const res = await sb(`/rest/v1/${TABLE}`, {
     method: 'POST',
     body: JSON.stringify({
-      user_id: me.id,
+      user_id: String(me.id),
       name: me.name,
       avatar: me.avatar_url || '',
       match: 'searching',
@@ -753,47 +756,60 @@ async function startSearch() {
       turn: null
     })
   });
-  if (!res || !res[0]) { cancelSearch(); return; }
+  if (!res || !res[0]) { searching = false; cancelSearch(); return; }
   myRowId = res[0].id;
 
-  // timer
   searchTimeLeft = 60;
-  searchInterval = setInterval(async () => {
-    searchTimeLeft--;
-    document.getElementById('search-sec').textContent = searchTimeLeft;
-    document.getElementById('search-fill').style.width = (searchTimeLeft/60*100)+'%';
-
-    if (searchTimeLeft <= 0) { cancelSearch(); return; }
-
-    // ابحث عن لاعب آخر يبحث
-    const others = await sb(`/rest/v1/${TABLE}?match=eq.searching&user_id=neq.${me.id}&order=id.asc&limit=1`);
-    if (others && others.length > 0) {
-      const opp = others[0];
-      // أنا وجدت خصماً — أصغر id يبدأ كـ X
-      clearInterval(searchInterval);
-      await pairMatch(opp);
-    }
-  }, 1500);
+  searchInterval = setInterval(searchTick, 2000);
 }
 
+async function searchTick() {
+  searchTimeLeft -= 2;
+  document.getElementById('search-sec').textContent = Math.max(0, searchTimeLeft);
+  document.getElementById('search-fill').style.width = (Math.max(0,searchTimeLeft)/60*100)+'%';
+
+  if (searchTimeLeft <= 0) { cancelSearch(); return; }
+
+  // أولاً: تحقق إذا كان شخص آخر قام بـ pair معي بالفعل (أنا الـ O)
+  const myRow = await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`);
+  if (!myRow || myRow.length === 0) { cancelSearch(); return; }
+  if (myRow[0].match === 'playing' && myRow[0].matched_with) {
+    // تم إقراني من قِبَل الخصم — ابدأ اللعب مباشرة
+    clearInterval(searchInterval);
+    searching = false;
+    await joinAsSecond(myRow[0]);
+    return;
+  }
+
+  // ثانياً: ابحث بنفسي عن لاعب آخر (أنا من سأقوم بالـ pairing)
+  const others = await sb(`/rest/v1/${TABLE}?match=eq.searching&user_id=neq.${String(me.id)}&order=id.asc&limit=1`);
+  if (others && others.length > 0) {
+    clearInterval(searchInterval);
+    searching = false;
+    await pairMatch(others[0]);
+  }
+}
+
+// أنا وجدت الخصم وسأقوم بالـ pairing
 async function pairMatch(opp) {
   oppRowId = opp.id;
-  const myId = parseInt(me.id);
-  const oppId = parseInt(opp.user_id);
+  const myId = Number(me.id);
+  const oppId = Number(opp.user_id);
   amIFirst = myId < oppId;
   myRole = amIFirst ? 'X' : 'O';
   oppRole = amIFirst ? 'O' : 'X';
   matchId = Math.min(myId, oppId) + '_' + Math.max(myId, oppId);
+  const firstTurn = String(amIFirst ? myId : oppId);
 
-  // حدّث صفي
+  // حدّث صفي أولاً
   await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, {
     method: 'PATCH',
     body: JSON.stringify({
       match: 'playing',
-      matched_with: opp.user_id,
+      matched_with: String(opp.user_id),
       match_id: matchId,
       'xo-role': myRole,
-      turn: amIFirst ? me.id : opp.user_id
+      turn: firstTurn
     })
   });
 
@@ -802,18 +818,45 @@ async function pairMatch(opp) {
     method: 'PATCH',
     body: JSON.stringify({
       match: 'playing',
-      matched_with: me.id,
+      matched_with: String(me.id),
       match_id: matchId,
       'xo-role': oppRole,
-      turn: amIFirst ? me.id : opp.user_id
+      turn: firstTurn
     })
   });
 
-  startGame(opp);
+  startGame({ id: oppRowId, user_id: opp.user_id, name: opp.name, avatar: opp.avatar });
+}
+
+// الخصم قام بالـ pairing — أنا فقط أقرأ بياناته وأبدأ
+async function joinAsSecond(myRow) {
+  oppRowId = null;
+  myRole = myRow['xo-role'];
+  oppRole = myRole === 'X' ? 'O' : 'X';
+  amIFirst = myRole === 'X';
+  matchId = myRow.match_id;
+
+  // اجلب بيانات الخصم
+  const oppRows = await sb(`/rest/v1/${TABLE}?user_id=eq.${myRow.matched_with}&match_id=eq.${matchId}`);
+  if (oppRows && oppRows.length > 0) {
+    const opp = oppRows[0];
+    oppRowId = opp.id;
+    startGame({ id: opp.id, user_id: opp.user_id, name: opp.name, avatar: opp.avatar });
+  } else {
+    // جرب بـ matched_with فقط
+    const opp2 = await sb(`/rest/v1/${TABLE}?user_id=eq.${myRow.matched_with}&limit=1`);
+    if (opp2 && opp2.length > 0) {
+      oppRowId = opp2[0].id;
+      startGame({ id: opp2[0].id, user_id: opp2[0].user_id, name: opp2[0].name, avatar: opp2[0].avatar });
+    } else {
+      goLobby();
+    }
+  }
 }
 
 async function cancelSearch() {
   clearInterval(searchInterval);
+  searching = false;
   if (myRowId) {
     await sb(`/rest/v1/${TABLE}?id=eq.${myRowId}`, { method: 'DELETE' });
     myRowId = null;
