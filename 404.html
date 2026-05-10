@@ -1,32 +1,357 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - الصفحة غير موجودة</title>
-    <style>
-        body { 
-            text-align: center; 
-            padding: 100px 20px; 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: #f8f9fa; 
-            color: #1d1d1f;
-        }
-        h1 { font-size: 120px; color: #0071e3; margin: 0; }
-        p { font-size: 20px; color: #6e6e73; margin-bottom: 30px; }
-        .btn { 
-            text-decoration: none; 
-            background: #0071e3; 
-            color: white; 
-            padding: 12px 25px; 
-            border-radius: 8px; 
-            font-weight: bold;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 – الصفحة غير موجودة | دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f7;
+    --bg3: #e8e8ed;
+    --ink: #1d1d1f;
+    --ink2: #3d3d3f;
+    --ink3: #6e6e73;
+    --line: #d2d2d7;
+    --line2: rgba(0,0,0,0.06);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --blue-soft: rgba(0,113,227,0.08);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+  }
+  .brand i { color: var(--blue); font-size: 15px; }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+  }
+
+  .error-wrap {
+    text-align: center;
+    max-width: 520px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── 404 BIG NUMBER ── */
+  .error-number {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .error-number .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(100px, 22vw, 160px);
+    font-weight: 700;
+    letter-spacing: -6px;
+    color: var(--bg3);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .error-number .icon-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-badge {
+    width: 72px; height: 72px;
+    background: var(--blue);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 30px;
+    box-shadow: 0 8px 32px rgba(0,113,227,0.35);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(0,113,227,0.35); }
+    50%       { transform: scale(1.06); box-shadow: 0 12px 40px rgba(0,113,227,0.5); }
+  }
+
+  /* ── EYEBROW ── */
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2); color: var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 16px;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  /* ── TEXTS ── */
+  .error-title {
+    font-size: clamp(24px, 5vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    color: var(--ink);
+    margin-bottom: 12px;
+    animation: fadeUp 0.5s 0.15s ease both;
+  }
+
+  .error-desc {
+    font-size: 16px;
+    color: var(--ink3);
+    line-height: 1.6;
+    margin-bottom: 36px;
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+
+  /* ── ACTIONS ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.5s 0.25s ease both;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    border-radius: var(--radius-sm); border: none;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+    letter-spacing: -0.2px;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--blue-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,113,227,0.3); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    background: var(--bg2); color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-secondary:hover { background: var(--bg3); transform: translateY(-1px); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    margin: 48px auto 32px;
+    width: 48px; height: 1px;
+    background: var(--line);
+    animation: fadeUp 0.5s 0.3s ease both;
+  }
+
+  /* ── SUGGESTIONS ── */
+  .suggestions-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.5s 0.35s ease both;
+  }
+
+  .suggestions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.5s 0.4s ease both;
+  }
+
+  .suggestion-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px; font-weight: 500;
+    color: var(--ink2);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .suggestion-chip i { font-size: 12px; color: var(--blue); }
+  .suggestion-chip:hover {
+    background: var(--blue-soft);
+    border-color: rgba(0,113,227,0.2);
+    color: var(--blue);
+    transform: translateY(-1px);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--line2);
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink3);
+  }
+
+  /* ── FLOATING DOTS DECORATION ── */
+  .deco {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .deco-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    opacity: 0.12;
+    position: absolute;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0%   { transform: translateY(0) scale(1); opacity: 0.12; }
+    50%  { opacity: 0.22; }
+    100% { transform: translateY(-80px) scale(0.6); opacity: 0; }
+  }
+</style>
 </head>
 <body>
-    <h1>404</h1>
-    <p>عذراً، الصفحة التي تبحث عنها غير موجودة في "دوري العباقرة".</p>
-    <a href="/" class="btn">العودة للرئيسية</a>
+
+<!-- Decorative dots -->
+<div class="deco" style="inset:0;">
+  <div class="deco-dot" style="left:10%;top:70%;width:8px;height:8px;animation-duration:6s;animation-delay:0s;"></div>
+  <div class="deco-dot" style="left:20%;top:60%;animation-duration:8s;animation-delay:1s;"></div>
+  <div class="deco-dot" style="left:75%;top:75%;width:10px;height:10px;animation-duration:7s;animation-delay:2s;"></div>
+  <div class="deco-dot" style="left:85%;top:50%;animation-duration:9s;animation-delay:0.5s;"></div>
+  <div class="deco-dot" style="left:50%;top:80%;width:5px;height:5px;animation-duration:5s;animation-delay:3s;"></div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <a href="/" class="brand">
+      <i class="fa-solid fa-brain"></i>
+      دوري العباقرة
+    </a>
+  </div>
+</header>
+
+<!-- Main content -->
+<main>
+  <div class="error-wrap">
+
+    <!-- Big 404 number with icon -->
+    <div class="error-number">
+      <div class="num">404</div>
+      <div class="icon-center">
+        <div class="icon-badge">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eyebrow badge -->
+    <div class="eyebrow">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      خطأ 404
+    </div>
+
+    <!-- Title & description -->
+    <h1 class="error-title">الصفحة غير موجودة</h1>
+    <p class="error-desc">
+      يبدو أن هذه الصفحة اختفت في عالم الأسئلة الصعبة!<br>
+      ربما تم نقلها أو حذفها أو كتبت الرابط بشكل خاطئ.
+    </p>
+
+    <!-- Action buttons -->
+    <div class="actions">
+      <a href="/" class="btn btn-primary">
+        <i class="fa-solid fa-house"></i>
+        العودة للرئيسية
+      </a>
+      <button class="btn btn-secondary" onclick="history.back()">
+        <i class="fa-solid fa-arrow-right"></i>
+        رجوع
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Quick navigation suggestions -->
+    <p class="suggestions-label">تصفح بسرعة</p>
+    <div class="suggestions">
+      <a href="/" class="suggestion-chip">
+        <i class="fa-solid fa-trophy"></i>
+        الدوري
+      </a>
+      <a href="/" class="suggestion-chip">
+        <i class="fa-solid fa-ranking-star"></i>
+        لوحة الصدارة
+      </a>
+      <a href="/" class="suggestion-chip">
+        <i class="fa-solid fa-user"></i>
+        حسابي
+      </a>
+      <a href="/" class="suggestion-chip">
+        <i class="fa-solid fa-gamepad"></i>
+        العب الآن
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  © 2025 دوري العباقرة — جميع الحقوق محفوظة
+</footer>
+
 </body>
 </html>
