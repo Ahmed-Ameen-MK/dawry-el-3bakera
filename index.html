@@ -48,7 +48,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
   /* ── HEADER ── */
   header {
@@ -60,7 +60,7 @@
     -webkit-backdrop-filter: blur(20px);
   }
   .header-inner {
-    max-width: 860px; margin: 0 auto;
+    max-width: 1100px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between;
     height: 52px;
   }
@@ -1172,67 +1172,143 @@
   }
   .legend-tips i { margin-left: 5px; }
 
-  /* ── MINI LEADERBOARD IN HOME ── */
-  .mini-lb-card {
+  /* ── DASHBOARD TWO-COLUMN LAYOUT ── */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: start;
+  }
+  .dashboard-main { min-width: 0; }
+  .dashboard-sidebar { position: sticky; top: 72px; }
+
+  @media (max-width: 780px) {
+    .dashboard-layout {
+      grid-template-columns: 1fr;
+    }
+    .dashboard-sidebar {
+      position: static;
+      order: -1; /* sidebar goes above on mobile */
+    }
+  }
+
+  /* ── TROPHY ANIMATION ── */
+  .trophy-wrap {
+    text-align: center;
+    padding: 8px 0 4px;
+    margin-bottom: 4px;
+  }
+  .trophy-svg {
+    width: 80px;
+    height: 80px;
+    animation: trophyFloat 2.8s ease-in-out infinite;
+    filter: drop-shadow(0 8px 18px rgba(181,136,46,0.35));
+  }
+  @keyframes trophyFloat {
+    0%, 100% { transform: translateY(0px) rotate(-2deg); }
+    50%       { transform: translateY(-10px) rotate(2deg); }
+  }
+  .trophy-sparkle {
+    position: relative;
+    display: inline-block;
+  }
+  .trophy-sparkle::before,
+  .trophy-sparkle::after {
+    content: '✦';
+    position: absolute;
+    font-size: 12px;
+    color: var(--gold);
+    animation: sparkleAnim 2s ease-in-out infinite;
+  }
+  .trophy-sparkle::before { top: 4px; right: -14px; animation-delay: 0.3s; }
+  .trophy-sparkle::after  { bottom: 8px; left: -14px; animation-delay: 0.9s; }
+  @keyframes sparkleAnim {
+    0%, 100% { opacity: 0.2; transform: scale(0.7); }
+    50%       { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* ── SIDEBAR LEADERBOARD ── */
+  .side-lb-card {
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 20px 24px;
-    margin-bottom: 20px;
+    overflow: hidden;
     box-shadow: var(--shadow);
   }
-  .mini-lb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+  .side-lb-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line2);
   }
-  .mini-lb-title {
+  .side-lb-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 16px;
+    gap: 7px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--ink);
   }
-  .mini-lb-title i { color: var(--gold); }
-  .mini-lb-row {
+  .side-lb-title i { color: var(--gold); font-size: 14px; }
+  .side-lb-body { padding: 4px 0; }
+  .side-lb-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line2);
+    gap: 10px;
+    padding: 10px 18px;
+    transition: background 0.13s;
+    position: relative;
   }
-  .mini-lb-row:last-child { border-bottom: none; }
-  .mini-lb-rank {
-    width: 24px;
+  .side-lb-row:hover { background: var(--bg2); }
+  .side-lb-row.me-row {
+    background: linear-gradient(90deg, rgba(0,113,227,0.06), transparent);
+    border-right: 3px solid var(--blue);
+  }
+  .side-lb-rank {
+    width: 22px;
     text-align: center;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 13px;
     color: var(--ink3);
     flex-shrink: 0;
   }
-  .mini-lb-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
+  .side-lb-rank.r1 { color: #c9a227; }
+  .side-lb-rank.r2 { color: #909090; }
+  .side-lb-rank.r3 { color: #b07d4a; }
+  .side-lb-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
     background: var(--ink); color: #fff;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 12px; flex-shrink: 0;
     overflow: hidden;
+    border: 2px solid var(--bg);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   }
-  .mini-lb-name {
-    flex: 1;
-    font-size: 14px;
+  .side-lb-info { flex: 1; min-width: 0; }
+  .side-lb-name {
+    font-size: 13px;
     font-weight: 600;
     color: var(--ink);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .mini-lb-pts {
-    font-size: 14px;
+  .side-lb-country {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .side-lb-pts {
+    font-size: 13px;
     font-weight: 700;
     color: var(--blue);
     white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .side-lb-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--line2);
   }
   .btn-view-more {
     display: flex;
@@ -1240,23 +1316,24 @@
     justify-content: center;
     gap: 6px;
     width: 100%;
-    margin-top: 14px;
-    padding: 10px;
+    padding: 9px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--line);
     background: var(--bg2);
     color: var(--ink2);
     font-family: 'IBM Plex Sans Arabic', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
   }
   .btn-view-more:hover {
-    background: var(--bg3);
-    border-color: var(--blue);
-    color: var(--blue);
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
   }
+  /* old mini-lb-card hidden */
+  .mini-lb-card { display: none; }
 </style>
 </head>
 <body>
@@ -1386,119 +1463,174 @@
     <!-- DASHBOARD -->
     <div id="dashboard-section" style="display:none">
       <div class="section" style="padding-top:32px">
-        <div class="user-banner">
-          <div class="avatar" id="dash-avatar"></div>
-          <div class="user-info">
-            <h3 id="dash-name"></h3>
-            <p id="dash-email"></p>
-            <p id="dash-country" style="margin-top:3px;font-size:13px;color:rgba(255,255,255,0.5)"></p>
-          </div>
-          <div class="pts-chip">
-            <i class="fa-solid fa-ranking-star"></i>
-            <span id="dash-points">0</span> صدارة
-          </div>
-        </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="num" id="stat-pts">0</div>
-            <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div>
-          </div>
-          <div class="stat-card">
-            <div class="num" id="stat-rank">#-</div>
-            <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> ترتيبك</div>
-          </div>
-          <div class="stat-card">
-            <div class="num"><i class="fa-solid fa-earth-africa" style="font-size:22px;color:var(--ink3)"></i></div>
-            <div class="lbl" id="stat-country"></div>
-          </div>
-        </div>
+        <!-- TWO-COLUMN LAYOUT -->
+        <div class="dashboard-layout">
 
-        <div class="play-section">
+          <!-- ── MAIN COLUMN ── -->
+          <div class="dashboard-main">
 
-          <!-- عنصر التحميل فوق الزر -->
-          <div class="searching-anim" id="searching-anim">
-            <div class="search-ring"></div>
-            <div class="search-timer-text" id="search-text">جاري البحث عن خصم...</div>
-            <div class="search-countdown">
-              <span id="search-countdown-num">60</span> ثانية متبقية
-              <div class="bar"><div class="bar-fill" id="search-bar-fill" style="width:100%"></div></div>
-            </div>
-            <button class="btn-stop-search" id="cancel-btn" onclick="cancelSearch()" style="display:none">
-              <i class="fa-solid fa-xmark"></i> إيقاف البحث
-            </button>
-          </div>
-
-          <!-- زر العب مباراة الكبير -->
-          <div style="text-align:center;margin-bottom:8px">
-            <button class="btn-play-big" id="play-btn" onclick="startSearch()">
-              <div class="play-btn-inner-top">
-                <i class="fa-solid fa-gamepad" style="font-size:22px;margin-left:10px"></i>
-                <span style="font-size:21px;font-weight:800;letter-spacing:-0.5px">العب مباراة</span>
+            <div class="user-banner">
+              <div class="avatar" id="dash-avatar"></div>
+              <div class="user-info">
+                <h3 id="dash-name"></h3>
+                <p id="dash-email"></p>
+                <p id="dash-country" style="margin-top:3px;font-size:13px;color:rgba(255,255,255,0.5)"></p>
               </div>
-              <div class="play-btn-stats" id="live-stats-row">
-                <div class="play-stat-item" id="searching-pill">
-                  <span class="pulse-dot green-dot" id="searching-dot"></span>
-                  <span id="searching-count">0</span> لاعب متاح
+              <div class="pts-chip">
+                <i class="fa-solid fa-ranking-star"></i>
+                <span id="dash-points">0</span> صدارة
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="num" id="stat-pts">0</div>
+                <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="stat-rank">#-</div>
+                <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> ترتيبك</div>
+              </div>
+              <div class="stat-card">
+                <div class="num"><i class="fa-solid fa-earth-africa" style="font-size:22px;color:var(--ink3)"></i></div>
+                <div class="lbl" id="stat-country"></div>
+              </div>
+            </div>
+
+            <div class="play-section">
+
+              <!-- عنصر التحميل فوق الزر -->
+              <div class="searching-anim" id="searching-anim">
+                <div class="search-ring"></div>
+                <div class="search-timer-text" id="search-text">جاري البحث عن خصم...</div>
+                <div class="search-countdown">
+                  <span id="search-countdown-num">60</span> ثانية متبقية
+                  <div class="bar"><div class="bar-fill" id="search-bar-fill" style="width:100%"></div></div>
                 </div>
-                <div class="play-stat-divider"></div>
-                <div class="play-stat-item" id="matches-pill">
-                  <span class="pulse-dot green-dot" id="matches-dot"></span>
-                  <span id="matches-count">0</span> مباراة نشطة
+                <button class="btn-stop-search" id="cancel-btn" onclick="cancelSearch()" style="display:none">
+                  <i class="fa-solid fa-xmark"></i> إيقاف البحث
+                </button>
+              </div>
+
+              <!-- زر العب مباراة الكبير -->
+              <div style="text-align:center;margin-bottom:8px">
+                <button class="btn-play-big" id="play-btn" onclick="startSearch()">
+                  <div class="play-btn-inner-top">
+                    <i class="fa-solid fa-gamepad" style="font-size:22px;margin-left:10px"></i>
+                    <span style="font-size:21px;font-weight:800;letter-spacing:-0.5px">العب مباراة</span>
+                  </div>
+                  <div class="play-btn-stats" id="live-stats-row">
+                    <div class="play-stat-item" id="searching-pill">
+                      <span class="pulse-dot green-dot" id="searching-dot"></span>
+                      <span id="searching-count">0</span> لاعب متاح
+                    </div>
+                    <div class="play-stat-divider"></div>
+                    <div class="play-stat-item" id="matches-pill">
+                      <span class="pulse-dot green-dot" id="matches-dot"></span>
+                      <span id="matches-count">0</span> مباراة نشطة
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <p class="play-subtitle">تحدّى الأسئلة مع أناس حقيقيين</p>
+
+              <!-- Share Button -->
+              <div style="text-align:center">
+                <button class="btn-share" onclick="shareWebsite()">
+                  <i class="fa-solid fa-share-nodes"></i> شارك الموقع ليزداد عدد اللاعبين
+                </button>
+              </div>
+
+              <!-- Offline Games -->
+              <div class="offline-games-grid">
+                <a href="kanji-memory.html" class="offline-game-btn glass-card">
+                  <div class="offline-game-icon"><i class="fa-solid fa-brain" style="font-size:28px;color:var(--blue)"></i></div>
+                  <div class="offline-game-title">ذاكرة الكانجي</div>
+                  <div class="offline-game-sub">تحدّ الذاكرة</div>
+                  <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                </a>
+                <a href="sudoku.html" class="offline-game-btn glass-card">
+                  <div class="offline-game-icon"><i class="fa-solid fa-table-cells" style="font-size:28px;color:var(--blue)"></i></div>
+                  <div class="offline-game-title">السودوكو</div>
+                  <div class="offline-game-sub">ألعاب العباقرة</div>
+                  <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                </a>
+                <a href="xo.html" class="offline-game-btn glass-card" style="grid-column: 1 / -1;">
+                  <div class="offline-game-icon">❌⭕</div>
+                  <div class="offline-game-title">العب اكس-أوو مع العباقرة الآخرين</div>
+                  <div class="offline-game-sub">تحدّ أصدقاءك في لعبة X O</div>
+                  <span class="offline-badge"><i class="fa-solid fa-users" style="font-size:9px"></i> متعدد اللاعبين</span>
+                </a>
+              </div>
+
+              <div id="search-msg" style="text-align:center;margin-top:10px"></div>
+            </div>
+
+          </div><!-- end dashboard-main -->
+
+          <!-- ── SIDEBAR: LEADERBOARD ── -->
+          <div class="dashboard-sidebar">
+            <div class="side-lb-card">
+
+              <!-- Trophy animation -->
+              <div class="trophy-wrap">
+                <div class="trophy-sparkle">
+                  <svg class="trophy-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Cup body -->
+                    <defs>
+                      <linearGradient id="cupGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#f5d060"/>
+                        <stop offset="50%" style="stop-color:#e6a817"/>
+                        <stop offset="100%" style="stop-color:#c68a00"/>
+                      </linearGradient>
+                      <linearGradient id="cupShine" x1="0%" y1="0%" x2="60%" y2="100%">
+                        <stop offset="0%" style="stop-color:#fff9c4;stop-opacity:0.7"/>
+                        <stop offset="100%" style="stop-color:#f5d060;stop-opacity:0"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- Base -->
+                    <rect x="35" y="82" width="30" height="5" rx="2.5" fill="url(#cupGold)"/>
+                    <rect x="29" y="87" width="42" height="6" rx="3" fill="url(#cupGold)"/>
+                    <!-- Stem -->
+                    <rect x="44" y="72" width="12" height="12" rx="2" fill="url(#cupGold)"/>
+                    <!-- Cup main body -->
+                    <path d="M22 18 Q22 72 50 72 Q78 72 78 18 Z" fill="url(#cupGold)"/>
+                    <!-- Shine overlay -->
+                    <path d="M30 20 Q28 55 42 66 Q34 50 33 20 Z" fill="url(#cupShine)"/>
+                    <!-- Handles -->
+                    <path d="M22 28 Q8 28 8 42 Q8 56 22 54" stroke="url(#cupGold)" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M78 28 Q92 28 92 42 Q92 56 78 54" stroke="url(#cupGold)" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <!-- Star on cup -->
+                    <text x="50" y="50" text-anchor="middle" font-size="22" fill="rgba(255,255,255,0.9)">★</text>
+                    <!-- Rim -->
+                    <ellipse cx="50" cy="18" rx="28" ry="5" fill="#c68a00" opacity="0.5"/>
+                    <ellipse cx="50" cy="18" rx="26" ry="3.5" fill="#f5d060"/>
+                  </svg>
                 </div>
               </div>
-            </button>
-          </div>
 
-          <p class="play-subtitle">تحدّى الأسئلة مع أناس حقيقيين</p>
+              <div class="side-lb-head">
+                <div class="side-lb-title">
+                  <i class="fa-solid fa-ranking-star"></i>
+                  لوحة الصدارة
+                </div>
+              </div>
 
-          <!-- Share Button -->
-          <div style="text-align:center">
-            <button class="btn-share" onclick="shareWebsite()">
-              <i class="fa-solid fa-share-nodes"></i> شارك الموقع ليزداد عدد اللاعبين
-            </button>
-          </div>
+              <div class="side-lb-body" id="side-lb-list">
+                <div style="text-align:center;color:var(--ink3);padding:24px;font-size:13px">جاري التحميل...</div>
+              </div>
 
-          <!-- Offline Games -->
-          <div class="offline-games-grid">
-            <a href="kanji-memory.html" class="offline-game-btn glass-card">
-              <div class="offline-game-icon"><i class="fa-solid fa-brain" style="font-size:28px;color:var(--blue)"></i></div>
-              <div class="offline-game-title">ذاكرة الكانجي</div>
-              <div class="offline-game-sub">تحدّ الذاكرة</div>
-              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
-            </a>
-            <a href="sudoku.html" class="offline-game-btn glass-card">
-              <div class="offline-game-icon"><i class="fa-solid fa-table-cells" style="font-size:28px;color:var(--blue)"></i></div>
-              <div class="offline-game-title">السودوكو</div>
-              <div class="offline-game-sub">ألعاب العباقرة</div>
-              <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
-            </a>
-            <a href="xo.html" class="offline-game-btn glass-card" style="grid-column: 1 / -1;">
-              <div class="offline-game-icon">❌⭕</div>
-              <div class="offline-game-title">العب اكس-أوو مع العباقرة الآخرين</div>
-              <div class="offline-game-sub">تحدّ أصدقاءك في لعبة X O</div>
-              <span class="offline-badge"><i class="fa-solid fa-users" style="font-size:9px"></i> متعدد اللاعبين</span>
-            </a>
-          </div>
-
-          <div id="search-msg" style="text-align:center;margin-top:10px"></div>
-        </div>
-
-        <!-- Mini Leaderboard -->
-        <div class="mini-lb-card" id="mini-lb-card">
-          <div class="mini-lb-header">
-            <div class="mini-lb-title">
-              <i class="fa-solid fa-ranking-star"></i>
-              المتصدرون
+              <div class="side-lb-footer">
+                <button class="btn-view-more" onclick="safeShowPage('leaderboard')">
+                  <i class="fa-solid fa-arrow-left"></i> عرض المزيد
+                </button>
+              </div>
             </div>
-          </div>
-          <div id="mini-lb-list">
-            <div style="text-align:center;color:var(--ink3);padding:16px;font-size:13px">جاري التحميل...</div>
-          </div>
-          <button class="btn-view-more" onclick="safeShowPage('leaderboard')">
-            <i class="fa-solid fa-arrow-left"></i> عرض المزيد
-          </button>
-        </div>
+          </div><!-- end sidebar -->
+
+        </div><!-- end dashboard-layout -->
       </div>
     </div>
   </div>
@@ -1641,7 +1773,7 @@
 </div>
 
 <!-- GIFTS SECTION (outside container, full width divider + section) -->
-<div style="max-width:860px;margin:0 auto;padding:0 24px">
+<div style="max-width:1100px;margin:0 auto;padding:0 24px">
   <div class="gifts-section">
     <div class="gifts-header">
       <h2><i class="fa-solid fa-gift" style="color:var(--blue);margin-left:8px"></i> هدايا واربح نقاط صدارة</h2>
@@ -2842,31 +2974,37 @@ function startChatPolling() {
   }, 2000);
 }
 
-// ==================== MINI LEADERBOARD ====================
+// ==================== SIDEBAR LEADERBOARD ====================
 async function loadMiniLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=5', { method: 'GET' });
-  const el = document.getElementById('mini-lb-list');
+  const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url&order=level.desc&limit=5', { method: 'GET' });
+  const el = document.getElementById('side-lb-list');
   if (!el) return;
   if (!data || data.length === 0) {
-    el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:16px;font-size:13px">لا يوجد لاعبون بعد</div>';
+    el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:24px;font-size:13px">لا يوجد لاعبون بعد</div>';
     return;
   }
-  const rankColors = ['var(--gold)', '#888', '#b07d4a'];
-  const rankIcons = ['fa-medal', 'fa-medal', 'fa-medal'];
+  const rankClass = ['r1','r2','r3'];
+  const rankIcon = [
+    '<i class="fa-solid fa-medal" style="color:#c9a227;font-size:16px"></i>',
+    '<i class="fa-solid fa-medal" style="color:#909090;font-size:16px"></i>',
+    '<i class="fa-solid fa-medal" style="color:#b07d4a;font-size:16px"></i>'
+  ];
   el.innerHTML = data.map((u, i) => {
     const initial = u.name ? u.name[0].toUpperCase() : '?';
+    const isMe = currentUser && u.id === currentUser.id;
     const avatarHtml = u.avatar_url
-      ? `<img src="${u.avatar_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${initial}'">`
+      ? `<img src="${u.avatar_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${initial}'">`
       : initial;
-    const rankHtml = i < 3
-      ? `<i class="fa-solid ${rankIcons[i]}" style="color:${rankColors[i]};font-size:15px"></i>`
-      : (i + 1);
+    const rankHtml = i < 3 ? rankIcon[i] : `<span class="side-lb-rank ${rankClass[i]||''}">${i+1}</span>`;
     return `
-      <div class="mini-lb-row">
-        <div class="mini-lb-rank">${rankHtml}</div>
-        <div class="mini-lb-avatar">${avatarHtml}</div>
-        <div class="mini-lb-name">${u.name || 'لاعب'}</div>
-        <div class="mini-lb-pts">${u.level || 0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة</span></div>
+      <div class="side-lb-row${isMe ? ' me-row' : ''}">
+        <div class="side-lb-rank ${rankClass[i]||''}">${rankHtml}</div>
+        <div class="side-lb-avatar">${avatarHtml}</div>
+        <div class="side-lb-info">
+          <div class="side-lb-name">${u.name || 'لاعب'}${isMe ? ' <span style="font-size:10px;color:var(--blue)">(أنت)</span>' : ''}</div>
+          <div class="side-lb-country">${u.country || ''}</div>
+        </div>
+        <div class="side-lb-pts">${u.level || 0}</div>
       </div>
     `;
   }).join('');
@@ -3530,14 +3668,19 @@ async function sendContactMessage() {
   resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
-  const res = await sbFetch('/rest/v1/contact-feedback', {
-    method: 'POST',
-    body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() })
-  });
-  if (res !== null && !(res && res.__error)) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
-    document.getElementById('contact-msg-text').value = '';
-  } else {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() })
+    });
+    if (res.ok || res.status === 201 || res.status === 200) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
+      document.getElementById('contact-msg-text').value = '';
+    } else {
+      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    }
+  } catch(e) {
     resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
   }
 }
@@ -3549,15 +3692,20 @@ async function sendContactReview() {
   resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
-  const res = await sbFetch('/rest/v1/contact-feedback', {
-    method: 'POST',
-    body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() })
-  });
-  if (res !== null && !(res && res.__error)) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
-    document.getElementById('contact-review-text').value = '';
-    setStars(0);
-  } else {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() })
+    });
+    if (res.ok || res.status === 201 || res.status === 200) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
+      document.getElementById('contact-review-text').value = '';
+      setStars(0);
+    } else {
+      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    }
+  } catch(e) {
     resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
   }
 }
@@ -3571,15 +3719,20 @@ async function sendBuyOffer() {
   resultEl.innerHTML = '<div class="msg info">جاري إرسال عرضك...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
-  const res = await sbFetch('/rest/v1/contact-feedback', {
-    method: 'POST',
-    body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() })
-  });
-  if (res !== null && !(res && res.__error)) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
-    document.getElementById('buy-price').value = '';
-    document.getElementById('buy-note').value = '';
-  } else {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() })
+    });
+    if (res.ok || res.status === 201 || res.status === 200) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
+      document.getElementById('buy-price').value = '';
+      document.getElementById('buy-note').value = '';
+    } else {
+      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    }
+  } catch(e) {
     resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
   }
 }
