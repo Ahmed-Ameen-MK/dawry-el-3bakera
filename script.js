@@ -8,6 +8,14 @@ const Q_HEADERS = {
   'Prefer': 'return=representation'
 };
 
+// ── SUPABASE REALTIME CLIENT ──
+const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Realtime channel references (for cleanup)
+let realtimeMatchChannel = null;
+let realtimeChatChannel = null;
+let realtimeLbChannel = null;
+
 // QUESTIONS loaded from questions.js (included before this script)
 
 // ==================== STATE ====================
@@ -178,6 +186,7 @@ function showDashboard() {
   loadRank();
   updateNavAvatar();
   startLiveStats();
+  startLeaderboardRealtime();
   loadMiniLeaderboard();
 }
 
@@ -356,8 +365,39 @@ async function handleGithubCallback(accessToken) {
   return false;
 }
 
-// ==================== MATCHMAKING ====================
+// ==================== MATCHMAKING REALTIME ====================
 const SEARCH_MAX = 60; // 60 seconds max
+
+function startMatchRealtime() {
+  // إلغاء أي channel سابق
+  if (realtimeMatchChannel) {
+    supabase.removeChannel(realtimeMatchChannel);
+    realtimeMatchChannel = null;
+  }
+
+  // استمع لتغييرات صف المستخدم الحالي (حقل match)
+  realtimeMatchChannel = supabase
+    .channel('match-listen-' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'system',
+      filter: `id=eq.${currentUser.id}`
+    }, async (payload) => {
+      const newMatch = payload.new?.match;
+      if (!newMatch || newMatch === 'searching' || newMatch === 'off') return;
+
+      // وجدنا خصماً! أوقف كل شيء وابدأ المباراة
+      clearInterval(searchTimerInterval);
+      clearInterval(searchPollInterval);
+      supabase.removeChannel(realtimeMatchChannel);
+      realtimeMatchChannel = null;
+
+      const opp = await sbFetch(`/rest/v1/system?id=eq.${newMatch}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
+      if (opp && opp[0]) startMatch(opp[0]);
+    })
+    .subscribe();
+}
 
 async function startSearch() {
   if (!currentUser) return;
@@ -370,6 +410,9 @@ async function startSearch() {
     method: 'PATCH',
     body: JSON.stringify({ match: 'searching' })
   });
+
+  // شغّل Realtime لاستقبال تغيير حقل match
+  startMatchRealtime();
 
   // Countdown timer (60s max)
   let timeLeft = SEARCH_MAX;
@@ -393,6 +436,7 @@ async function startSearch() {
     if (timeLeft <= 0) {
       clearInterval(searchTimerInterval);
       clearInterval(searchPollInterval);
+      if (realtimeMatchChannel) { supabase.removeChannel(realtimeMatchChannel); realtimeMatchChannel = null; }
       if (currentUser) sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
       document.getElementById('searching-anim').classList.remove('show');
       document.getElementById('play-btn').disabled = false;
@@ -407,11 +451,11 @@ async function startSearch() {
   }, 1000);
 
   const countEl = document.getElementById('search-text');
-  // افحص كل 3 ثواني طوال مدة البحث (60 ثانية = 20 محاولة)
+  // polling خفيف كل 4 ثوانٍ للتزاوج (اللاعب الأول يُعيِّن الخصم لكليهما)
   searchPollInterval = setInterval(async () => {
     countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
-  }, 3000);
+  }, 4000);
 }
 
 async function matchMake() {
@@ -452,6 +496,7 @@ async function matchMake() {
 async function cancelSearch() {
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
+  if (realtimeMatchChannel) { supabase.removeChannel(realtimeMatchChannel); realtimeMatchChannel = null; }
   if (currentUser) {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
   }
@@ -970,6 +1015,7 @@ async function endMatch(reason) {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
+  if (realtimeChatChannel) { supabase.removeChannel(realtimeChatChannel); realtimeChatChannel = null; }
   document.getElementById('match-chat').style.display = 'none';
 
   // حساب نتيجة لوحة الصدارة (level)
@@ -1065,6 +1111,7 @@ async function forfeitMatch() {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
+  if (realtimeChatChannel) { supabase.removeChannel(realtimeChatChannel); realtimeChatChannel = null; }
 
   const newLevel = Math.max(0, (currentUser.level || 0) - 2);
 
@@ -1194,25 +1241,60 @@ function addChatBubble(text, mine, name) {
 
 function startChatPolling() {
   clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(async () => {
-    if (!opponent) return;
-    const me = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=match-message`, { method: 'GET' });
-    if (!me || !me[0]) return;
-    const raw = me[0]['match-message'];
-    if (!raw) return;
-    try {
-      const msg = JSON.parse(raw);
-      if (msg.ts && msg.ts > lastChatTs) {
-        lastChatTs = msg.ts;
-        addChatBubble(msg.text, false, msg.from);
-        // امسح الرسالة بعد استقبالها
-        await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ 'match-message': '' }) });
-      }
-    } catch(e) {}
-  }, 2000);
+
+  // إلغاء channel قديم إن وجد
+  if (realtimeChatChannel) {
+    supabase.removeChannel(realtimeChatChannel);
+    realtimeChatChannel = null;
+  }
+
+  // استمع لتغييرات match-message في صف المستخدم الحالي
+  realtimeChatChannel = supabase
+    .channel('chat-' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'system',
+      filter: `id=eq.${currentUser.id}`
+    }, async (payload) => {
+      const raw = payload.new?.['match-message'];
+      if (!raw) return;
+      try {
+        const msg = JSON.parse(raw);
+        if (msg.ts && msg.ts > lastChatTs) {
+          lastChatTs = msg.ts;
+          addChatBubble(msg.text, false, msg.from);
+          // امسح الرسالة بعد استقبالها
+          await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ 'match-message': '' })
+          });
+        }
+      } catch(e) {}
+    })
+    .subscribe();
 }
 
 // ==================== SIDEBAR LEADERBOARD ====================
+function startLeaderboardRealtime() {
+  if (realtimeLbChannel) return; // لا تشغّل مرتين
+  realtimeLbChannel = supabase
+    .channel('leaderboard-changes')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'system'
+    }, () => {
+      // أي تحديث في الجدول → حدّث الصدارة الجانبية
+      loadMiniLeaderboard();
+      // وإذا كانت صفحة الصدارة مفتوحة، حدّثها أيضاً
+      if (document.getElementById('page-leaderboard').classList.contains('active')) {
+        loadLeaderboard();
+      }
+    })
+    .subscribe();
+}
+
 async function loadMiniLeaderboard() {
   const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url&order=level.desc&limit=5', { method: 'GET' });
   const el = document.getElementById('side-lb-list');
