@@ -1893,6 +1893,35 @@
     <div id="legend-msg" style="margin-top:10px;text-align:center;font-size:13px"></div>
   </div>
 </div>
+<!-- ── APPLE-STYLE FOOTER ── -->
+<footer style="border-top:1px solid var(--line);background:var(--bg2);margin-top:40px;padding:32px 24px 24px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-brain" style="color:var(--blue);font-size:15px"></i>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-0.3px">دوري العباقرة</span>
+      </div>
+      <nav style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+        <a href="privacy-policy.html" style="color:var(--ink3);font-size:13px;font-weight:500;text-decoration:none;padding:5px 12px;border-radius:20px;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;"
+          onmouseover="this.style.background='var(--bg3)';this.style.color='var(--ink)'"
+          onmouseout="this.style.background='transparent';this.style.color='var(--ink3)'">
+          <i class="fa-solid fa-shield-halved" style="font-size:11px"></i> سياسة الخصوصية
+        </a>
+        <span style="color:var(--line);font-size:12px">|</span>
+        <a href="aboutus.html" style="color:var(--ink3);font-size:13px;font-weight:500;text-decoration:none;padding:5px 12px;border-radius:20px;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;"
+          onmouseover="this.style.background='var(--bg3)';this.style.color='var(--ink)'"
+          onmouseout="this.style.background='transparent';this.style.color='var(--ink3)'">
+          <i class="fa-solid fa-circle-info" style="font-size:11px"></i> من نحن
+        </a>
+      </nav>
+    </div>
+    <div style="border-top:1px solid var(--line2);padding-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <p style="font-size:12px;color:var(--ink3);">Copyright © 2025 دوري العباقرة. جميع الحقوق محفوظة.</p>
+      <p style="font-size:12px;color:var(--ink3);">صُنع بـ <i class="fa-solid fa-heart" style="color:var(--red);font-size:10px"></i> في مصر</p>
+    </div>
+  </div>
+</footer>
+
 <!-- CONTACT FLOATING BUTTON -->
 <div class="contact-fab" id="contact-fab">
   <div class="contact-fab-popup" id="contact-popup">
@@ -3665,23 +3694,34 @@ async function sendContactMessage() {
   const text = document.getElementById('contact-msg-text').value.trim();
   const resultEl = document.getElementById('contact-msg-result');
   if (!text) { resultEl.innerHTML = '<div class="msg error">يرجى كتابة رسالتك أولاً</div>'; return; }
-  resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
+  resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() })
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     if (res.ok || res.status === 201 || res.status === 200) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
       document.getElementById('contact-msg-text').value = '';
     } else {
-      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      const errText = await res.text().catch(() => '');
+      console.error('Send message error:', res.status, errText);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
     }
   } catch(e) {
-    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    if (e.name === 'AbortError') {
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    } else {
+      console.error('Send message exception:', e);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    }
   }
 }
 
@@ -3689,24 +3729,35 @@ async function sendContactReview() {
   const text = document.getElementById('contact-review-text').value.trim();
   const resultEl = document.getElementById('contact-review-result');
   if (!selectedStars) { resultEl.innerHTML = '<div class="msg error">يرجى اختيار تقييم بالنجوم أولاً</div>'; return; }
-  resultEl.innerHTML = '<div class="msg info">جاري الإرسال...</div>';
+  resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() })
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     if (res.ok || res.status === 201 || res.status === 200) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
       document.getElementById('contact-review-text').value = '';
       setStars(0);
     } else {
-      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      const errText = await res.text().catch(() => '');
+      console.error('Send review error:', res.status, errText);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
     }
   } catch(e) {
-    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    if (e.name === 'AbortError') {
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    } else {
+      console.error('Send review exception:', e);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    }
   }
 }
 
@@ -3716,24 +3767,35 @@ async function sendBuyOffer() {
   const note = document.getElementById('buy-note').value.trim();
   const resultEl = document.getElementById('contact-buy-result');
   if (!price || isNaN(price) || Number(price) <= 0) { resultEl.innerHTML = '<div class="msg error">يرجى إدخال سعر صحيح</div>'; return; }
-  resultEl.innerHTML = '<div class="msg info">جاري إرسال عرضك...</div>';
+  resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري إرسال عرضك...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() })
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     if (res.ok || res.status === 201 || res.status === 200) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
       document.getElementById('buy-price').value = '';
       document.getElementById('buy-note').value = '';
     } else {
-      resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      const errText = await res.text().catch(() => '');
+      console.error('Send buy offer error:', res.status, errText);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
     }
   } catch(e) {
-    resultEl.innerHTML = '<div class="msg error">حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+    if (e.name === 'AbortError') {
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    } else {
+      console.error('Send buy offer exception:', e);
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
+    }
   }
 }
 

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سياسة الخصوصية — دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f7;
+    --bg3: #e8e8ed;
+    --ink: #1d1d1f;
+    --ink2: #3d3d3f;
+    --ink3: #6e6e73;
+    --line: #d2d2d7;
+    --line2: rgba(0,0,0,0.06);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 800px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+  }
+  .brand i { color: var(--blue); font-size: 15px; }
+
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--blue); font-size: 14px; font-weight: 500;
+    text-decoration: none;
+    padding: 6px 14px; border-radius: 20px;
+    transition: background 0.15s;
+  }
+  .back-btn:hover { background: var(--bg2); }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 800px; margin: 0 auto;
+    padding: 56px 24px 40px;
+    border-bottom: 1px solid var(--line2);
+  }
+  .page-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2); color: var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700; line-height: 1.1;
+    letter-spacing: -1.5px; color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .hero p { font-size: 16px; color: var(--ink3); }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 800px; margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .section-block {
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--line2);
+  }
+  .section-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--blue); color: #fff;
+    font-size: 13px; font-weight: 700;
+    margin-bottom: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .section-block h2 {
+    font-size: 20px; font-weight: 700;
+    color: var(--ink); margin-bottom: 14px;
+    letter-spacing: -0.4px;
+  }
+
+  .section-block p {
+    font-size: 15px; color: var(--ink2);
+    margin-bottom: 12px;
+  }
+  .section-block p:last-child { margin-bottom: 0; }
+
+  .info-list {
+    list-style: none;
+    margin: 14px 0;
+  }
+  .info-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line2);
+    font-size: 15px; color: var(--ink2);
+  }
+  .info-list li:last-child { border-bottom: none; }
+  .info-list li i {
+    color: var(--blue); font-size: 13px;
+    margin-top: 3px; flex-shrink: 0;
+  }
+
+  .highlight-box {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    margin: 16px 0;
+    font-size: 14px; color: var(--ink2);
+    line-height: 1.7;
+  }
+  .highlight-box.blue {
+    background: #eef4fb;
+    border-color: rgba(0,113,227,0.2);
+    color: var(--ink2);
+  }
+  .highlight-box i { color: var(--blue); margin-left: 6px; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg2);
+    padding: 28px 24px;
+  }
+  .footer-inner {
+    max-width: 800px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-inner a {
+    color: var(--ink3); font-size: 13px; font-weight: 500;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px; transition: all 0.15s;
+  }
+  .footer-inner a:hover { background: var(--bg3); color: var(--ink); }
+  .footer-copy { font-size: 12px; color: var(--ink3); }
+
+  @media (max-width: 600px) {
+    .hero { padding: 36px 20px 28px; }
+    .content { padding: 32px 20px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-brain"></i>
+      دوري العباقرة
+    </a>
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i>
+      العودة للرئيسية
+    </a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="page-label">
+    <i class="fa-solid fa-shield-halved"></i>
+    Privacy Policy
+  </div>
+  <h1>سياسة الخصوصية</h1>
+  <p>آخر تحديث: يناير ٢٠٢٥ — نلتزم بحماية بياناتك وخصوصيتك بشكل كامل.</p>
+</div>
+
+<div class="content">
+
+  <div class="section-block">
+    <div class="section-num">١</div>
+    <h2>مقدمة</h2>
+    <p>مرحباً بك في دوري العباقرة. نحن نأخذ خصوصيتك على محمل الجد، ونلتزم بحماية بياناتك الشخصية وضمان شفافية كاملة في كيفية جمعها واستخدامها.</p>
+    <p>تنطبق هذه السياسة على جميع مستخدمي موقعنا والخدمات التي نقدمها. باستخدامك للموقع، فأنت توافق على الشروط الواردة في هذه الوثيقة.</p>
+    <div class="highlight-box blue">
+      <i class="fa-solid fa-circle-info"></i>
+      <strong>ملخص مختصر:</strong> نجمع فقط البيانات الضرورية لتشغيل الخدمة، ولا نبيع بياناتك أبداً لأي طرف ثالث.
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٢</div>
+    <h2>البيانات التي نجمعها</h2>
+    <p>عند تسجيلك أو استخدامك للموقع، قد نجمع الأنواع التالية من البيانات:</p>
+    <ul class="info-list">
+      <li>
+        <i class="fa-solid fa-user"></i>
+        <div><strong>بيانات الحساب:</strong> الاسم، البريد الإلكتروني، وكلمة المرور (مشفّرة) عند إنشاء حساب.</div>
+      </li>
+      <li>
+        <i class="fa-solid fa-gamepad"></i>
+        <div><strong>بيانات اللعب:</strong> نتائج المباريات، النقاط، وإحصائيات الأداء داخل المنصة.</div>
+      </li>
+      <li>
+        <i class="fa-solid fa-globe"></i>
+        <div><strong>بيانات تقنية:</strong> عنوان IP، نوع المتصفح، ونظام التشغيل لأغراض تحسين الأداء والأمان.</div>
+      </li>
+      <li>
+        <i class="fa-solid fa-comment"></i>
+        <div><strong>رسائل التواصل:</strong> الرسائل والتقييمات التي ترسلها إلينا عبر نموذج التواصل.</div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٣</div>
+    <h2>كيف نستخدم بياناتك</h2>
+    <p>نستخدم البيانات المجمّعة للأغراض التالية حصراً:</p>
+    <ul class="info-list">
+      <li><i class="fa-solid fa-check"></i> تشغيل خدمات المنصة وإدارة حسابك.</li>
+      <li><i class="fa-solid fa-check"></i> تحسين تجربة اللعب وإصلاح الأخطاء التقنية.</li>
+      <li><i class="fa-solid fa-check"></i> التواصل معك بشأن تحديثات المنصة أو الردّ على استفساراتك.</li>
+      <li><i class="fa-solid fa-check"></i> ضمان أمن المنصة ومنع الاحتيال.</li>
+    </ul>
+    <div class="highlight-box">
+      <i class="fa-solid fa-ban" style="color:var(--red)"></i>
+      <strong>نؤكد أننا لا نستخدم بياناتك لأغراض إعلانية، ولا نبيعها أو نشاركها مع أي طرف ثالث.</strong>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٤</div>
+    <h2>تخزين البيانات وأمنها</h2>
+    <p>تُخزَّن بياناتك على خوادم Supabase المؤمَّنة، والتي تلتزم بأعلى معايير أمن المعلومات. نطبّق تشفير SSL/TLS على جميع الاتصالات، كما تُخزَّن كلمات المرور مشفّرة باستخدام خوارزميات تشفير قوية ولا يمكن لأحد الوصول إليها.</p>
+    <p>نحتفظ ببياناتك طالما حسابك نشطاً. يمكنك طلب حذف حسابك وبياناتك في أي وقت من إعدادات الحساب.</p>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٥</div>
+    <h2>ملفات تعريف الارتباط (Cookies)</h2>
+    <p>نستخدم ملفات تعريف الارتباط لأغراض تشغيلية فقط، مثل تذكّر جلسة تسجيل الدخول وتفضيلاتك. لا نستخدم ملفات تعريف ارتباط تتبّعية أو إعلانية.</p>
+    <div class="highlight-box">
+      <i class="fa-solid fa-cookie-bite" style="color:var(--gold)"></i>
+      يمكنك تعطيل ملفات تعريف الارتباط من إعدادات متصفحك، لكن ذلك قد يؤثر على بعض وظائف الموقع.
+    </div>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٦</div>
+    <h2>حقوقك</h2>
+    <p>لديك الحقوق الكاملة التالية فيما يخص بياناتك الشخصية:</p>
+    <ul class="info-list">
+      <li><i class="fa-solid fa-eye"></i> <div><strong>الاطلاع:</strong> طلب نسخة من جميع البيانات الشخصية التي نحتفظ بها.</div></li>
+      <li><i class="fa-solid fa-pen"></i> <div><strong>التصحيح:</strong> تعديل أي معلومات غير دقيقة من خلال إعدادات حسابك.</div></li>
+      <li><i class="fa-solid fa-trash"></i> <div><strong>الحذف:</strong> طلب حذف حسابك وجميع بياناتك بشكل نهائي.</div></li>
+      <li><i class="fa-solid fa-right-from-bracket"></i> <div><strong>النقل:</strong> الحصول على بياناتك بصيغة قابلة للقراءة الآلية.</div></li>
+    </ul>
+    <p>لممارسة أي من هذه الحقوق، تواصل معنا عبر نموذج التواصل في الموقع.</p>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٧</div>
+    <h2>التعديلات على هذه السياسة</h2>
+    <p>قد نُحدِّث سياسة الخصوصية هذه بشكل دوري. في حال إجراء تعديلات جوهرية، سنُعلمك بذلك من خلال إشعار على الموقع أو عبر البريد الإلكتروني المسجّل في حسابك.</p>
+    <p>استمرارك في استخدام الموقع بعد نشر التعديلات يُعدّ موافقةً على السياسة المحدّثة.</p>
+  </div>
+
+  <div class="section-block">
+    <div class="section-num">٨</div>
+    <h2>التواصل معنا</h2>
+    <p>إذا كان لديك أي أسئلة أو مخاوف بشأن سياسة الخصوصية، لا تتردد في التواصل معنا عبر نموذج التواصل المتاح في الموقع أو من خلال زر التواصل السريع في الزاوية السفلية.</p>
+    <div class="highlight-box blue">
+      <i class="fa-solid fa-envelope"></i>
+      نلتزم بالردّ على جميع استفسارات الخصوصية في غضون 72 ساعة.
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <a href="index.html"><i class="fa-solid fa-house" style="font-size:11px"></i> الرئيسية</a>
+      <a href="aboutus.html"><i class="fa-solid fa-circle-info" style="font-size:11px"></i> من نحن</a>
+    </div>
+    <span class="footer-copy">© 2025 دوري العباقرة. جميع الحقوق محفوظة.</span>
+  </div>
+</footer>
+
+</body>
+</html>

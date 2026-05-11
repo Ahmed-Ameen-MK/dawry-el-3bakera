@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>من نحن — دوري العباقرة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f7;
+    --bg3: #e8e8ed;
+    --ink: #1d1d1f;
+    --ink2: #3d3d3f;
+    --ink3: #6e6e73;
+    --line: #d2d2d7;
+    --line2: rgba(0,0,0,0.06);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --green: #1d8348;
+    --green-bg: #f0faf4;
+    --gold: #b5882e;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 1000px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none;
+  }
+  .brand i { color: var(--blue); font-size: 15px; }
+
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--blue); font-size: 14px; font-weight: 500;
+    text-decoration: none;
+    padding: 6px 14px; border-radius: 20px;
+    transition: background 0.15s;
+  }
+  .back-btn:hover { background: var(--bg2); }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 72px 24px 64px;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,113,227,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .page-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg); color: var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 700; line-height: 1.05;
+    letter-spacing: -2px; color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero .sub {
+    font-size: 18px; color: var(--ink3);
+    max-width: 540px; margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    max-width: 1000px; margin: 0 auto;
+    padding: 40px 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .stat-item {
+    background: var(--bg);
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .stat-item .big-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-item .big-num span { color: var(--blue); }
+  .stat-item .stat-lbl {
+    font-size: 13px;
+    color: var(--ink3);
+    font-weight: 500;
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 1000px; margin: 0 auto;
+    padding: 64px 24px 80px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 64px;
+  }
+  @media (max-width: 680px) {
+    .two-col { grid-template-columns: 1fr; }
+    .stats-strip { grid-template-columns: 1fr; gap: 0; }
+  }
+
+  .feature-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: rgba(0,113,227,0.2);
+  }
+  .feature-card .icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--bg); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue); font-size: 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .feature-card h3 {
+    font-size: 17px; font-weight: 700;
+    color: var(--ink); margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .feature-card p {
+    font-size: 14px; color: var(--ink3);
+    line-height: 1.6;
+  }
+
+  /* ── MISSION ── */
+  .mission-section {
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--ink);
+    border-radius: var(--radius);
+    margin-bottom: 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mission-section::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%);
+    pointer-events: none;
+  }
+  .mission-section h2 {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700; color: #fff;
+    letter-spacing: -1px; margin-bottom: 16px;
+  }
+  .mission-section p {
+    font-size: 16px; color: rgba(255,255,255,0.65);
+    max-width: 560px; margin: 0 auto;
+    line-height: 1.7;
+  }
+  .mission-section .mission-icon {
+    font-size: 44px; margin-bottom: 20px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 26px; font-weight: 700;
+    color: var(--ink); letter-spacing: -0.6px;
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 15px; color: var(--ink3);
+    margin-bottom: 28px;
+  }
+
+  /* ── GAMES LIST ── */
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 64px;
+  }
+  .game-chip {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s;
+  }
+  .game-chip:hover { border-color: var(--blue); background: #eef4fb; }
+  .game-chip .g-icon { font-size: 22px; }
+  .game-chip .g-name {
+    font-size: 14px; font-weight: 600; color: var(--ink);
+  }
+  .game-chip .g-type {
+    font-size: 11px; color: var(--ink3); margin-top: 1px;
+  }
+
+  /* ── VALUES ── */
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+  .value-item {
+    text-align: center;
+    padding: 28px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg);
+    box-shadow: var(--shadow);
+  }
+  .value-item .v-icon {
+    font-size: 28px; color: var(--blue);
+    margin-bottom: 12px; display: block;
+  }
+  .value-item h4 {
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .value-item p {
+    font-size: 13px; color: var(--ink3); line-height: 1.6;
+  }
+
+  /* ── CTA ── */
+  .cta-section {
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .cta-section h2 {
+    font-size: 26px; font-weight: 700;
+    color: var(--ink); letter-spacing: -0.6px; margin-bottom: 10px;
+  }
+  .cta-section p {
+    font-size: 15px; color: var(--ink3); margin-bottom: 24px;
+  }
+  .btn-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #fff;
+    text-decoration: none;
+    padding: 14px 32px; border-radius: 50px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px; font-weight: 700;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(0,113,227,0.35);
+    letter-spacing: -0.2px;
+  }
+  .btn-cta:hover {
+    background: var(--blue-hover);
+    transform: scale(1.03);
+    box-shadow: 0 6px 28px rgba(0,113,227,0.45);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg2);
+    padding: 28px 24px;
+    margin-top: 64px;
+  }
+  .footer-inner {
+    max-width: 1000px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-inner a {
+    color: var(--ink3); font-size: 13px; font-weight: 500;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px; transition: all 0.15s;
+  }
+  .footer-inner a:hover { background: var(--bg3); color: var(--ink); }
+  .footer-copy { font-size: 12px; color: var(--ink3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-brain"></i>
+      دوري العباقرة
+    </a>
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i>
+      العودة للرئيسية
+    </a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="page-label">
+    <i class="fa-solid fa-circle-info"></i>
+    About Us
+  </div>
+  <h1>نحن <span>دوري العباقرة</span></h1>
+  <p class="sub">منصة تحدٍّ ثقافية تجمع العقول العربية في مسابقات ذكاء مباشرة حول العالم.</p>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-item">
+    <div class="big-num">١٠K<span>+</span></div>
+    <div class="stat-lbl">لاعب مسجّل</div>
+  </div>
+  <div class="stat-item">
+    <div class="big-num">٥٠<span>+</span></div>
+    <div class="stat-lbl">دولة حول العالم</div>
+  </div>
+  <div class="stat-item">
+    <div class="big-num">١M<span>+</span></div>
+    <div class="stat-lbl">سؤال تم الإجابة عليه</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- MISSION -->
+  <div class="mission-section">
+    <div class="mission-icon"><i class="fa-solid fa-brain"></i></div>
+    <h2>رسالتنا: إحياء ثقافة التحدي العربي</h2>
+    <p>نؤمن بأن المعرفة لا حدود لها، وأن التحدي الفكري بين الأصدقاء والغرباء يخلق تجربة ممتعة ومثيرة. هدفنا هو تقديم منصة عربية احترافية تجمع المتحمسين للثقافة والذكاء في مكان واحد.</p>
+  </div>
+
+  <!-- FEATURES -->
+  <div style="margin-bottom:28px">
+    <h2 class="section-title">ما الذي يميّزنا؟</h2>
+    <p class="section-sub">بنيّنا دوري العباقرة بشغف وعناية لنقدم تجربة لا مثيل لها.</p>
+  </div>
+
+  <div class="two-col" style="margin-bottom:64px">
+    <div class="feature-card">
+      <div class="icon"><i class="fa-solid fa-bolt"></i></div>
+      <h3>مباريات مباشرة فورية</h3>
+      <p>تحدَّ لاعبين حقيقيين من مختلف أنحاء العالم العربي في مباريات ذكاء مباشرة لحظية بلا انتظار.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon"><i class="fa-solid fa-question-circle"></i></div>
+      <h3>أسئلة متنوعة ومحكَمة</h3>
+      <p>بنك أسئلة ضخم يشمل التاريخ، العلوم، الجغرافيا، الأدب والثقافة العامة، يُحدَّث باستمرار.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon"><i class="fa-solid fa-ranking-star"></i></div>
+      <h3>لوحة صدارة حقيقية</h3>
+      <p>تنافس على المراتب الأولى في لوحة الصدارة العالمية وأثبت أنك الأذكى من بين الآلاف.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon"><i class="fa-solid fa-gamepad"></i></div>
+      <h3>ألعاب متعددة</h3>
+      <p>بالإضافة للمباريات، استمتع بالسودوكو، الشطرنج، لعبة الذاكرة، وغيرها بدون اتصال بالإنترنت.</p>
+    </div>
+  </div>
+
+  <!-- GAMES -->
+  <div style="margin-bottom:28px">
+    <h2 class="section-title">الألعاب المتاحة</h2>
+    <p class="section-sub">تجربة ترفيهية متكاملة في مكان واحد.</p>
+  </div>
+
+  <div class="games-grid">
+    <div class="game-chip">
+      <span class="g-icon"><i class="fa-solid fa-bolt" style="color:var(--blue)"></i></span>
+      <div>
+        <div class="g-name">مباراة ثقافية</div>
+        <div class="g-type">PvP مباشر</div>
+      </div>
+    </div>
+    <div class="game-chip">
+      <span class="g-icon"><i class="fa-solid fa-table-cells" style="color:var(--blue)"></i></span>
+      <div>
+        <div class="g-name">السودوكو</div>
+        <div class="g-type">بدون إنترنت</div>
+      </div>
+    </div>
+    <div class="game-chip">
+      <span class="g-icon">♟️</span>
+      <div>
+        <div class="g-name">الشطرنج</div>
+        <div class="g-type">تحدٍّ استراتيجي</div>
+      </div>
+    </div>
+    <div class="game-chip">
+      <span class="g-icon">🃏</span>
+      <div>
+        <div class="g-name">لعبة الذاكرة</div>
+        <div class="g-type">بدون إنترنت</div>
+      </div>
+    </div>
+    <div class="game-chip">
+      <span class="g-icon">❌⭕</span>
+      <div>
+        <div class="g-name">اكس-أوو</div>
+        <div class="g-type">متعدد اللاعبين</div>
+      </div>
+    </div>
+    <div class="game-chip">
+      <span class="g-icon">🈳</span>
+      <div>
+        <div class="g-name">ذاكرة الكانجي</div>
+        <div class="g-type">بدون إنترنت</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUES -->
+  <div style="margin-bottom:28px">
+    <h2 class="section-title">قيمنا</h2>
+    <p class="section-sub">هذه هي المبادئ التي تقوم عليها منصتنا.</p>
+  </div>
+
+  <div class="values-grid">
+    <div class="value-item">
+      <span class="v-icon"><i class="fa-solid fa-shield-halved"></i></span>
+      <h4>الخصوصية أولاً</h4>
+      <p>نحمي بياناتك ولا نشاركها مع أي طرف ثالث.</p>
+    </div>
+    <div class="value-item">
+      <span class="v-icon"><i class="fa-solid fa-handshake"></i></span>
+      <h4>نزاهة المنافسة</h4>
+      <p>بيئة لعب نظيفة وعادلة للجميع بدون غش.</p>
+    </div>
+    <div class="value-item">
+      <span class="v-icon"><i class="fa-solid fa-globe"></i></span>
+      <h4>مجتمع عربي موحّد</h4>
+      <p>نجمع العقول من كل الدول العربية في مكان واحد.</p>
+    </div>
+    <div class="value-item">
+      <span class="v-icon"><i class="fa-solid fa-rocket"></i></span>
+      <h4>تحسين مستمر</h4>
+      <p>نستمع لآراء اللاعبين ونطوّر المنصة باستمرار.</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>جاهز للتحدي؟</h2>
+    <p>انضم الآن لآلاف اللاعبين وأثبت أنك من العباقرة.</p>
+    <a href="index.html" class="btn-cta">
+      <i class="fa-solid fa-play"></i>
+      ابدأ اللعب الآن
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <a href="index.html"><i class="fa-solid fa-house" style="font-size:11px"></i> الرئيسية</a>
+      <a href="privacy-policy.html"><i class="fa-solid fa-shield-halved" style="font-size:11px"></i> سياسة الخصوصية</a>
+    </div>
+    <span class="footer-copy">© 2025 دوري العباقرة. صُنع بـ <i class="fa-solid fa-heart" style="color:#c0392b;font-size:10px"></i> في مصر.</span>
+  </div>
+</footer>
+
+</body>
+</html>
