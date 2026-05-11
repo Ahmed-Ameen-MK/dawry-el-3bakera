@@ -38,13 +38,15 @@ function rtConnect(onReady) {
   _rtSocket.onmessage = (e) => {
     try {
       const msg = JSON.parse(e.data);
-      if (msg.event !== 'postgres_changes') return;
-      const record = msg.payload?.data;
+      // Supabase Realtime: postgres_changes جاية في payload.data.record
+      const data = msg.payload && msg.payload.data;
+      if (!data || data.type !== 'UPDATE') return;
+      const record = data.record;
       if (!record) return;
       Object.values(_rtChannels).forEach(ch => {
         if (ch.topic === msg.topic) ch.callback(record);
       });
-    } catch(_) {}
+    } catch(err) {}
   };
 
   _rtSocket.onclose = () => {
@@ -70,15 +72,50 @@ function _rtJoin(ch) {
 // اشترك في تغييرات صف معيّن
 // filter مثال: "id=eq.12345"
 // callback(record) تستقبل الصف الجديد
+// كل المستمعين على صف المستخدم نفسه يُدمجون في channel واحد
+// callbacks مخزّنة هنا بدلاً من channels منفصلة
+let _myRowCallbacks = {}; // { key: callback }
+let _myRowJoined = false;
+
 function rtSubscribe(key, filter, callback) {
+  // إذا كان filter لصف المستخدم نفسه → استخدم channel مشترك
+  if (currentUser && filter === 'id=eq.' + currentUser.id) {
+    _myRowCallbacks[key] = callback;
+    if (!_myRowJoined) {
+      _myRowJoined = false; // سيُعيَّن true بعد phx_join
+      const topic = 'realtime:public:system:id=eq.' + currentUser.id;
+      const ch = {
+        key: '__myrow__',
+        topic,
+        filter,
+        callback: (record) => Object.values(_myRowCallbacks).forEach(cb => cb(record))
+      };
+      _rtChannels['__myrow__'] = ch;
+      rtConnect(() => _rtJoin(ch));
+    }
+    return;
+  }
+  // غير ذلك → channel مستقل
   const topic = 'realtime:public:system:' + filter;
   const ch = { key, topic, filter, callback };
   _rtChannels[key] = ch;
   rtConnect(() => _rtJoin(ch));
 }
 
-// أوقف اشتراكاً
 function rtUnsubscribe(key) {
+  if (_myRowCallbacks[key]) {
+    delete _myRowCallbacks[key];
+    // لا نغلق الـ channel المشترك إلا إذا فرغ تماماً
+    if (Object.keys(_myRowCallbacks).length === 0) {
+      const ch = _rtChannels['__myrow__'];
+      if (ch && _rtSocket && _rtSocket.readyState === WebSocket.OPEN) {
+        _rtSocket.send(JSON.stringify({ topic: ch.topic, event: 'phx_leave', payload: {}, ref: String(_rtRef++) }));
+      }
+      delete _rtChannels['__myrow__'];
+      _myRowJoined = false;
+    }
+    return;
+  }
   const ch = _rtChannels[key];
   if (ch && _rtSocket && _rtSocket.readyState === WebSocket.OPEN) {
     _rtSocket.send(JSON.stringify({ topic: ch.topic, event: 'phx_leave', payload: {}, ref: String(_rtRef++) }));
