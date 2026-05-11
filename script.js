@@ -8,13 +8,83 @@ const Q_HEADERS = {
   'Prefer': 'return=representation'
 };
 
-// ── SUPABASE REALTIME CLIENT ──
-const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+// ==================== SUPABASE REALTIME (native WebSocket — no library) ====================
+// يتصل مباشرة بـ Supabase Realtime WebSocket بدون أي مكتبة خارجية
+const RT_URL = SB_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
 
-// Realtime channel references (for cleanup)
-let realtimeMatchChannel = null;
-let realtimeChatChannel = null;
-let realtimeLbChannel = null;
+let _rtSocket = null;       // WebSocket الرئيسي المشترك
+let _rtChannels = {};       // { channelKey: { topic, filter, callback, ref } }
+let _rtRef = 1;             // رقم متسلسل للرسائل
+let _rtPingInterval = null; // heartbeat
+
+function rtConnect(onReady) {
+  if (_rtSocket && _rtSocket.readyState === WebSocket.OPEN) {
+    if (onReady) onReady();
+    return;
+  }
+  _rtSocket = new WebSocket(RT_URL);
+
+  _rtSocket.onopen = () => {
+    // heartbeat كل 25 ثانية
+    _rtPingInterval = setInterval(() => {
+      if (_rtSocket.readyState === WebSocket.OPEN)
+        _rtSocket.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(_rtRef++) }));
+    }, 25000);
+    if (onReady) onReady();
+    // أعد تسجيل أي channels كانت موجودة
+    Object.values(_rtChannels).forEach(ch => _rtJoin(ch));
+  };
+
+  _rtSocket.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.event !== 'postgres_changes') return;
+      const record = msg.payload?.data;
+      if (!record) return;
+      Object.values(_rtChannels).forEach(ch => {
+        if (ch.topic === msg.topic) ch.callback(record);
+      });
+    } catch(_) {}
+  };
+
+  _rtSocket.onclose = () => {
+    clearInterval(_rtPingInterval);
+    // إعادة الاتصال بعد 3 ثوانٍ
+    setTimeout(() => rtConnect(), 3000);
+  };
+  _rtSocket.onerror = () => _rtSocket.close();
+}
+
+function _rtJoin(ch) {
+  if (!_rtSocket || _rtSocket.readyState !== WebSocket.OPEN) return;
+  const payload = {
+    config: {
+      broadcast: { self: false },
+      presence: { key: '' },
+      postgres_changes: [{ event: 'UPDATE', schema: 'public', table: 'system', filter: ch.filter }]
+    }
+  };
+  _rtSocket.send(JSON.stringify({ topic: ch.topic, event: 'phx_join', payload, ref: String(_rtRef++) }));
+}
+
+// اشترك في تغييرات صف معيّن
+// filter مثال: "id=eq.12345"
+// callback(record) تستقبل الصف الجديد
+function rtSubscribe(key, filter, callback) {
+  const topic = 'realtime:public:system:' + filter;
+  const ch = { key, topic, filter, callback };
+  _rtChannels[key] = ch;
+  rtConnect(() => _rtJoin(ch));
+}
+
+// أوقف اشتراكاً
+function rtUnsubscribe(key) {
+  const ch = _rtChannels[key];
+  if (ch && _rtSocket && _rtSocket.readyState === WebSocket.OPEN) {
+    _rtSocket.send(JSON.stringify({ topic: ch.topic, event: 'phx_leave', payload: {}, ref: String(_rtRef++) }));
+  }
+  delete _rtChannels[key];
+}
 
 // QUESTIONS loaded from questions.js (included before this script)
 
@@ -365,39 +435,8 @@ async function handleGithubCallback(accessToken) {
   return false;
 }
 
-// ==================== MATCHMAKING REALTIME ====================
-const SEARCH_MAX = 60; // 60 seconds max
-
-function startMatchRealtime() {
-  // إلغاء أي channel سابق
-  if (realtimeMatchChannel) {
-    supabase.removeChannel(realtimeMatchChannel);
-    realtimeMatchChannel = null;
-  }
-
-  // استمع لتغييرات صف المستخدم الحالي (حقل match)
-  realtimeMatchChannel = supabase
-    .channel('match-listen-' + currentUser.id)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'system',
-      filter: `id=eq.${currentUser.id}`
-    }, async (payload) => {
-      const newMatch = payload.new?.match;
-      if (!newMatch || newMatch === 'searching' || newMatch === 'off') return;
-
-      // وجدنا خصماً! أوقف كل شيء وابدأ المباراة
-      clearInterval(searchTimerInterval);
-      clearInterval(searchPollInterval);
-      supabase.removeChannel(realtimeMatchChannel);
-      realtimeMatchChannel = null;
-
-      const opp = await sbFetch(`/rest/v1/system?id=eq.${newMatch}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
-      if (opp && opp[0]) startMatch(opp[0]);
-    })
-    .subscribe();
-}
+// ==================== MATCHMAKING ====================
+const SEARCH_MAX = 60;
 
 async function startSearch() {
   if (!currentUser) return;
@@ -411,10 +450,19 @@ async function startSearch() {
     body: JSON.stringify({ match: 'searching' })
   });
 
-  // شغّل Realtime لاستقبال تغيير حقل match
-  startMatchRealtime();
+  // ── Realtime: استمع لتغيير حقل match في صفي ──
+  rtSubscribe('match-listen', `id=eq.${currentUser.id}`, async (record) => {
+    const newMatch = record?.match;
+    if (!newMatch || newMatch === 'searching' || newMatch === 'off') return;
+    // وجدنا خصماً!
+    clearInterval(searchTimerInterval);
+    clearInterval(searchPollInterval);
+    rtUnsubscribe('match-listen');
+    const opp = await sbFetch(`/rest/v1/system?id=eq.${newMatch}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
+    if (opp && opp[0]) startMatch(opp[0]);
+  });
 
-  // Countdown timer (60s max)
+  // countdown
   let timeLeft = SEARCH_MAX;
   document.getElementById('search-countdown-num').textContent = timeLeft;
   document.getElementById('search-bar-fill').style.width = '100%';
@@ -424,19 +472,15 @@ async function startSearch() {
     document.getElementById('search-countdown-num').textContent = timeLeft;
     document.getElementById('search-bar-fill').style.width = (timeLeft / SEARCH_MAX * 100) + '%';
 
-    // بعد ١٠ ثوانٍ بدون خصم → أظهر زر اللعب offline
     if (timeLeft === SEARCH_MAX - 10) {
       const offlineBtn = document.getElementById('offline-mode-btn');
-      if (offlineBtn) {
-        offlineBtn.style.display = 'inline-flex';
-        offlineBtn.style.animation = 'fadeInBtn 0.4s ease';
-      }
+      if (offlineBtn) { offlineBtn.style.display = 'inline-flex'; offlineBtn.style.animation = 'fadeInBtn 0.4s ease'; }
     }
 
     if (timeLeft <= 0) {
       clearInterval(searchTimerInterval);
       clearInterval(searchPollInterval);
-      if (realtimeMatchChannel) { supabase.removeChannel(realtimeMatchChannel); realtimeMatchChannel = null; }
+      rtUnsubscribe('match-listen');
       if (currentUser) sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
       document.getElementById('searching-anim').classList.remove('show');
       document.getElementById('play-btn').disabled = false;
@@ -450,8 +494,8 @@ async function startSearch() {
     }
   }, 1000);
 
+  // polling خفيف كل 4 ثوانٍ فقط للتزاوج (اللاعب الأول يُعيِّن الخصم لكليهما)
   const countEl = document.getElementById('search-text');
-  // polling خفيف كل 4 ثوانٍ للتزاوج (اللاعب الأول يُعيِّن الخصم لكليهما)
   searchPollInterval = setInterval(async () => {
     countEl.textContent = 'جاري البحث عن خصم...';
     await matchMake();
@@ -496,7 +540,7 @@ async function matchMake() {
 async function cancelSearch() {
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
-  if (realtimeMatchChannel) { supabase.removeChannel(realtimeMatchChannel); realtimeMatchChannel = null; }
+  rtUnsubscribe('match-listen');
   if (currentUser) {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
   }
@@ -1015,7 +1059,7 @@ async function endMatch(reason) {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
-  if (realtimeChatChannel) { supabase.removeChannel(realtimeChatChannel); realtimeChatChannel = null; }
+  rtUnsubscribe('chat-listen');
   document.getElementById('match-chat').style.display = 'none';
 
   // حساب نتيجة لوحة الصدارة (level)
@@ -1111,7 +1155,7 @@ async function forfeitMatch() {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
-  if (realtimeChatChannel) { supabase.removeChannel(realtimeChatChannel); realtimeChatChannel = null; }
+  rtUnsubscribe('chat-listen');
 
   const newLevel = Math.max(0, (currentUser.level || 0) - 2);
 
@@ -1241,58 +1285,33 @@ function addChatBubble(text, mine, name) {
 
 function startChatPolling() {
   clearInterval(chatPollInterval);
+  rtUnsubscribe('chat-listen');
 
-  // إلغاء channel قديم إن وجد
-  if (realtimeChatChannel) {
-    supabase.removeChannel(realtimeChatChannel);
-    realtimeChatChannel = null;
-  }
-
-  // استمع لتغييرات match-message في صف المستخدم الحالي
-  realtimeChatChannel = supabase
-    .channel('chat-' + currentUser.id)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'system',
-      filter: `id=eq.${currentUser.id}`
-    }, async (payload) => {
-      const raw = payload.new?.['match-message'];
-      if (!raw) return;
-      try {
-        const msg = JSON.parse(raw);
-        if (msg.ts && msg.ts > lastChatTs) {
-          lastChatTs = msg.ts;
-          addChatBubble(msg.text, false, msg.from);
-          // امسح الرسالة بعد استقبالها
-          await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ 'match-message': '' })
-          });
-        }
-      } catch(e) {}
-    })
-    .subscribe();
+  rtSubscribe('chat-listen', `id=eq.${currentUser.id}`, async (record) => {
+    const raw = record?.['match-message'];
+    if (!raw) return;
+    try {
+      const msg = JSON.parse(raw);
+      if (msg.ts && msg.ts > lastChatTs) {
+        lastChatTs = msg.ts;
+        addChatBubble(msg.text, false, msg.from);
+        await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ 'match-message': '' })
+        });
+      }
+    } catch(e) {}
+  });
 }
 
 // ==================== SIDEBAR LEADERBOARD ====================
 function startLeaderboardRealtime() {
-  if (realtimeLbChannel) return; // لا تشغّل مرتين
-  realtimeLbChannel = supabase
-    .channel('leaderboard-changes')
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'system'
-    }, () => {
-      // أي تحديث في الجدول → حدّث الصدارة الجانبية
-      loadMiniLeaderboard();
-      // وإذا كانت صفحة الصدارة مفتوحة، حدّثها أيضاً
-      if (document.getElementById('page-leaderboard').classList.contains('active')) {
-        loadLeaderboard();
-      }
-    })
-    .subscribe();
+  rtSubscribe('lb-changes', 'level=gte.0', () => {
+    loadMiniLeaderboard();
+    if (document.getElementById('page-leaderboard').classList.contains('active')) {
+      loadLeaderboard();
+    }
+  });
 }
 
 async function loadMiniLeaderboard() {
