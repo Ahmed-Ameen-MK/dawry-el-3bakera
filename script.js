@@ -868,15 +868,13 @@ function pollForQuestion() {
 }
 
 function renderQuestion(q) {
-  const tq = getTranslatedQuestion(q);
-  const L = LANG_LABELS[currentLang] || LANG_LABELS['ar'];
-  const labels = currentLang === 'ar' ? ['أ', 'ب', 'ج', 'د'] : ['A', 'B', 'C', 'D'];
-  document.getElementById('q-num').textContent = `${L.q} ${usedQIds.length}`;
-  document.getElementById('q-text').textContent = tq.q;
+  const labels = ['أ', 'ب', 'ج', 'د'];
+  document.getElementById('q-num').textContent = `السؤال ${usedQIds.length}`;
+  document.getElementById('q-text').textContent = q.q;
   setStatus('', '');
   const grid = document.getElementById('options-grid');
   grid.innerHTML = '';
-  tq.opts.forEach((opt, i) => {
+  q.opts.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
     btn.innerHTML = `<span class="option-label">${labels[i]}</span>${opt}`;
@@ -1572,16 +1570,7 @@ async function saveProfileEdit() {
   }
 }
 
-// ==================== TRANSLATION SYSTEM ====================
 
-const LANG_LABELS = {
-  ar: { name: 'العربية', dir: 'rtl', play: 'العب مباراة', search: 'جاري البحث عن خصم...', q: 'السؤال', pts: 'نقاط الصدارة', rank: 'ترتيبك', leaders: 'المتصدرون', account: 'حسابي', home: 'الرئيسية', back: 'العودة للرئيسية', win: 'أنت الفائز!', lose: 'خسرت المباراة', draw: 'تعادل!', forfeit: 'انسحاب من المباراة', send: '', chat: 'رسائل المباراة', chatph: 'اكتب رسالة لخصمك...', timer: 'وقت السؤال', searching: 'جاري البحث', stop: 'إيقاف البحث' },
-  en: { name: 'English', dir: 'ltr', play: 'Play Match', search: 'Searching for opponent...', q: 'Question', pts: 'Points', rank: 'Your Rank', leaders: 'Leaderboard', account: 'My Account', home: 'Home', back: 'Back to Home', win: 'You Win!', lose: 'You Lost', draw: 'Draw!', forfeit: 'Forfeit Match', send: '', chat: 'Match Chat', chatph: 'Send a message...', timer: 'Time', searching: 'Searching', stop: 'Cancel' },
-  fr: { name: 'Français', dir: 'ltr', play: 'Jouer un match', search: 'Recherche d\'adversaire...', q: 'Question', pts: 'Points', rank: 'Votre rang', leaders: 'Classement', account: 'Mon compte', home: 'Accueil', back: 'Retour', win: 'Vous gagnez!', lose: 'Vous perdez', draw: 'Égalité!', forfeit: 'Abandonner', send: '', chat: 'Chat du match', chatph: 'Envoyer un message...', timer: 'Temps', searching: 'Recherche', stop: 'Annuler' },
-  es: { name: 'Español', dir: 'ltr', play: 'Jugar partido', search: 'Buscando oponente...', q: 'Pregunta', pts: 'Puntos', rank: 'Tu rango', leaders: 'Clasificación', account: 'Mi cuenta', home: 'Inicio', back: 'Volver', win: '¡Ganaste!', lose: 'Perdiste', draw: '¡Empate!', forfeit: 'Abandonar', send: '', chat: 'Chat del partido', chatph: 'Enviar mensaje...', timer: 'Tiempo', searching: 'Buscando', stop: 'Cancelar' },
-  de: { name: 'Deutsch', dir: 'ltr', play: 'Spiel starten', search: 'Suche Gegner...', q: 'Frage', pts: 'Punkte', rank: 'Dein Rang', leaders: 'Rangliste', account: 'Mein Konto', home: 'Startseite', back: 'Zurück', win: 'Du gewinnst!', lose: 'Du verlierst', draw: 'Unentschieden!', forfeit: 'Aufgeben', send: '', chat: 'Match Chat', chatph: 'Nachricht senden...', timer: 'Zeit', searching: 'Suche', stop: 'Abbrechen' },
-  tr: { name: 'Türkçe', dir: 'ltr', play: 'Maç Oyna', search: 'Rakip aranıyor...', q: 'Soru', pts: 'Puan', rank: 'Sıralaman', leaders: 'Sıralama', account: 'Hesabım', home: 'Ana Sayfa', back: 'Ana Sayfaya Dön', win: 'Kazandın!', lose: 'Kaybettin', draw: 'Berabere!', forfeit: 'Maçı Terk Et', send: '', chat: 'Maç Sohbeti', chatph: 'Mesaj gönder...', timer: 'Süre', searching: 'Aranıyor', stop: 'İptal' }
-};
 
 // ── LIVE STATS (polling every 0.5s) ──
 let liveStatsInterval = null;
@@ -1803,204 +1792,6 @@ async function submitLegend() {
   });
 });
 
-
-
-try {
-  const cached = localStorage.getItem('genius_translations');
-  if (cached) translationCache = JSON.parse(cached);
-} catch(e) {}
-
-function setLanguage(lang) {
-  currentLang = lang;
-  localStorage.setItem('genius_lang', lang);
-
-  // Update active button
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('lang-' + lang);
-  if (btn) btn.classList.add('active');
-
-  // Apply UI direction & static translations
-  applyUILanguage(lang);
-
-  // Translate questions if not Arabic (original) and not cached
-  if (lang !== 'ar') {
-    translateAllQuestions(lang);
-  }
-}
-
-function applyUILanguage(lang) {
-  const L = LANG_LABELS[lang] || LANG_LABELS['ar'];
-  const html = document.documentElement;
-  html.setAttribute('dir', L.dir);
-  html.setAttribute('lang', lang);
-
-  // Nav buttons
-  const navHome = document.querySelector('#nav-home .nav-text');
-  const navLb = document.querySelector('#nav-lb .nav-text');
-  const navProfile = document.querySelector('#nav-profile .nav-text');
-  if (navHome) navHome.textContent = L.home;
-  if (navLb) navLb.textContent = L.leaders;
-  if (navProfile) navProfile.textContent = L.account;
-
-  // Play button
-  const playBtn = document.getElementById('play-btn');
-  if (playBtn) playBtn.querySelector('.play-btn-inner-top').innerHTML = `<i class="fa-solid fa-gamepad" style="font-size:22px;margin-left:10px"></i><span style="font-size:21px;font-weight:800;letter-spacing:-0.5px">${L.play}</span>`;
-
-  // Search text
-  const searchText = document.getElementById('search-text');
-  if (searchText) searchText.textContent = L.search;
-
-  // Timer label
-  const timerLabel = document.querySelector('.timer-label');
-  if (timerLabel) timerLabel.innerHTML = `<i class="fa-regular fa-hourglass-half"></i> ${L.timer}`;
-
-  // Chat
-  const chatHeader = document.querySelector('.match-chat-header');
-  if (chatHeader) chatHeader.innerHTML = `<i class="fa-solid fa-comment-dots"></i> ${L.chat}`;
-  const chatInput = document.getElementById('chat-input');
-  if (chatInput) chatInput.placeholder = L.chatph;
-
-  // Forfeit btn
-  const forfeitBtn = document.getElementById('forfeit-btn');
-  if (forfeitBtn) forfeitBtn.innerHTML = `<i class="fa-solid fa-flag"></i> ${L.forfeit}`;
-
-  // Stat labels
-  const statLabels = document.querySelectorAll('.stat-card .lbl');
-  if (statLabels[0]) statLabels[0].innerHTML = `<i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> ${L.pts}`;
-  if (statLabels[1]) statLabels[1].innerHTML = `<i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> ${L.rank}`;
-
-  // Pts chip
-  const ptsChip = document.querySelector('.pts-chip');
-  if (ptsChip) {
-    const span = ptsChip.querySelector('span');
-    const pts = span ? span.textContent : '0';
-    ptsChip.innerHTML = `<i class="fa-solid fa-ranking-star"></i><span id="dash-points">${pts}</span> ${L.pts}`;
-  }
-
-  // Leaderboard title
-  const lbTitle = document.querySelector('#page-leaderboard .card-header h2');
-  if (lbTitle) lbTitle.textContent = L.leaders;
-}
-
-async function translateAllQuestions(lang) {
-  const cacheKey = `${lang}`;
-  if (translationCache[cacheKey] && Object.keys(translationCache[cacheKey]).length > 0) {
-    // Already translated, nothing to do
-    return;
-  }
-
-  const statusEl = document.getElementById('translate-status');
-  const statusText = document.getElementById('translate-status-text');
-  const progressFill = document.getElementById('translate-progress-fill');
-  if (statusEl) statusEl.classList.add('show');
-
-  const L = LANG_LABELS[lang];
-  const BATCH = 20; // translate 20 questions per API call
-  const total = QUESTIONS.length;
-  let translated = {};
-  let done = 0;
-
-  for (let i = 0; i < QUESTIONS.length; i += BATCH) {
-    const batch = QUESTIONS.slice(i, i + BATCH);
-    if (statusText) statusText.textContent = `Translating to ${L.name}... (${Math.min(i + BATCH, total)}/${total})`;
-
-    try {
-      const questionsJSON = JSON.stringify(batch.map(q => ({
-        id: q.id,
-        q: q.q,
-        opts: q.opts
-      })));
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          messages: [{
-            role: 'user',
-            content: `Translate these trivia questions and their answer options from Arabic to ${L.name}. Keep proper nouns, country names, and scientific terms accurate. Return ONLY a JSON array with the exact same structure (id, q, opts). No extra text, no markdown.\n\n${questionsJSON}`
-          }]
-        })
-      });
-
-      const data = await response.json();
-      const text = data.content?.[0]?.text || '[]';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const translatedBatch = JSON.parse(clean);
-
-      translatedBatch.forEach(q => {
-        translated[q.id] = { q: q.q, opts: q.opts };
-      });
-
-      done += batch.length;
-      if (progressFill) progressFill.style.width = `${(done / total) * 100}%`;
-
-    } catch(e) {
-      console.error('Translation error:', e);
-    }
-  }
-
-  // Cache it
-  translationCache[cacheKey] = translated;
-  try {
-    localStorage.setItem('genius_translations', JSON.stringify(translationCache));
-  } catch(e) {
-    // Storage full, clear old cache
-    localStorage.removeItem('genius_translations');
-  }
-
-  if (statusEl) {
-    statusEl.classList.remove('show');
-    if (progressFill) progressFill.style.width = '0%';
-  }
-
-  // Success toast
-  showTranslateToast(L.name);
-}
-
-function showTranslateToast(langName) {
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-    background:var(--ink);color:#fff;padding:12px 20px;border-radius:40px;
-    font-size:14px;font-weight:500;z-index:999;
-    animation:toastIn 0.3s ease;white-space:nowrap;
-    box-shadow:0 4px 20px rgba(0,0,0,0.2);
-  `;
-  toast.innerHTML = `<i class="fa-solid fa-check" style="margin-left:8px;color:#4cd964"></i> تمت الترجمة إلى ${langName}`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// Override getQuestion to use translated version
-function getTranslatedQuestion(q) {
-  if (currentLang === 'ar') return q;
-  const cache = translationCache[currentLang];
-  if (cache && cache[q.id]) {
-    return { ...q, q: cache[q.id].q, opts: cache[q.id].opts };
-  }
-  return q; // fallback to Arabic if not yet translated
-}
-
-// Initialize language on page load
-(function initLang() {
-  const saved = localStorage.getItem('genius_lang') || 'ar';
-  currentLang = saved;
-  if (saved !== 'ar') {
-    applyUILanguage(saved);
-    const btn = document.getElementById('lang-' + saved);
-    if (btn) {
-      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-  }
-})();
-
-// Add toast animation style
-const toastStyle = document.createElement('style');
-toastStyle.textContent = `@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }`;
-document.head.appendChild(toastStyle);
 
 // ==================== CONTACT FAB ====================
 let contactFabOpen = false;
