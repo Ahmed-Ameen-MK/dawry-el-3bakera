@@ -1825,33 +1825,192 @@
     <div id="legend-msg" style="margin-top:10px;text-align:center;font-size:13px"></div>
   </div>
 </div>
-<!-- ── APPLE-STYLE FOOTER ── -->
-<footer style="border-top:1px solid var(--line);background:var(--bg2);margin-top:40px;padding:32px 24px 24px;">
-  <div style="max-width:1100px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-brain" style="color:var(--blue);font-size:15px"></i>
-        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-0.3px">دوري العباقرة</span>
+<!-- ── FOOTER ── -->
+<style>
+  .site-footer {
+    background: #0a0a0f;
+    color: rgba(255,255,255,0.75);
+    margin-top: 60px;
+    padding: 56px 24px 0;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+  }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  @media (max-width: 768px) {
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-brand-col { grid-column: 1 / -1; }
+  }
+  @media (max-width: 480px) {
+    .footer-top { grid-template-columns: 1fr; }
+  }
+  .footer-brand-logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .footer-brand-logo .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, #0071e3, #005bbf);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff;
+    box-shadow: 0 4px 16px rgba(0,113,227,0.4);
+    flex-shrink: 0;
+  }
+  .footer-brand-logo span {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: #fff; letter-spacing: -0.4px;
+  }
+  .footer-tagline {
+    font-size: 13px; line-height: 1.7;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 24px;
+    max-width: 260px;
+  }
+  .footer-social {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .footer-social a {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none; font-size: 14px;
+    transition: all 0.2s;
+  }
+  .footer-social a:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+  .footer-col-title {
+    font-size: 12px; font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 18px;
+  }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .footer-links li a {
+    color: rgba(255,255,255,0.55);
+    text-decoration: none; font-size: 13.5px;
+    transition: color 0.15s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .footer-links li a i { font-size: 11px; opacity: 0.6; }
+  .footer-links li a:hover { color: #fff; }
+  .footer-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0,113,227,0.18);
+    border: 1px solid rgba(0,113,227,0.35);
+    color: #5aabff; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px; margin-top: 6px;
+  }
+  .footer-bottom {
+    padding: 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-bottom-left { font-size: 12px; color: rgba(255,255,255,0.28); }
+  .footer-bottom-left a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  .footer-bottom-left a:hover { color: rgba(255,255,255,0.7); }
+  .footer-bottom-center {
+    font-size: 12px; color: rgba(255,255,255,0.25);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .footer-bottom-center .made-flag { font-size: 14px; }
+  .footer-dev {
+    font-size: 11.5px; color: rgba(255,255,255,0.25);
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.2px;
+  }
+  .footer-dev a { color: #ff6b8a; text-decoration: none; font-weight: 600; }
+  .footer-dev a:hover { color: #ff8fa3; }
+</style>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+
+      <!-- عمود البراند -->
+      <div class="footer-brand-col">
+        <div class="footer-brand-logo">
+          <div class="logo-icon"><i class="fa-solid fa-brain"></i></div>
+          <span>دوري العباقرة</span>
+        </div>
+        <p class="footer-tagline">منصة تحدي ثقافي أونلاين — العب ضد أشخاص حقيقيين، تسلّق لوحة الصدارة، وأثبت أنك العبقري!</p>
+        <div class="footer-social">
+          <a href="#" title="تويتر / X"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" title="فيسبوك"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" title="إنستغرام"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" title="يوتيوب"><i class="fa-brands fa-youtube"></i></a>
+          <a href="#" title="تيك توك"><i class="fa-brands fa-tiktok"></i></a>
+        </div>
+        <div class="footer-badge" style="margin-top:16px">
+          <i class="fa-solid fa-circle" style="font-size:6px;color:#4ade80"></i>
+          الموقع يعمل الآن
+        </div>
       </div>
-      <nav style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-        <a href="privacy-policy.html" style="color:var(--ink3);font-size:13px;font-weight:500;text-decoration:none;padding:5px 12px;border-radius:20px;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;"
-          onmouseover="this.style.background='var(--bg3)';this.style.color='var(--ink)'"
-          onmouseout="this.style.background='transparent';this.style.color='var(--ink3)'">
-          <i class="fa-solid fa-shield-halved" style="font-size:11px"></i> سياسة الخصوصية
-        </a>
-        <span style="color:var(--line);font-size:12px">|</span>
-        <a href="aboutus.html" style="color:var(--ink3);font-size:13px;font-weight:500;text-decoration:none;padding:5px 12px;border-radius:20px;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;"
-          onmouseover="this.style.background='var(--bg3)';this.style.color='var(--ink)'"
-          onmouseout="this.style.background='transparent';this.style.color='var(--ink3)'">
-          <i class="fa-solid fa-circle-info" style="font-size:11px"></i> من نحن
-        </a>
-      </nav>
+
+      <!-- الروابط -->
+      <div>
+        <div class="footer-col-title">الموقع</div>
+        <ul class="footer-links">
+          <li><a href="#" onclick="showPage('home');return false"><i class="fa-solid fa-house"></i> الرئيسية</a></li>
+          <li><a href="#" onclick="showPage('play');return false"><i class="fa-solid fa-gamepad"></i> العب الآن</a></li>
+          <li><a href="#" onclick="showPage('leaderboard');return false"><i class="fa-solid fa-trophy"></i> لوحة الصدارة</a></li>
+          <li><a href="#" onclick="showPage('gifts');return false"><i class="fa-solid fa-gift"></i> الهدايا</a></li>
+        </ul>
+      </div>
+
+      <!-- الدعم -->
+      <div>
+        <div class="footer-col-title">الدعم</div>
+        <ul class="footer-links">
+          <li><a href="aboutus.html"><i class="fa-solid fa-circle-info"></i> من نحن</a></li>
+          <li><a href="privacy-policy.html"><i class="fa-solid fa-shield-halved"></i> سياسة الخصوصية</a></li>
+          <li><a href="#" onclick="toggleContactFab();return false"><i class="fa-solid fa-envelope"></i> تواصل معنا</a></li>
+        </ul>
+      </div>
+
+      <!-- معلومات -->
+      <div>
+        <div class="footer-col-title">معلومات</div>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fa-solid fa-flag"></i> صُنع في مصر 🇪🇬</a></li>
+          <li><a href="#"><i class="fa-solid fa-language"></i> العربية</a></li>
+          <li><a href="#"><i class="fa-solid fa-bolt"></i> سريع وآمن</a></li>
+        </ul>
+      </div>
+
     </div>
-    <div style="border-top:1px solid var(--line2);padding-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <p style="font-size:12px;color:var(--ink3);">Copyright © 2026 دوري العباقرة. جميع الحقوق محفوظة.</p>
-      <p dir="ltr" style="font-size: 12px; font-weight:9px;">&lt;  Developed by = " <a style="text-decoration: none;  color:pink;" href="https://nafezly.com/service/71680?ref=69f507b3714b4"><b style="color:red;">A.ameen</b></a> " /&gt;</p>
-      <p style="font-size:12px;color:var(--ink3);">صُنع في مصر</p>
+
+    <!-- أسفل الفوتر -->
+    <div class="footer-bottom">
+      <p class="footer-bottom-left">
+        © 2026 دوري العباقرة. جميع الحقوق محفوظة.
+        &nbsp;·&nbsp;
+        <a href="privacy-policy.html">الخصوصية</a>
+        &nbsp;·&nbsp;
+        <a href="aboutus.html">من نحن</a>
+      </p>
+      <p class="footer-bottom-center">
+        <span class="made-flag">🇪🇬</span> صُنع بـ ❤️ في مصر
+      </p>
+      <p class="footer-dev">
+        &lt; Developed by = "<a href="https://nafezly.com/service/71680?ref=69f507b3714b4">A.ameen</a>" /&gt;
+      </p>
     </div>
+
   </div>
 </footer>
 

@@ -1838,7 +1838,7 @@ async function sendContactMessage() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() }),
@@ -1873,7 +1873,7 @@ async function sendContactReview() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() }),
@@ -1911,7 +1911,7 @@ async function sendBuyOffer() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact-feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() }),
