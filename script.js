@@ -1572,33 +1572,29 @@ async function saveProfileEdit() {
 
 
 
-// ── LIVE STATS (Realtime أولاً، ثم fallback polling) ──
+// ── LIVE STATS (polling every 0.5s) ──
 let liveStatsInterval = null;
-let _liveRtJoined = false;
 
 async function fetchLiveStats() {
   try {
-    // عدد اللاعبين المتاحين: الصفوف التي match = 'searching' أو match = 'xo-searching'
+    // Searching players: status = 'searching'
     const [searchRes, matchRes] = await Promise.all([
-      sbFetch("/rest/v1/system?or=(match.eq.searching,match.eq.xo-searching)&select=id", { method: 'GET' }),
-      sbFetch('/rest/v1/system?match=not.is.null&match=neq.searching&match=neq.xo-searching&match=neq.off&select=id,match', { method: 'GET' })
+      sbFetch('/rest/v1/system?status=eq.searching&select=id', { method: 'GET' }),
+      sbFetch('/rest/v1/system?match=not.is.null&select=id,match', { method: 'GET' })
     ]);
 
-    // عدد اللاعبين المتاحين = الصفوف التي match = 'searching' أو 'xo-searching'
     const searchingCount = Array.isArray(searchRes) ? searchRes.length : 0;
 
-    // عدد المباريات = عدد الصفوف التي match = معرّف لاعب آخر (رقمي) ÷ 2
-    let activePlayers = 0;
+    // Active matches: rows where match column has an opponent player id
+    let activeMatchIds = new Set();
     if (Array.isArray(matchRes)) {
       matchRes.forEach(row => {
-        const m = String(row.match || '').trim();
-        // match يكون معرّف اللاعب الآخر (رقمي) وليس off/searching/xo-searching
-        if (m && m !== 'off' && m !== 'searching' && m !== 'xo-searching' && /^\d+$/.test(m)) {
-          activePlayers++;
+        if (row.match && String(row.match).trim() !== '') {
+          activeMatchIds.add(row.match);
         }
       });
     }
-    const activeMatches = Math.floor(activePlayers / 2);
+    const activeMatches = Math.floor(activeMatchIds.size); // each match counted once (2 players share 1 match)
 
     updateLiveStatsPills(searchingCount, activeMatches);
   } catch(e) {
@@ -1619,13 +1615,17 @@ function updateLiveStatsPills(searching, matches) {
   if (sCount) sCount.textContent = searching;
   if (mCount) mCount.textContent = matches;
 
-  if (searching > 0) {
-    sPill.classList.remove('red-state'); sPill.classList.add('green');
-    sDot.classList.remove('red-dot'); sDot.classList.add('green-dot');
-  } else {
-    sPill.classList.remove('green'); sPill.classList.add('red-state');
-    sDot.classList.remove('green-dot'); sDot.classList.add('red-dot');
-  }
+  // Color: green if >0, red if 0
+  [sPill, sDot].forEach(el => {
+    if (!el) return;
+    if (searching > 0) {
+      sPill.classList.remove('red-state'); sPill.classList.add('green');
+      sDot.classList.remove('red-dot'); sDot.classList.add('green-dot');
+    } else {
+      sPill.classList.remove('green'); sPill.classList.add('red-state');
+      sDot.classList.remove('green-dot'); sDot.classList.add('red-dot');
+    }
+  });
 
   if (matches > 0) {
     mPill.classList.remove('red-state'); mPill.classList.add('green');
@@ -1636,58 +1636,10 @@ function updateLiveStatsPills(searching, matches) {
   }
 }
 
-// Realtime: استمع لأي تغيير في جدول system لتحديث الإحصائيات فوراً
-function startLiveStatsRealtime() {
-  if (_liveRtJoined) return;
-  _liveRtJoined = true;
-  // نستمع لأي UPDATE في جدول system
-  const topic = 'realtime:public:system';
-  const ch = {
-    key: '__livestats__',
-    topic,
-    filter: '',
-    callback: () => fetchLiveStats()
-  };
-  // نستخدم WebSocket مباشرة بدون filter لأننا نريد أي تغيير
-  if (!_rtSocket || _rtSocket.readyState !== WebSocket.OPEN) {
-    rtConnect(() => _joinLiveStatsChannel());
-  } else {
-    _joinLiveStatsChannel();
-  }
-}
-
-function _joinLiveStatsChannel() {
-  if (!_rtSocket || _rtSocket.readyState !== WebSocket.OPEN) return;
-  const payload = {
-    config: {
-      broadcast: { self: false },
-      presence: { key: '' },
-      postgres_changes: [{ event: '*', schema: 'public', table: 'system' }]
-    }
-  };
-  const topic = 'realtime:public:system';
-  _rtSocket.send(JSON.stringify({ topic, event: 'phx_join', payload, ref: String(_rtRef++) }));
-
-  // استمع للرسائل الواردة لتحديث الإحصائيات
-  const _origOnMessage = _rtSocket.onmessage;
-  _rtSocket.onmessage = (e) => {
-    if (_origOnMessage) _origOnMessage(e);
-    try {
-      const msg = JSON.parse(e.data);
-      if (msg.topic === topic && msg.payload?.data) {
-        fetchLiveStats();
-      }
-    } catch(err) {}
-  };
-}
-
 function startLiveStats() {
   fetchLiveStats();
-  // Realtime أولاً
-  startLiveStatsRealtime();
-  // Fallback polling كل 8 ثوانٍ (ليس كل 0.5 ثانية!)
   if (!liveStatsInterval) {
-    liveStatsInterval = setInterval(fetchLiveStats, 8000);
+    liveStatsInterval = setInterval(fetchLiveStats, 500);
   }
 }
 
@@ -1884,30 +1836,19 @@ async function sendContactMessage() {
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact', {
+    const res = await sbFetch('/rest/v1/contact', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() }),
-      signal: controller.signal
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() })
     });
-    clearTimeout(timeout);
-    if (res.ok || res.status === 201 || res.status === 200) {
+    if (res !== null && !res?.__error) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
       document.getElementById('contact-msg-text').value = '';
     } else {
-      const errText = await res.text().catch(() => '');
-      console.error('Send message error:', res.status, errText);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، تأكد من إعدادات Supabase</div>';
     }
   } catch(e) {
-    if (e.name === 'AbortError') {
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    } else {
-      console.error('Send message exception:', e);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    }
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم</div>';
   }
 }
 
@@ -1919,31 +1860,20 @@ async function sendContactReview() {
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact', {
+    const res = await sbFetch('/rest/v1/contact', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() }),
-      signal: controller.signal
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() })
     });
-    clearTimeout(timeout);
-    if (res.ok || res.status === 201 || res.status === 200) {
+    if (res !== null && !res?.__error) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
       document.getElementById('contact-review-text').value = '';
       setStars(0);
     } else {
-      const errText = await res.text().catch(() => '');
-      console.error('Send review error:', res.status, errText);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، تأكد من إعدادات Supabase</div>';
     }
   } catch(e) {
-    if (e.name === 'AbortError') {
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    } else {
-      console.error('Send review exception:', e);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    }
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم</div>';
   }
 }
 
@@ -1957,31 +1887,20 @@ async function sendBuyOffer() {
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? currentUser.id : 'guest';
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact', {
+    const res = await sbFetch('/rest/v1/contact', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() }),
-      signal: controller.signal
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() })
     });
-    clearTimeout(timeout);
-    if (res.ok || res.status === 201 || res.status === 200) {
+    if (res !== null && !res?.__error) {
       resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
       document.getElementById('buy-price').value = '';
       document.getElementById('buy-note').value = '';
     } else {
-      const errText = await res.text().catch(() => '');
-      console.error('Send buy offer error:', res.status, errText);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، حاول مرة أخرى</div>';
+      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ أثناء الإرسال، تأكد من إعدادات Supabase</div>';
     }
   } catch(e) {
-    if (e.name === 'AbortError') {
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-clock" style="margin-left:6px"></i>انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    } else {
-      console.error('Send buy offer exception:', e);
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى</div>';
-    }
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم</div>';
   }
 }
 
