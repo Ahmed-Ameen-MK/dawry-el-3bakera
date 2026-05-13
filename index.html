@@ -11,19 +11,70 @@
 <!--monetag-->
 <!--script src="https://quge5.com/88/tag.min.js" data-zone="238317" async data-cfasync="false"></script-->
 
-<meta name="keywords" content="دورى،مسابقة ، العباقرة ، دوري العباقرة ، تحدي، تحدي ثقافي أونلاين، أمام أشخاص حقيقيين ، dawry el 3bakera, Al abakera, genius championship,العباقرة، العب أونلاين، ثقافي، ثقافة، السودوكو، العب السودوكو، الشطرنج، مع، أصدقاء، لعبة الذكرة ، اختبار الذكاء ، أسئلة، pvp , soduko, chess, culture, challenge , لوحة الصدارة"
+<meta name="keywords" content="دورى،مسابقة ، العباقرة ، دوري العباقرة ، تحدي، تحدي ثقافي أونلاين، أمام أشخاص حقيقيين ، dawry el 3bakera, Al abakera, genius championship,العباقرة، العب أونلاين، ثقافي، ثقافة، السودوكو، العب السودوكو، مع، أصدقاء، لعبة الذكرة ، اختبار الذكاء ، أسئلة، pvp , soduko, culture, challenge , لوحة الصدارة"
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lord-icon-element/1.1.0/lord-icon-element.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
-.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f7;
+    --bg3: #e8e8ed;
+    --ink: #1d1d1f;
+    --ink2: #3d3d3f;
+    --ink3: #6e6e73;
+    --line: #d2d2d7;
+    --line2: rgba(0,0,0,0.06);
+    --blue: #0071e3;
+    --blue-hover: #0077ed;
+    --green: #1d8348;
+    --green-bg: #f0faf4;
+    --red: #c0392b;
+    --red-bg: #fef1ef;
+    --gold: #b5882e;
+    --gold-bg: #fdf6e3;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
 
-  
-  
-  
-  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px;
+  }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand i { color: var(--blue); font-size: 15px; }
 
   nav { display: flex; gap: 4px; }
   nav button {
@@ -47,7 +98,15 @@
     padding: 72px 24px 56px;
     border-bottom: 1px solid var(--line2);
   }
-  
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg2); color: var(--blue);
+    border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
   .hero h1 {
     font-size: clamp(40px, 7vw, 72px);
     font-weight: 700; line-height: 1.05;
@@ -74,7 +133,10 @@
     margin-bottom: 16px;
     box-shadow: var(--shadow);
   }
-  .card-
+  .card-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
   .card-header .icon-wrap {
     width: 40px; height: 40px; border-radius: 10px;
     background: var(--bg2); border: 1px solid var(--line);
@@ -173,6 +235,7 @@
   }
   .profile-avatar-overlay i { color: #fff; font-size: 16px; }
 
+
   .user-banner {
     background: var(--ink); color: #fff;
     border-radius: var(--radius);
@@ -265,7 +328,12 @@
   .btn-stop-search:hover { background: var(--red-bg); border-color: rgba(192,57,43,0.25); }
 
   /* ── MATCH ── */
-  .vs-
+  .vs-header {
+    background: var(--ink); color: #fff;
+    border-radius: var(--radius); padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; gap: 12px;
+  }
   .player-side { text-align: center; flex: 1; }
   .player-side .p-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); }
   .player-side .p-pts { font-size: 36px; font-weight: 700; color: #fff; letter-spacing: -1px; }
@@ -358,7 +426,11 @@
     border-radius: var(--radius); padding: 16px;
     margin-bottom: 16px;
   }
-  .match-chat-
+  .match-chat-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--ink2);
+    margin-bottom: 12px;
+  }
   .match-chat-header i { font-size: 12px; color: var(--blue); }
   .chat-messages {
     min-height: 64px; max-height: 120px; overflow-y: auto;
@@ -461,7 +533,7 @@
   @media (max-width: 520px) {
     .options-grid { grid-template-columns: 1fr; }
     .card { padding: 20px; }
-    .vs-
+    .vs-header { padding: 16px; }
   }
 
   /* ── LARGER PLAY BUTTON ── */
@@ -772,84 +844,6 @@
     border-radius: var(--radius-sm) !important;
   }
 
-  /* ── LANGUAGE SETTINGS ── */
-  .lang-section {
-    margin-top: 28px;
-    border-top: 1px solid var(--line);
-    padding-top: 24px;
-  }
-  .lang-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 16px;
-  }
-  @media (max-width: 520px) { .lang-grid { grid-template-columns: repeat(2, 1fr); } }
-  .lang-btn {
-    background: var(--bg2);
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 14px 10px;
-    cursor: pointer;
-    transition: all 0.18s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    font-family: 'IBM Plex Sans Arabic', sans-serif;
-    color: var(--ink2);
-    font-size: 13px;
-    font-weight: 500;
-    position: relative;
-    overflow: hidden;
-  }
-  .lang-btn:hover { border-color: var(--blue); background: #eef4fb; }
-  .lang-btn.active {
-    border-color: var(--blue);
-    background: #eef4fb;
-    color: var(--blue);
-  }
-  .lang-btn.active::after {
-    content: '✓';
-    position: absolute;
-    top: 5px;
-    left: 8px;
-    font-size: 10px;
-    color: var(--blue);
-    font-weight: 700;
-  }
-  .lang-flag { font-size: 24px; line-height: 1; }
-  .lang-name { font-size: 12px; }
-
-  /* Translation loading bar */
-  .translate-status {
-    margin-top: 12px;
-    display: none;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: #eef4fb;
-    border: 1px solid rgba(0,113,227,0.2);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    color: var(--blue);
-  }
-  .translate-status.show { display: flex; }
-  .translate-spin {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(0,113,227,0.2);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    flex-shrink: 0;
-  }
-  .translate-progress {
-    height: 3px;
-    background: var(--line);
-    border-radius: 2px;
-    margin-top: 6px;
-    overflow: hidden;
-  }
   /* ── BIG PLAY BUTTON ── */
   .btn-play-big {
     width: 100%;
@@ -915,7 +909,10 @@
     margin-top: 32px;
     padding: 40px 0 48px;
   }
-  .gifts-
+  .gifts-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
   .gifts-header h2 {
     font-size: 22px;
     font-weight: 800;
@@ -1048,7 +1045,10 @@
     font-size: 20px; font-weight: 800; text-align: center;
     color: var(--ink); margin-bottom: 8px; letter-spacing: -0.4px;
   }
-  .modal-
+  .modal-body {
+    font-size: 14px; color: var(--ink2); line-height: 1.7;
+    text-align: center; margin-bottom: 22px;
+  }
   .modal-steps {
     background: var(--bg2); border: 1px solid var(--line);
     border-radius: var(--radius-sm); padding: 16px 18px;
@@ -1174,7 +1174,7 @@
     color: var(--ink);
   }
   .side-lb-title i { color: var(--gold); font-size: 14px; }
-  .side-lb-
+  .side-lb-body { padding: 4px 0; }
   .side-lb-row {
     display: flex;
     align-items: center;
@@ -1232,7 +1232,10 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .side-lb-
+  .side-lb-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--line2);
+  }
   .btn-view-more {
     display: flex;
     align-items: center;
