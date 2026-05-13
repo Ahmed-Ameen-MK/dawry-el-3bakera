@@ -1572,29 +1572,33 @@ async function saveProfileEdit() {
 
 
 
-// ── LIVE STATS (polling every 0.5s) ──
+// ── LIVE STATS (Realtime أولاً، ثم fallback polling) ──
 let liveStatsInterval = null;
+let _liveRtJoined = false;
 
 async function fetchLiveStats() {
   try {
-    // Searching players: status = 'searching'
+    // عدد اللاعبين المتاحين: الصفوف التي match = 'searching' أو match = 'xo-searching'
     const [searchRes, matchRes] = await Promise.all([
-      sbFetch('/rest/v1/system?status=eq.searching&select=id', { method: 'GET' }),
-      sbFetch('/rest/v1/system?match=not.is.null&select=id,match', { method: 'GET' })
+      sbFetch("/rest/v1/system?or=(match.eq.searching,match.eq.xo-searching)&select=id", { method: 'GET' }),
+      sbFetch('/rest/v1/system?match=not.is.null&match=neq.searching&match=neq.xo-searching&match=neq.off&select=id,match', { method: 'GET' })
     ]);
 
+    // عدد اللاعبين المتاحين = الصفوف التي match = 'searching' أو 'xo-searching'
     const searchingCount = Array.isArray(searchRes) ? searchRes.length : 0;
 
-    // Active matches: rows where match column has an opponent player id
-    let activeMatchIds = new Set();
+    // عدد المباريات = عدد الصفوف التي match = معرّف لاعب آخر (رقمي) ÷ 2
+    let activePlayers = 0;
     if (Array.isArray(matchRes)) {
       matchRes.forEach(row => {
-        if (row.match && String(row.match).trim() !== '') {
-          activeMatchIds.add(row.match);
+        const m = String(row.match || '').trim();
+        // match يكون معرّف اللاعب الآخر (رقمي) وليس off/searching/xo-searching
+        if (m && m !== 'off' && m !== 'searching' && m !== 'xo-searching' && /^\d+$/.test(m)) {
+          activePlayers++;
         }
       });
     }
-    const activeMatches = Math.floor(activeMatchIds.size); // each match counted once (2 players share 1 match)
+    const activeMatches = Math.floor(activePlayers / 2);
 
     updateLiveStatsPills(searchingCount, activeMatches);
   } catch(e) {
@@ -1615,17 +1619,13 @@ function updateLiveStatsPills(searching, matches) {
   if (sCount) sCount.textContent = searching;
   if (mCount) mCount.textContent = matches;
 
-  // Color: green if >0, red if 0
-  [sPill, sDot].forEach(el => {
-    if (!el) return;
-    if (searching > 0) {
-      sPill.classList.remove('red-state'); sPill.classList.add('green');
-      sDot.classList.remove('red-dot'); sDot.classList.add('green-dot');
-    } else {
-      sPill.classList.remove('green'); sPill.classList.add('red-state');
-      sDot.classList.remove('green-dot'); sDot.classList.add('red-dot');
-    }
-  });
+  if (searching > 0) {
+    sPill.classList.remove('red-state'); sPill.classList.add('green');
+    sDot.classList.remove('red-dot'); sDot.classList.add('green-dot');
+  } else {
+    sPill.classList.remove('green'); sPill.classList.add('red-state');
+    sDot.classList.remove('green-dot'); sDot.classList.add('red-dot');
+  }
 
   if (matches > 0) {
     mPill.classList.remove('red-state'); mPill.classList.add('green');
@@ -1636,10 +1636,58 @@ function updateLiveStatsPills(searching, matches) {
   }
 }
 
+// Realtime: استمع لأي تغيير في جدول system لتحديث الإحصائيات فوراً
+function startLiveStatsRealtime() {
+  if (_liveRtJoined) return;
+  _liveRtJoined = true;
+  // نستمع لأي UPDATE في جدول system
+  const topic = 'realtime:public:system';
+  const ch = {
+    key: '__livestats__',
+    topic,
+    filter: '',
+    callback: () => fetchLiveStats()
+  };
+  // نستخدم WebSocket مباشرة بدون filter لأننا نريد أي تغيير
+  if (!_rtSocket || _rtSocket.readyState !== WebSocket.OPEN) {
+    rtConnect(() => _joinLiveStatsChannel());
+  } else {
+    _joinLiveStatsChannel();
+  }
+}
+
+function _joinLiveStatsChannel() {
+  if (!_rtSocket || _rtSocket.readyState !== WebSocket.OPEN) return;
+  const payload = {
+    config: {
+      broadcast: { self: false },
+      presence: { key: '' },
+      postgres_changes: [{ event: '*', schema: 'public', table: 'system' }]
+    }
+  };
+  const topic = 'realtime:public:system';
+  _rtSocket.send(JSON.stringify({ topic, event: 'phx_join', payload, ref: String(_rtRef++) }));
+
+  // استمع للرسائل الواردة لتحديث الإحصائيات
+  const _origOnMessage = _rtSocket.onmessage;
+  _rtSocket.onmessage = (e) => {
+    if (_origOnMessage) _origOnMessage(e);
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.topic === topic && msg.payload?.data) {
+        fetchLiveStats();
+      }
+    } catch(err) {}
+  };
+}
+
 function startLiveStats() {
   fetchLiveStats();
+  // Realtime أولاً
+  startLiveStatsRealtime();
+  // Fallback polling كل 8 ثوانٍ (ليس كل 0.5 ثانية!)
   if (!liveStatsInterval) {
-    liveStatsInterval = setInterval(fetchLiveStats, 500);
+    liveStatsInterval = setInterval(fetchLiveStats, 8000);
   }
 }
 
@@ -1838,7 +1886,7 @@ async function sendContactMessage() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'message', sender, sender_id: String(senderId), content: text, created_at: new Date().toISOString() }),
@@ -1873,7 +1921,7 @@ async function sendContactReview() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'review', sender, sender_id: String(senderId), stars: selectedStars, content: text || '', created_at: new Date().toISOString() }),
@@ -1911,7 +1959,7 @@ async function sendBuyOffer() {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(SB_URL + '/rest/v1/contact_feedback', {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ type: 'buy-offer', sender, sender_id: String(senderId), content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() }),
