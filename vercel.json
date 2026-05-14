@@ -1,6 +1,12 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/abqari/:slug",
+      "destination": "/api/abqari/:slug"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*).(jpg|jpeg|png|gif|svg|webp|css|js)",
@@ -10,17 +16,6 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
-    }
-  ],
-  "functions": {
-    "abqari/index.php": {
-      "runtime": "vercel-php@0.7.2"
-    }
-  },
-  "routes": [
-    {
-      "src": "/abqari/(?<slug>[^/]+)",
-      "dest": "/abqari/index.php?slug=$slug"
     }
   ]
 }
