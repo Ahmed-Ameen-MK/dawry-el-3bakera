@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>سياسة الخصوصية — دوري العباقرة</title>
-<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<title>من نحن | دوري العباقرة</title>
+<meta name="description" content="تعرّف على قصة دوري العباقرة — المنصة العربية للتحدي الثقافي أونلاين">
+<link rel="icon" type="image/png" href="/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   :root {
@@ -15,24 +17,23 @@
     --ink2: #3d3d3f;
     --ink3: #6e6e73;
     --line: #d2d2d7;
-    --line2: rgba(0,0,0,0.06);
     --blue: #0071e3;
-    --blue-hover: #0077ed;
+    --blue-light: #eef4fb;
+    --gold: #b5882e;
+    --gold-bg: #fdf6e3;
+    --green: #1d8348;
+    --green-bg: #f0faf4;
     --radius: 18px;
-    --radius-sm: 10px;
-    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    --shadow: 0 2px 20px rgba(0,0,0,0.07);
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     font-family: 'El Messiri', sans-serif;
     background: var(--bg);
     color: var(--ink);
     min-height: 100vh;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
-    line-height: 1.8;
-    font-size: 17px;
   }
 
   /* ── HEADER ── */
@@ -40,288 +41,525 @@
     border-bottom: 1px solid var(--line);
     padding: 0 24px;
     position: sticky; top: 0; z-index: 50;
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.88);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
   .header-inner {
-    max-width: 800px; margin: 0 auto;
+    max-width: 900px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between;
     height: 52px;
   }
   .brand {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 17px; font-weight: 700;
-    letter-spacing: -0.3px;
-    color: var(--ink);
+    font-size: 17px; font-weight: 700; color: var(--ink);
     display: flex; align-items: center; gap: 8px;
     text-decoration: none;
   }
   .brand i { color: var(--blue); font-size: 15px; }
-
   .back-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--blue); font-size: 14px; font-weight: 500;
-    text-decoration: none;
-    padding: 6px 14px; border-radius: 20px;
-    transition: background 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: 1px solid var(--line);
+    border-radius: 20px; padding: 6px 14px;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 13px; font-weight: 500; color: var(--ink2);
+    text-decoration: none; transition: all 0.15s;
   }
-  .back-btn:hover { background: var(--bg2); }
+  .back-btn:hover { background: var(--bg3); }
 
   /* ── HERO ── */
   .hero {
-    max-width: 800px; margin: 0 auto;
-    padding: 56px 24px 40px;
-    border-bottom: 1px solid var(--line2);
+    text-align: center;
+    padding: 72px 24px 56px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
   }
-  .page-label {
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,113,227,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--bg2); color: var(--blue);
-    border: 1px solid var(--line);
-    border-radius: 20px; padding: 4px 14px;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 0.5px; text-transform: uppercase;
-    margin-bottom: 18px;
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 5px 16px; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; margin-bottom: 22px;
   }
   .hero h1 {
-    font-size: clamp(32px, 6vw, 52px);
-    font-weight: 700; line-height: 1.2;
+    font-size: clamp(36px, 6vw, 60px);
+    font-weight: 700; line-height: 1.1;
     letter-spacing: -1.5px; color: var(--ink);
-    margin-bottom: 12px;
+    margin-bottom: 18px;
   }
-  .hero p { font-size: 17px; color: var(--ink3); }
-
-  /* ── CONTENT ── */
-  .content {
-    max-width: 800px; margin: 0 auto;
-    padding: 48px 24px 80px;
+  .hero h1 span { color: var(--blue); }
+  .hero-sub {
+    font-size: 17px; color: var(--ink3); max-width: 560px;
+    margin: 0 auto; line-height: 1.65;
   }
 
-  .section-block {
-    margin-bottom: 48px;
-    padding-bottom: 48px;
-    border-bottom: 1px solid var(--line2);
-  }
-  .section-block:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
+  /* ── ARTICLE ── */
+  .article-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
   }
 
-  .section-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 8px;
-    background: var(--blue); color: #fff;
-    font-size: 14px; font-weight: 700;
-    margin-bottom: 14px;
-    font-family: 'Space Grotesk', sans-serif;
+  .article-section {
+    padding: 56px 0 0;
   }
 
-  .section-block h2 {
-    font-size: 22px; font-weight: 700;
-    color: var(--ink); margin-bottom: 14px;
-    letter-spacing: -0.4px;
-  }
-
-  .section-block p {
-    font-size: 17px; color: var(--ink2);
-    margin-bottom: 14px;
-  }
-  .section-block p:last-child { margin-bottom: 0; }
-
-  .info-list {
-    list-style: none;
-    margin: 14px 0;
-  }
-  .info-list li {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line2);
-    font-size: 17px; color: var(--ink2);
-  }
-  .info-list li:last-child { border-bottom: none; }
-  .info-list li i {
-    color: var(--blue); font-size: 14px;
-    margin-top: 4px; flex-shrink: 0;
-  }
-
-  .highlight-box {
+  /* ── ILLUSTRATION CARDS ── */
+  .illus-card {
     background: var(--bg2);
     border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 18px 20px;
-    margin: 16px 0;
+    border-radius: var(--radius);
+    padding: 32px 28px 28px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .illus-card.blue-tint { background: var(--blue-light); border-color: rgba(0,113,227,0.15); }
+  .illus-card.gold-tint { background: var(--gold-bg); border-color: rgba(181,136,46,0.2); }
+  .illus-card.green-tint { background: var(--green-bg); border-color: rgba(29,131,72,0.15); }
+
+  .illus-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 18px;
+  }
+  .blue-tint .illus-icon { background: rgba(0,113,227,0.12); color: var(--blue); }
+  .gold-tint .illus-icon { background: rgba(181,136,46,0.14); color: var(--gold); }
+  .green-tint .illus-icon { background: rgba(29,131,72,0.12); color: var(--green); }
+
+  .illus-card h3 {
+    font-size: 19px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.3px; margin-bottom: 12px;
+  }
+  .illus-card p {
+    font-size: 15px; color: var(--ink2); line-height: 1.8;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-label {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .section-label::before {
+    content: '';
+    width: 20px; height: 2px; background: var(--blue); border-radius: 2px;
+  }
+
+  h2.section-title {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.8px; color: var(--ink);
+    margin-bottom: 18px; line-height: 1.25;
+  }
+
+  .prose {
     font-size: 16px; color: var(--ink2);
-    line-height: 1.8;
+    line-height: 1.85; margin-bottom: 20px;
   }
-  .highlight-box.blue {
-    background: #eef4fb;
-    border-color: rgba(0,113,227,0.2);
-    color: var(--ink2);
+  .prose strong { color: var(--ink); font-weight: 700; }
+
+  /* ── SVG ILLUSTRATIONS ── */
+  .svg-scene {
+    width: 100%; max-width: 580px;
+    margin: 0 auto 32px;
+    display: block;
   }
-  .highlight-box i { color: var(--blue); margin-left: 6px; }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 32px 0;
+  }
+  @media (max-width: 520px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-box .num {
+    font-size: 32px; font-weight: 800;
+    letter-spacing: -1px; color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .stat-box .lbl {
+    font-size: 13px; color: var(--ink3);
+  }
+
+  /* ── VALUES ── */
+  .values-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 28px;
+  }
+  @media (max-width: 520px) {
+    .values-grid { grid-template-columns: 1fr; }
+  }
+  .value-item {
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .value-item .vi-icon {
+    font-size: 20px; margin-bottom: 10px;
+  }
+  .value-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
+  .value-item p { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+
+  /* ── DIVIDER ── */
+  .article-divider {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 52px 0 0;
+  }
+
+  /* ── CLOSING CARD ── */
+  .closing-card {
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    text-align: center;
+    margin-top: 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .closing-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(0,113,227,0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .closing-card h3 {
+    font-size: 24px; font-weight: 700; color: #fff;
+    letter-spacing: -0.5px; margin-bottom: 12px;
+    position: relative;
+  }
+  .closing-card p {
+    font-size: 15px; color: rgba(255,255,255,0.6);
+    line-height: 1.7; margin-bottom: 24px;
+    position: relative;
+  }
+  .btn-home {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: #fff;
+    padding: 13px 28px; border-radius: 50px;
+    text-decoration: none;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 15px; font-weight: 700;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .btn-home:hover { background: #005bbf; transform: scale(1.03); }
 
   /* ── FOOTER ── */
   footer {
     border-top: 1px solid var(--line);
     background: var(--bg2);
-    padding: 28px 24px;
+    padding: 24px;
+    text-align: center;
   }
-  .footer-inner {
-    max-width: 800px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px;
-  }
-  .footer-inner a {
-    color: var(--ink3); font-size: 14px; font-weight: 500;
-    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 20px; transition: all 0.15s;
-  }
-  .footer-inner a:hover { background: var(--bg3); color: var(--ink); }
-  .footer-copy { font-size: 13px; color: var(--ink3); }
+  footer p { font-size: 12px; color: var(--ink3); }
 
-  @media (max-width: 600px) {
-    body { font-size: 16px; }
-    .hero { padding: 36px 20px 28px; }
-    .content { padding: 32px 20px 60px; }
-    .section-block p, .info-list li, .highlight-box { font-size: 16px; }
-    .section-block h2 { font-size: 20px; }
-  }
+  /* ── ANIMATION ── */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+  .hero > * { animation: fadeUp 0.5s ease both; }
+  .hero > *:nth-child(1) { animation-delay: 0.05s; }
+  .hero > *:nth-child(2) { animation-delay: 0.12s; }
+  .hero > *:nth-child(3) { animation-delay: 0.2s; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-inner">
-    <a href="index.html" class="brand">
-      <i class="fa-solid fa-brain"></i>
-      دوري العباقرة
-    </a>
-    <a href="index.html" class="back-btn">
-      <i class="fa-solid fa-arrow-right"></i>
-      العودة للرئيسية
-    </a>
+    <a class="brand" href="/"><i class="fa-solid fa-trophy"></i> دوري العباقرة</a>
+    <a class="back-btn" href="/"><i class="fa-solid fa-arrow-right"></i> الرئيسية</a>
   </div>
 </header>
 
-<div class="hero">
-  <div class="page-label">
-    <i class="fa-solid fa-shield-halved"></i>
-    Privacy Policy
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><i class="fa-solid fa-circle-info"></i> من نحن</div>
+  <h1>ساحة المعرفة<br><span>للعقول العربية</span></h1>
+  <p class="hero-sub">دوري العباقرة ليس مجرد موقع مسابقات — إنه مجتمع حقيقي يجمع المثقفين والمتحدين من كل أرجاء الوطن العربي.</p>
+</section>
+
+<div class="article-wrap">
+
+  <!-- SECTION 1: القصة -->
+  <section class="article-section">
+
+    <!-- SVG: لاعبان أمام شاشة -->
+    <svg class="svg-scene" viewBox="0 0 580 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- background -->
+      <rect width="580" height="220" rx="18" fill="#f5f5f7"/>
+      <!-- monitor -->
+      <rect x="200" y="30" width="180" height="120" rx="10" fill="#1d1d1f"/>
+      <rect x="207" y="38" width="166" height="100" rx="7" fill="#0a2540"/>
+      <!-- screen glow -->
+      <rect x="207" y="38" width="166" height="100" rx="7" fill="url(#screenGrad)" opacity="0.85"/>
+      <!-- trophy on screen -->
+      <text x="290" y="100" text-anchor="middle" font-size="40" fill="#f0c040">🏆</text>
+      <!-- stand -->
+      <rect x="275" y="150" width="30" height="14" rx="3" fill="#3d3d3f"/>
+      <rect x="255" y="162" width="70" height="8" rx="4" fill="#3d3d3f"/>
+      <!-- left player -->
+      <circle cx="120" cy="90" r="26" fill="#0071e3" opacity="0.15"/>
+      <circle cx="120" cy="76" r="16" fill="#0071e3"/>
+      <text x="120" y="82" text-anchor="middle" font-size="16" fill="white">🧑</text>
+      <rect x="98" y="100" width="44" height="50" rx="10" fill="#0071e3" opacity="0.2"/>
+      <text x="120" y="166" text-anchor="middle" font-size="11" fill="#0071e3" font-family="El Messiri, sans-serif" font-weight="700">لاعب ١</text>
+      <!-- VS -->
+      <rect x="174" y="82" width="32" height="22" rx="6" fill="#1d1d1f"/>
+      <text x="190" y="98" text-anchor="middle" font-size="12" fill="white" font-family="El Messiri, sans-serif" font-weight="700">VS</text>
+      <!-- right player -->
+      <circle cx="460" cy="90" r="26" fill="#1d8348" opacity="0.15"/>
+      <circle cx="460" cy="76" r="16" fill="#1d8348"/>
+      <text x="460" y="82" text-anchor="middle" font-size="16" fill="white">🧕</text>
+      <rect x="438" y="100" width="44" height="50" rx="10" fill="#1d8348" opacity="0.2"/>
+      <text x="460" y="166" text-anchor="middle" font-size="11" fill="#1d8348" font-family="El Messiri, sans-serif" font-weight="700">لاعب ٢</text>
+      <!-- VS right side -->
+      <rect x="374" y="82" width="32" height="22" rx="6" fill="#1d1d1f"/>
+      <text x="390" y="98" text-anchor="middle" font-size="12" fill="white" font-family="El Messiri, sans-serif" font-weight="700">VS</text>
+      <!-- bottom text -->
+      <text x="290" y="200" text-anchor="middle" font-size="12" fill="#6e6e73" font-family="El Messiri, sans-serif">تحدٍّ مباشر — في الوقت الفعلي</text>
+      <defs>
+        <linearGradient id="screenGrad" x1="207" y1="38" x2="373" y2="138" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#0071e3" stop-opacity="0.25"/>
+          <stop offset="1" stop-color="#005bbf" stop-opacity="0.05"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="section-label"><i class="fa-solid fa-seedling"></i> البداية</div>
+    <h2 class="section-title">كيف بدأت الفكرة؟</h2>
+
+    <p class="prose">
+      وُلدت فكرة دوري العباقرة من سؤال بسيط: لماذا لا توجد منصة عربية حقيقية تتيح لك قياس معرفتك مباشرةً أمام منافس حقيقي من أي مكان في العالم؟ لم تكن الإجابة موجودة، فقررنا أن نصنعها.
+    </p>
+
+    <p class="prose">
+      المسابقات الثقافية قديمة قِدَم الحضارة، لكنها كانت دائماً محدودة بالمكان والزمان. <strong>دوري العباقرة غيّر هذا</strong> — فأصبح بإمكانك أن تتحدى صديقاً في القاهرة وأنت في الرياض، أو أن تقيس معلوماتك أمام عشرات اللاعبين الآخرين في دقائق.
+    </p>
+
+    <div class="illus-card blue-tint">
+      <div class="illus-icon"><i class="fa-solid fa-bolt"></i></div>
+      <h3>التحدي المباشر في ثوانٍ</h3>
+      <p>ما إن تضغط على زر "العب الآن" حتى يبدأ النظام بالبحث لك عن منافس حقيقي من فوره. لا انتظار مطوّل، ولا برامج إضافية — فقط متصفحك وعقلك.</p>
+    </div>
+  </section>
+
+  <hr class="article-divider">
+
+  <!-- SECTION 2: ماذا نقدم -->
+  <section class="article-section">
+
+    <!-- SVG: Leaderboard illustration -->
+    <svg class="svg-scene" viewBox="0 0 580 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="580" height="200" rx="18" fill="#f5f5f7"/>
+      <!-- podium bars -->
+      <!-- 2nd place -->
+      <rect x="170" y="80" width="90" height="90" rx="8" fill="#e8e8ed"/>
+      <text x="215" y="75" text-anchor="middle" font-size="22" fill="#909090">🥈</text>
+      <text x="215" y="145" text-anchor="middle" font-size="28" fill="#909090" font-family="El Messiri" font-weight="800">#2</text>
+      <!-- 1st place -->
+      <rect x="270" y="50" width="100" height="120" rx="8" fill="#1d1d1f"/>
+      <text x="320" y="42" text-anchor="middle" font-size="26" fill="#f0c040">👑</text>
+      <text x="320" y="125" text-anchor="middle" font-size="34" fill="#f0c040" font-family="El Messiri" font-weight="800">#1</text>
+      <text x="320" y="152" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.5)" font-family="El Messiri">المتصدر</text>
+      <!-- 3rd place -->
+      <rect x="380" y="100" width="90" height="70" rx="8" fill="#e8e8ed"/>
+      <text x="425" y="95" text-anchor="middle" font-size="22" fill="#b07d4a">🥉</text>
+      <text x="425" y="150" text-anchor="middle" font-size="24" fill="#b07d4a" font-family="El Messiri" font-weight="800">#3</text>
+      <!-- base -->
+      <rect x="160" y="170" width="320" height="10" rx="5" fill="#d2d2d7"/>
+      <!-- left decorations -->
+      <text x="80" y="115" text-anchor="middle" font-size="28">⭐</text>
+      <text x="500" y="115" text-anchor="middle" font-size="28">⭐</text>
+      <!-- title -->
+      <text x="290" y="196" text-anchor="middle" font-size="12" fill="#6e6e73" font-family="El Messiri, sans-serif">لوحة الصدارة — تتحدث الأرقام</text>
+    </svg>
+
+    <div class="section-label"><i class="fa-solid fa-trophy"></i> ما نقدمه</div>
+    <h2 class="section-title">تجربة تنافسية كاملة</h2>
+
+    <p class="prose">
+      دوري العباقرة ليس مجرد أسئلة وأجوبة. إنه نظام متكامل يمنحك <strong>هوية رقمية تنافسية</strong>: اسمك في لوحة الصدارة، ترتيبك بين الآلاف من اللاعبين، ونقاط صدارة تعكس تاريخك في المنصة.
+    </p>
+
+    <p class="prose">
+      كل مباراة مباشرة تجمعك بخصم حقيقي تُطرح عليكما أسئلة من مجالات متنوعة: تاريخ وجغرافيا وعلوم وثقافة عامة. السرعة والدقة معاً هما اللذان يحددان الفائز. كل إجابة صحيحة تزيد رصيدك وتُقرّبك من القمة.
+    </p>
+
+    <div class="values-grid">
+      <div class="value-item">
+        <div class="vi-icon">⚡</div>
+        <h4>تحدٍّ آني</h4>
+        <p>مباريات مباشرة مع لاعبين حقيقيين من حول العالم العربي.</p>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🏆</div>
+        <h4>لوحة صدارة حية</h4>
+        <p>ترتيبك يتحدث عن نفسه — مرئي للجميع ومحدَّث في الوقت الفعلي.</p>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🧩</div>
+        <h4>أسئلة متنوعة</h4>
+        <p>مئات الأسئلة المُختارة بعناية من مجالات معرفية شتى.</p>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🔗</div>
+        <h4>صفحة شخصية</h4>
+        <p>رابط خاص بك لمشاركة إنجازاتك مع الأصدقاء والمتابعين.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="article-divider">
+
+  <!-- SECTION 3: الرسالة -->
+  <section class="article-section">
+
+    <!-- SVG: Globe / Community -->
+    <svg class="svg-scene" viewBox="0 0 580 190" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="580" height="190" rx="18" fill="#f0faf4"/>
+      <!-- central globe -->
+      <circle cx="290" cy="95" r="60" fill="#1d8348" opacity="0.08"/>
+      <circle cx="290" cy="95" r="44" fill="#1d8348" opacity="0.12"/>
+      <circle cx="290" cy="95" r="30" fill="#1d8348" opacity="0.2"/>
+      <text x="290" y="108" text-anchor="middle" font-size="38">🌍</text>
+      <!-- connecting lines -->
+      <line x1="100" y1="60" x2="268" y2="88" stroke="#1d8348" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+      <line x1="480" y1="60" x2="312" y2="88" stroke="#1d8348" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+      <line x1="80" y1="140" x2="265" y2="105" stroke="#1d8348" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+      <line x1="500" y1="140" x2="315" y2="105" stroke="#1d8348" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+      <!-- player dots -->
+      <circle cx="100" cy="60" r="18" fill="#1d8348" opacity="0.15"/>
+      <text x="100" y="67" text-anchor="middle" font-size="18">🇪🇬</text>
+      <circle cx="480" cy="60" r="18" fill="#1d8348" opacity="0.15"/>
+      <text x="480" y="67" text-anchor="middle" font-size="18">🇸🇦</text>
+      <circle cx="80" cy="140" r="18" fill="#1d8348" opacity="0.15"/>
+      <text x="80" y="147" text-anchor="middle" font-size="18">🇯🇴</text>
+      <circle cx="500" cy="140" r="18" fill="#1d8348" opacity="0.15"/>
+      <text x="500" y="147" text-anchor="middle" font-size="18">🇩🇿</text>
+      <!-- label -->
+      <text x="290" y="175" text-anchor="middle" font-size="12" fill="#1d8348" font-family="El Messiri, sans-serif" font-weight="600">مجتمع عربي من جميع الدول</text>
+    </svg>
+
+    <div class="section-label"><i class="fa-solid fa-heart"></i> رسالتنا</div>
+    <h2 class="section-title">نؤمن بقوة المعرفة المشتركة</h2>
+
+    <p class="prose">
+      في زمن يتشتت فيه الانتباه بين ملايين المحتويات، نؤمن أن <strong>الفضول المعرفي</strong> هو ما يجمع الناس أكثر من أي شيء آخر. حين يتنافس شخصان على سؤال في الجغرافيا أو التاريخ، فهما في الحقيقة يحتفلان بثقافتهما المشتركة.
+    </p>
+
+    <p class="prose">
+      نسعى لأن يكون دوري العباقرة المساحة التي يرفع فيها المتحدون العرب من مستواهم المعرفي بطريقة ممتعة وتنافسية — لا عبر الحفظ والتلقين، بل من خلال التحدي والمقارعة الذهنية المباشرة.
+    </p>
+
+    <div class="illus-card gold-tint">
+      <div class="illus-icon"><i class="fa-solid fa-star"></i></div>
+      <h3>هدفنا الأعمق</h3>
+      <p>أن نُثبت أن اللاعب العربي يستطيع أن يتفوق معرفياً على أي مستوى، وأن المنافسة الشريفة في ميدان العلم والثقافة هي من أنبل أشكال التحدي.</p>
+    </div>
+  </section>
+
+  <hr class="article-divider">
+
+  <!-- SECTION 4: القيم -->
+  <section class="article-section">
+
+    <div class="section-label"><i class="fa-solid fa-compass"></i> قيمنا</div>
+    <h2 class="section-title">ما الذي يهدينا؟</h2>
+
+    <p class="prose">
+      بنينا دوري العباقرة على ثلاثة مبادئ لا نتنازل عنها في أي قرار نتخذه:
+    </p>
+
+    <!-- SVG: Values illustration -->
+    <svg class="svg-scene" viewBox="0 0 580 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="580" height="150" rx="18" fill="#f5f5f7"/>
+      <!-- Fairness -->
+      <rect x="30" y="30" width="155" height="90" rx="12" fill="white" stroke="#d2d2d7" stroke-width="1"/>
+      <text x="107" y="70" text-anchor="middle" font-size="28">⚖️</text>
+      <text x="107" y="95" text-anchor="middle" font-size="13" fill="#1d1d1f" font-family="El Messiri" font-weight="700">النزاهة</text>
+      <text x="107" y="113" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="El Messiri">قواعد واضحة للجميع</text>
+      <!-- Transparency -->
+      <rect x="213" y="30" width="155" height="90" rx="12" fill="white" stroke="#d2d2d7" stroke-width="1"/>
+      <text x="290" y="70" text-anchor="middle" font-size="28">🔍</text>
+      <text x="290" y="95" text-anchor="middle" font-size="13" fill="#1d1d1f" font-family="El Messiri" font-weight="700">الشفافية</text>
+      <text x="290" y="113" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="El Messiri">نقاطك مرئية للجميع</text>
+      <!-- Fun -->
+      <rect x="396" y="30" width="155" height="90" rx="12" fill="white" stroke="#d2d2d7" stroke-width="1"/>
+      <text x="473" y="70" text-anchor="middle" font-size="28">🎉</text>
+      <text x="473" y="95" text-anchor="middle" font-size="13" fill="#1d1d1f" font-family="El Messiri" font-weight="700">المتعة</text>
+      <text x="473" y="113" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="El Messiri">التعلم بالتنافس</text>
+    </svg>
+
+    <p class="prose">
+      <strong>النزاهة</strong> تعني أن كل لاعب يحصل على فرصة عادلة تماماً. الأسئلة تُطرح على الجميع بنفس الوقت، والنقاط تُحتسب بنفس الآلية دون استثناء.
+    </p>
+
+    <p class="prose">
+      <strong>الشفافية</strong> تعني أن لوحة الصدارة حقيقية وليست مزيّفة — كل نقطة لها قصة مباراة وراءها، وكل ترتيب مكتسب بجهد حقيقي.
+    </p>
+
+    <p class="prose">
+      <strong>المتعة</strong> تعني أننا نصمّم كل تفصيلة في المنصة لتجعلك تشعر بالإثارة. المباراة التي تخسرها تجعلك تريد العودة مجدداً لتُثبت نفسك.
+    </p>
+
+  </section>
+
+  <hr class="article-divider">
+
+  <!-- SECTION 5: الفريق -->
+  <section class="article-section">
+    <div class="section-label"><i class="fa-solid fa-users"></i> خلف الكواليس</div>
+    <h2 class="section-title">من يقف وراء المنصة؟</h2>
+
+    <p class="prose">
+      دوري العباقرة مشروع مستقل بُني بشغف من مطور عربي يؤمن بفكرة بسيطة: <strong>العرب يستحقون منصات تقنية بمستوى عالمي</strong>، مُصمَّمة خصيصاً لثقافتهم ولغتهم.
+    </p>
+
+    <div class="illus-card green-tint">
+      <div class="illus-icon"><i class="fa-solid fa-code"></i></div>
+      <h3>مشروع يتطور يومياً</h3>
+      <p>المنصة ليست مجرد فكرة انتهت — هي كائن حي نُضيف إليه ميزات جديدة، ونُصلح أخطاءه، ونستمع لتعليقات المجتمع باستمرار. كل تقييم ترسله يصل إلينا مباشرة ويشكّل القرارات القادمة.</p>
+    </div>
+
+    <p class="prose">
+      إذا كنت مطوراً أو مصمماً أو صاحب فكرة تريد المشاركة في تطوير المنصة، فنحن نرحب بالتواصل. استخدم زر التواصل في الصفحة الرئيسية وأرسل لنا رسالتك.
+    </p>
+  </section>
+
+  <!-- CLOSING -->
+  <div class="closing-card">
+    <h3>هل أنت مستعد للتحدي؟</h3>
+    <p>انضم إلى آلاف اللاعبين وأثبت أن عقلك يستحق مكانه في لوحة الصدارة.</p>
+    <a class="btn-home" href="/">
+      <i class="fa-solid fa-trophy"></i> العب الآن
+    </a>
   </div>
-  <h1>سياسة الخصوصية</h1>
-  <p>آخر تحديث: يناير 2025 — نلتزم بحماية بياناتك وخصوصيتك بشكل كامل.</p>
+
 </div>
 
-<div class="content">
-
-  <div class="section-block">
-    <div class="section-num">1</div>
-    <h2>مقدمة</h2>
-    <p>مرحباً بك في دوري العباقرة. نحن نأخذ خصوصيتك على محمل الجد، ونلتزم بحماية بياناتك الشخصية وضمان شفافية كاملة في كيفية جمعها واستخدامها.</p>
-    <p>تنطبق هذه السياسة على جميع مستخدمي موقعنا والخدمات التي نقدمها. باستخدامك للموقع، فأنت توافق على الشروط الواردة في هذه الوثيقة.</p>
-    <div class="highlight-box blue">
-      <i class="fa-solid fa-circle-info"></i>
-      <strong>ملخص مختصر:</strong> نجمع فقط البيانات الضرورية لتشغيل الخدمة، ولا نبيع بياناتك أبداً لأي طرف ثالث.
-    </div>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">2</div>
-    <h2>البيانات التي نجمعها</h2>
-    <p>عند تسجيلك أو استخدامك للموقع، قد نجمع الأنواع التالية من البيانات:</p>
-    <ul class="info-list">
-      <li>
-        <i class="fa-solid fa-user"></i>
-        <div><strong>بيانات الحساب:</strong> الاسم، البريد الإلكتروني، وكلمة المرور (مشفّرة) عند إنشاء حساب.</div>
-      </li>
-      <li>
-        <i class="fa-solid fa-gamepad"></i>
-        <div><strong>بيانات اللعب:</strong> نتائج المباريات، النقاط، وإحصائيات الأداء داخل المنصة.</div>
-      </li>
-      <li>
-        <i class="fa-solid fa-globe"></i>
-        <div><strong>بيانات تقنية:</strong> عنوان IP، نوع المتصفح، ونظام التشغيل لأغراض تحسين الأداء والأمان.</div>
-      </li>
-      <li>
-        <i class="fa-solid fa-comment"></i>
-        <div><strong>رسائل التواصل:</strong> الرسائل والتقييمات التي ترسلها إلينا عبر نموذج التواصل.</div>
-      </li>
-    </ul>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">3</div>
-    <h2>كيف نستخدم بياناتك</h2>
-    <p>نستخدم البيانات المجمّعة للأغراض التالية حصراً:</p>
-    <ul class="info-list">
-      <li><i class="fa-solid fa-check"></i> تشغيل خدمات المنصة وإدارة حسابك.</li>
-      <li><i class="fa-solid fa-check"></i> تحسين تجربة اللعب وإصلاح الأخطاء التقنية.</li>
-      <li><i class="fa-solid fa-check"></i> التواصل معك بشأن تحديثات المنصة أو الردّ على استفساراتك.</li>
-      <li><i class="fa-solid fa-check"></i> ضمان أمن المنصة ومنع الاحتيال.</li>
-    </ul>
-    <div class="highlight-box">
-      <i class="fa-solid fa-ban" style="color:var(--red)"></i>
-      <strong>نؤكد أننا لا نستخدم بياناتك لأغراض إعلانية، ولا نبيعها أو نشاركها مع أي طرف ثالث.</strong>
-    </div>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">4</div>
-    <h2>تخزين البيانات وأمنها</h2>
-    <p>تُخزَّن بياناتك على خوادم Supabase المؤمَّنة، والتي تلتزم بأعلى معايير أمن المعلومات. نطبّق تشفير SSL/TLS على جميع الاتصالات، كما تُخزَّن كلمات المرور مشفّرة باستخدام خوارزميات تشفير قوية ولا يمكن لأحد الوصول إليها.</p>
-    <p>نحتفظ ببياناتك طالما حسابك نشطاً. يمكنك طلب حذف حسابك وبياناتك في أي وقت من إعدادات الحساب.</p>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">5</div>
-    <h2>ملفات تعريف الارتباط (Cookies)</h2>
-    <p>نستخدم ملفات تعريف الارتباط لأغراض تشغيلية فقط، مثل تذكّر جلسة تسجيل الدخول وتفضيلاتك. لا نستخدم ملفات تعريف ارتباط تتبّعية أو إعلانية.</p>
-    <div class="highlight-box">
-      <i class="fa-solid fa-cookie-bite" style="color:var(--gold)"></i>
-      يمكنك تعطيل ملفات تعريف الارتباط من إعدادات متصفحك، لكن ذلك قد يؤثر على بعض وظائف الموقع.
-    </div>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">6</div>
-    <h2>حقوقك</h2>
-    <p>لديك الحقوق الكاملة التالية فيما يخص بياناتك الشخصية:</p>
-    <ul class="info-list">
-      <li><i class="fa-solid fa-eye"></i> <div><strong>الاطلاع:</strong> طلب نسخة من جميع البيانات الشخصية التي نحتفظ بها.</div></li>
-      <li><i class="fa-solid fa-pen"></i> <div><strong>التصحيح:</strong> تعديل أي معلومات غير دقيقة من خلال إعدادات حسابك.</div></li>
-      <li><i class="fa-solid fa-trash"></i> <div><strong>الحذف:</strong> طلب حذف حسابك وجميع بياناتك بشكل نهائي.</div></li>
-      <li><i class="fa-solid fa-right-from-bracket"></i> <div><strong>النقل:</strong> الحصول على بياناتك بصيغة قابلة للقراءة الآلية.</div></li>
-    </ul>
-    <p>لممارسة أي من هذه الحقوق، تواصل معنا عبر نموذج التواصل في الموقع.</p>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">7</div>
-    <h2>التعديلات على هذه السياسة</h2>
-    <p>قد نُحدِّث سياسة الخصوصية هذه بشكل دوري. في حال إجراء تعديلات جوهرية، سنُعلمك بذلك من خلال إشعار على الموقع أو عبر البريد الإلكتروني المسجّل في حسابك.</p>
-    <p>استمرارك في استخدام الموقع بعد نشر التعديلات يُعدّ موافقةً على السياسة المحدّثة.</p>
-  </div>
-
-  <div class="section-block">
-    <div class="section-num">8</div>
-    <h2>التواصل معنا</h2>
-    <p>إذا كان لديك أي أسئلة أو مخاوف بشأن سياسة الخصوصية، لا تتردد في التواصل معنا عبر نموذج التواصل المتاح في الموقع أو من خلال زر التواصل السريع في الزاوية السفلية.</p>
-    <div class="highlight-box blue">
-      <i class="fa-solid fa-envelope"></i>
-      نلتزم بالردّ على جميع استفسارات الخصوصية في غضون 72 ساعة.
-    </div>
-  </div>
-
-</div>
-
+<!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <a href="index.html"><i class="fa-solid fa-house" style="font-size:11px"></i> الرئيسية</a>
-      <a href="aboutus.html"><i class="fa-solid fa-circle-info" style="font-size:11px"></i> من نحن</a>
-    </div>
-    <span class="footer-copy">© 2026 دوري العباقرة. جميع الحقوق محفوظة.</span>
-  </div>
+  <p>Copyright © 2026 دوري العباقرة — صُنع في مصر 🇪🇬 بشغف حقيقي.</p>
 </footer>
 
 </body>

@@ -144,21 +144,14 @@ let chatPollInterval = null;
 let lastChatTs = 0;
 
 // ==================== UTILS ====================
-async function sbFetch(path, opts={}, retries=3) {
+async function sbFetch(path, opts={}, retries=2) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
-      // timeout أطول على الجوال (15 ثانية بدل 8)
-      const timeoutMs = /Mobi|Android/i.test(navigator.userAgent) ? 15000 : 10000;
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const timer = setTimeout(() => controller.abort(), 8000);
       const res = await fetch(SB_URL + path, {
         ...opts,
-        mode: 'cors',
-        headers: {
-          ...Q_HEADERS,
-          ...(opts.headers||{}),
-          'X-Client-Info': 'dawry-el-abakera/1.0'
-        },
+        headers: { ...Q_HEADERS, ...(opts.headers||{}) },
         signal: controller.signal
       });
       clearTimeout(timer);
@@ -169,13 +162,8 @@ async function sbFetch(path, opts={}, retries=3) {
         return json;
       } catch(e) { console.error('Parse error:', text); return null; }
     } catch(e) {
-      console.error('Fetch error attempt ' + (attempt+1) + ':', e.name, e.message);
-      if (e.name === 'AbortError') {
-        // timeout — أعد المحاولة مع فترة انتظار أطول
-        if (attempt < retries) await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
-      } else {
-        if (attempt < retries) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
-      }
+      console.error('Fetch error attempt ' + (attempt+1) + ':', e);
+      if (attempt < retries) await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
     }
   }
   return null;
@@ -273,10 +261,12 @@ async function doRegister() {
   const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`, { method: 'GET' });
   if (check && check.length > 0) return showMsg(msgEl, 'هذا البريد مسجل مسبقاً', 'error');
   const newId = Date.now() + Math.floor(Math.random() * 9999);
+  showMsg(msgEl, 'جاري إنشاء الحساب... (توليد الرابط الشخصي)', 'info');
   const slug = await generateUniqueSlug(name);
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    headers: { 'Prefer': 'return=representation' },
+    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug: slug || generateSlug(name) || 'user-' + newId, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');
@@ -444,6 +434,7 @@ async function handleGoogleCallback(preToken) {
   };
   const created = await sbFetch('/rest/v1/system', {
     method: 'POST',
+    headers: { 'Prefer': 'return=representation' },
     body: JSON.stringify(newUser)
   });
   if (created && created[0]) {
@@ -512,6 +503,7 @@ async function handleGithubCallback(accessToken) {
   };
   const created = await sbFetch('/rest/v1/system', {
     method: 'POST',
+    headers: { 'Prefer': 'return=representation' },
     body: JSON.stringify(newUser)
   });
   if (created && created[0]) {
@@ -1884,25 +1876,28 @@ async function sendContactMessage() {
   resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? String(currentUser.id) : 'guest';
-  const payload = JSON.stringify({ type: 'message', sender, sender_id: senderId, content: text, created_at: new Date().toISOString() });
-  const res = await sbFetch('/rest/v1/contact', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=minimal', 'Content-Type': 'application/json' },
-    body: payload
-  });
-  if (res !== null && !res?.__error) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
-    document.getElementById('contact-msg-text').value = '';
-  } else if (res === null) {
-    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال، تأكد من اتصال الإنترنت وحاول مجدداً</div>';
-  } else {
-    const errMsg = res?.message || res?.hint || '';
-    if (errMsg.includes('contact') || res?.code === '42P01') {
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-database" style="margin-left:6px"></i>جدول contact غير موجود في Supabase — يرجى إنشاؤه أولاً</div>';
+  const payload = { type: 'message', sender, sender_id: senderId, content: text, created_at: new Date().toISOString() };
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-check-circle" style="font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال رسالتك بنجاح! شكراً لتواصلك معنا.</div>';
+      document.getElementById('contact-msg-text').value = '';
     } else {
-      resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ، حاول مرة أخرى</div>';
+      const errBody = await res.json().catch(() => ({}));
+      console.error('contact error:', res.status, errBody);
+      resultEl.innerHTML = `<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ (${res.status}): ${errBody.message || errBody.hint || 'تحقق من إعدادات جدول contact في Supabase'}</div>`;
     }
-    console.error('contact insert error:', res);
+  } catch(e) {
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الاتصال بالإنترنت</div>';
   }
 }
 
@@ -1913,21 +1908,29 @@ async function sendContactReview() {
   resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري الإرسال...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? String(currentUser.id) : 'guest';
-  const payload = JSON.stringify({ type: 'review', sender, sender_id: senderId, stars: selectedStars, content: text || '', created_at: new Date().toISOString() });
-  const res = await sbFetch('/rest/v1/contact', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=minimal', 'Content-Type': 'application/json' },
-    body: payload
-  });
-  if (res !== null && !res?.__error) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
-    document.getElementById('contact-review-text').value = '';
-    setStars(0);
-  } else if (res === null) {
-    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال، تأكد من اتصال الإنترنت وحاول مجدداً</div>';
-  } else {
-    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ، حاول مرة أخرى</div>';
-    console.error('review insert error:', res);
+  const payload = { type: 'review', sender, sender_id: senderId, stars: selectedStars, content: text || '', created_at: new Date().toISOString() };
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-star" style="color:var(--gold);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال تقييمك! شكراً لك.</div>';
+      document.getElementById('contact-review-text').value = '';
+      setStars(0);
+    } else {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('review error:', res.status, errBody);
+      resultEl.innerHTML = `<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ (${res.status}): ${errBody.message || errBody.hint || 'تحقق من إعدادات جدول contact في Supabase'}</div>`;
+    }
+  } catch(e) {
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الاتصال بالإنترنت</div>';
   }
 }
 
@@ -1940,21 +1943,29 @@ async function sendBuyOffer() {
   resultEl.innerHTML = '<div class="msg info"><i class="fa-solid fa-spinner fa-spin" style="margin-left:6px"></i> جاري إرسال عرضك...</div>';
   const sender = currentUser ? currentUser.name : 'زائر';
   const senderId = currentUser ? String(currentUser.id) : 'guest';
-  const payload = JSON.stringify({ type: 'buy-offer', sender, sender_id: senderId, content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() });
-  const res = await sbFetch('/rest/v1/contact', {
-    method: 'POST',
-    headers: { 'Prefer': 'return=minimal', 'Content-Type': 'application/json' },
-    body: payload
-  });
-  if (res !== null && !res?.__error) {
-    resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
-    document.getElementById('buy-price').value = '';
-    document.getElementById('buy-note').value = '';
-  } else if (res === null) {
-    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال، تأكد من اتصال الإنترنت وحاول مجدداً</div>';
-  } else {
-    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ، حاول مرة أخرى</div>';
-    console.error('buy-offer insert error:', res);
+  const payload = { type: 'buy-offer', sender, sender_id: senderId, content: `${price} ${currency}${note ? ' — ' + note : ''}`, created_at: new Date().toISOString() };
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      resultEl.innerHTML = '<div class="contact-success"><i class="fa-solid fa-handshake" style="color:var(--green);font-size:20px;margin-bottom:6px;display:block"></i>تم إرسال عرضك! سيراجع فريقنا عرضك وسيردّ عليك قريباً.</div>';
+      document.getElementById('buy-price').value = '';
+      document.getElementById('buy-note').value = '';
+    } else {
+      const errBody = await res.json().catch(() => ({}));
+      console.error('buy-offer error:', res.status, errBody);
+      resultEl.innerHTML = `<div class="msg error"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>حدث خطأ (${res.status}): ${errBody.message || errBody.hint || 'تحقق من إعدادات جدول contact في Supabase'}</div>`;
+    }
+  } catch(e) {
+    resultEl.innerHTML = '<div class="msg error"><i class="fa-solid fa-wifi" style="margin-left:6px"></i>تعذّر الاتصال بالخادم، تحقق من الاتصال بالإنترنت</div>';
   }
 }
 
