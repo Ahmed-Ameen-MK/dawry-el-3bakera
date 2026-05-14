@@ -208,6 +208,24 @@ function switchAuthTab(tab) {
   }
 }
 
+// ==================== SLUG HELPER ====================
+function generateSlug(name) {
+  const arabicMap = {
+    'أ':'a','إ':'i','آ':'a','ا':'a','ب':'b','ت':'t','ث':'th',
+    'ج':'j','ح':'h','خ':'kh','د':'d','ذ':'z','ر':'r','ز':'z',
+    'س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a',
+    'غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n',
+    'ه':'h','و':'w','ي':'y','ة':'a','ى':'a','ء':'a'
+  };
+  let slug = name.toLowerCase();
+  for (const [ar, en] of Object.entries(arabicMap)) {
+    slug = slug.replaceAll(ar, en);
+  }
+  slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+  slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return slug || 'user';
+}
+
 // ==================== AUTH ====================
 async function doRegister() {
   const name = document.getElementById('reg-name').value.trim();
@@ -231,7 +249,7 @@ async function doRegister() {
   const newId = Date.now() + Math.floor(Math.random() * 9999);
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug: generateSlug(name) + '-' + newId, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');

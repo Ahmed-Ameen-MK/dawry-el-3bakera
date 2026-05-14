@@ -16,5 +16,11 @@
     "abqari/index.php": {
       "runtime": "vercel-php@0.7.2"
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/abqari/(?<slug>[^/]+)",
+      "dest": "/abqari/index.php?slug=$slug"
+    }
+  ]
 }
