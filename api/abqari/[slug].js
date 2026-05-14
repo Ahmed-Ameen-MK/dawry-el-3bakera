@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     try {
       // جلب المستخدم من Supabase
       const userRes = await fetch(
-        `${SB_URL}/rest/v1/system?slug=eq.${encodeURIComponent(slug)}&select=id,name,email,points,country,avatar`,
+        `${SB_URL}/rest/v1/system?slug=eq.${encodeURIComponent(slug)}&select=id,name,email,points,country`,
         { headers: SB_HEADERS }
       );
       const userData = await userRes.json();
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   const email   = escHtml(user?.email   ?? '');
   const points  = parseInt(user?.points ?? 0);
   const country = escHtml(user?.country ?? '');
-  const avatar  = escHtml(user?.avatar  ?? '');
+  const avatar  = ''; // الصور مخفية - يظهر الحرف الأول دائماً
   const initial = name.slice(0, 1);
   const slugSafe = escHtml(slug ?? '');
 
