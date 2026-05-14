@@ -1429,7 +1429,7 @@ async function loadMiniLeaderboard() {
 let lbAllData = [];
 
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url,slug&order=level.desc&limit=100', { method: 'GET' });
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
@@ -1463,7 +1463,7 @@ function renderLeaderboard(data, highlight='') {
       nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
     }
     return `
-    <div class="lb-row">
+    <div class="lb-row" style="cursor:pointer" onclick="if(this.dataset.slug) window.location.href='/abqari/'+this.dataset.slug" data-slug="${u.slug || ''}">
       <div class="lb-rank ${rankClass[globalRank]||''}">
         ${globalRank === 0 ? '<i class="fa-solid fa-medal"></i>' : globalRank === 1 ? '<i class="fa-solid fa-medal" style="color:#aaa"></i>' : globalRank === 2 ? '<i class="fa-solid fa-medal" style="color:#b07d4a"></i>' : displayRank}
       </div>

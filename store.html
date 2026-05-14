@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متجر دوري العباقرة</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg:#ffffff; --bg2:#f5f5f7; --bg3:#e8e8ed;
+  --ink:#1d1d1f; --ink2:#3d3d3f; --ink3:#6e6e73;
+  --line:#d2d2d7; --line2:rgba(0,0,0,0.06);
+  --blue:#0071e3; --blue-hover:#0077ed;
+  --green:#1d8348; --green-bg:#f0faf4;
+  --red:#c0392b; --red-bg:#fef1ef;
+  --gold:#b5882e; --gold-bg:#fdf6e3;
+  --radius:18px; --radius-sm:10px;
+  --shadow:0 2px 20px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'El Messiri',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.9);backdrop-filter:blur(20px)}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
+.brand{font-size:17px;font-weight:700;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand i{color:var(--blue)}
+.back-btn{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-family:'El Messiri',sans-serif;font-size:13px;font-weight:500;color:var(--ink2);text-decoration:none;transition:all 0.15s;cursor:pointer}
+.back-btn:hover{background:var(--bg3)}
+
+/* ── HERO ── */
+.store-hero{text-align:center;padding:52px 24px 40px;background:linear-gradient(180deg,#f5f5f7 0%,#fff 100%);border-bottom:1px solid var(--line2)}
+.store-hero .eyebrow{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold-bg),#fff9e6);color:var(--gold);border:1px solid rgba(181,136,46,0.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:0.5px;margin-bottom:14px}
+.store-hero h1{font-size:clamp(28px,5vw,52px);font-weight:700;letter-spacing:-1.5px;color:var(--ink);margin-bottom:10px}
+.store-hero h1 span{color:var(--blue)}
+.store-hero p{font-size:15px;color:var(--ink3)}
+
+/* ── BALANCE BAR ── */
+.balance-bar{max-width:680px;margin:0 auto;padding:0 24px}
+.balance-card{background:var(--ink);border-radius:var(--radius);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;margin:28px 0 36px;gap:16px;flex-wrap:wrap}
+.balance-card .lbl{font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:4px}
+.balance-card .pts{font-size:32px;font-weight:700;color:#fff;letter-spacing:-1px;display:flex;align-items:center;gap:8px}
+.balance-card .pts i{font-size:18px;color:#f0c040}
+.balance-card .user-name{font-size:14px;color:rgba(255,255,255,0.7)}
+.not-logged{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px 28px;text-align:center;margin:28px 0 36px;font-size:14px;color:var(--ink3)}
+.not-logged a{color:var(--blue);text-decoration:none;font-weight:600}
+
+/* ── GRID ── */
+.store-grid{max-width:680px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+/* ── ITEM CARD ── */
+.item-card{background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:all 0.2s;position:relative}
+.item-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.item-card.owned{border-color:rgba(29,131,72,0.35);background:linear-gradient(160deg,#fff 70%,var(--green-bg) 100%)}
+.item-img-wrap{background:linear-gradient(135deg,#f8f8fa,#efeff2);padding:32px;text-align:center;border-bottom:1px solid var(--line2);position:relative}
+.item-img-wrap img{width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.12));transition:transform 0.3s}
+.item-card:hover .item-img-wrap img{transform:scale(1.08) translateY(-4px)}
+.item-img-wrap .item-badge{position:absolute;top:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+.badge-owned{background:var(--green);color:#fff}
+.badge-rare{background:linear-gradient(135deg,#b5882e,#f0c040);color:#fff}
+.badge-legendary{background:linear-gradient(135deg,#7b2ff7,#e040fb);color:#fff}
+
+.item-body{padding:18px 20px 20px}
+.item-name{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:-0.3px}
+.item-desc{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:16px}
+.item-price{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700;color:var(--gold);margin-bottom:14px}
+.item-price i{font-size:13px}
+.item-price .price-num{font-size:22px;letter-spacing:-0.5px}
+
+.buy-btn{width:100%;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'El Messiri',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.buy-btn.available{background:var(--blue);color:#fff}
+.buy-btn.available:hover{background:var(--blue-hover)}
+.buy-btn.available:active{transform:scale(0.97)}
+.buy-btn.no-funds{background:var(--bg2);color:var(--ink3);border:1px solid var(--line);cursor:not-allowed}
+.buy-btn.already-owned{background:var(--green-bg);color:var(--green);border:1px solid rgba(29,131,72,0.25);cursor:default}
+
+/* ── MODAL CONFIRM ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:36px 32px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);animation:pop 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;text-align:center}
+@keyframes pop{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:14px;left:14px;width:30px;height:30px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--ink3);transition:all 0.15s}
+.modal-close:hover{background:var(--bg3);color:var(--ink)}
+.modal-img{width:80px;height:80px;object-fit:contain;margin:0 auto 16px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.12))}
+.modal-title{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:6px;letter-spacing:-0.4px}
+.modal-sub{font-size:14px;color:var(--ink3);margin-bottom:20px}
+.modal-price-row{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold-bg);border:1px solid rgba(181,136,46,0.3);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px}
+.modal-price-row .arrow{font-size:13px;color:var(--ink3)}
+.modal-price-row .before{font-size:14px;color:var(--ink3)}
+.modal-price-row .after{font-size:14px;color:var(--green);font-weight:700}
+.modal-price-row .cost{font-size:17px;font-weight:800;color:var(--gold)}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-family:'El Messiri',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn-confirm{background:var(--blue);color:#fff}
+.btn-confirm:hover{background:var(--blue-hover)}
+.btn-cancel{background:var(--bg2);color:var(--ink);border:1px solid var(--line) !important}
+.btn-cancel:hover{background:var(--bg3)}
+
+/* ── SUCCESS TOAST ── */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:500;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast i{color:#4ade80}
+
+/* ── LOADING ── */
+.skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+@media(max-width:520px){
+  .store-grid{grid-template-columns:1fr}
+  .balance-card{padding:16px 20px}
+  .balance-card .pts{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="brand" href="/"><i class="fa-solid fa-trophy"></i> دوري العباقرة</a>
+    <a class="back-btn" href="/"><i class="fa-solid fa-arrow-right"></i> الرئيسية</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="store-hero">
+  <div class="eyebrow"><i class="fa-solid fa-star"></i> متجر الجوائز</div>
+  <h1>أنفق نقاطك على <span>جوائز حصرية</span></h1>
+  <p>اشترِ ألقاباً فريدة تُعرض على صفحتك الشخصية للعالم كله</p>
+</div>
+
+<!-- BALANCE -->
+<div class="balance-bar">
+  <div id="balance-area"></div>
+</div>
+
+<!-- ITEMS GRID -->
+<div class="store-grid" id="store-grid">
+  <!-- Skeleton loaders -->
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:154px"></div><div class="item-body"><div class="skeleton" style="height:18px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;border-radius:6px;width:60%;margin-bottom:16px"></div><div class="skeleton" style="height:44px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:154px"></div><div class="item-body"><div class="skeleton" style="height:18px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;border-radius:6px;width:60%;margin-bottom:16px"></div><div class="skeleton" style="height:44px;border-radius:10px"></div></div></div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-box">
+    <div class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></div>
+    <img class="modal-img" id="modal-item-img" src="" alt="">
+    <div class="modal-title" id="modal-item-name"></div>
+    <div class="modal-sub">هل أنت متأكد من شراء هذه الجائزة؟</div>
+    <div class="modal-price-row">
+      <span class="before" id="modal-before"></span>
+      <span class="arrow">→</span>
+      <span class="after" id="modal-after"></span>
+      <span style="flex:1"></span>
+      <i class="fa-solid fa-star" style="color:var(--gold);font-size:12px"></i>
+      <span class="cost" id="modal-cost"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-confirm" id="modal-confirm-btn" onclick="confirmPurchase()">
+        <i class="fa-solid fa-check"></i> تأكيد الشراء
+      </button>
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i> <span id="toast-msg"></span></div>
+
+<script>
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': `Bearer ${SB_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SB_URL + path, {
+    ...opts,
+    headers: { ...SB_HEADERS, ...(opts.headers || {}) }
+  });
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return null; }
+}
+
+// ── الجوائز المتاحة ──
+const ITEMS = [
+  {
+    key: 'p1',
+    name: 'المخ الفضي',
+    desc: 'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون 70 نقطة صدارة.',
+    price: 70,
+    img: '/store/p1.png',
+    badge: 'نادر',
+    badgeClass: 'badge-rare'
+  },
+  {
+    key: 'p2',
+    name: 'المخ الذهبي',
+    desc: 'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.',
+    price: 300,
+    img: '/store/p2.png',
+    badge: 'ذهبي',
+    badgeClass: 'badge-rare'
+  },
+  {
+    key: 'p3',
+    name: 'كأس العباقرة',
+    desc: 'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.',
+    price: 990,
+    img: '/store/p3.png',
+    badge: 'أسطوري',
+    badgeClass: 'badge-legendary'
+  },
+  {
+    key: 'p4',
+    name: 'إمبراطور العباقرة',
+    desc: 'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.',
+    price: 1500,
+    img: '/store/p4.png',
+    badge: 'إمبراطور',
+    badgeClass: 'badge-legendary'
+  }
+];
+
+let currentUser = null;
+let storeData = null; // store row for current user
+let pendingItem = null;
+
+// ── تحميل المستخدم من localStorage ──
+function loadUser() {
+  try {
+    const saved = localStorage.getItem('genius_user');
+    if (saved) currentUser = JSON.parse(saved);
+  } catch {}
+}
+
+// ── عرض رصيد المستخدم ──
+function renderBalance() {
+  const el = document.getElementById('balance-area');
+  if (!currentUser) {
+    el.innerHTML = `<div class="not-logged"><i class="fa-solid fa-circle-info" style="margin-left:6px;color:var(--blue)"></i> يجب <a href="/">تسجيل الدخول</a> لتتمكن من الشراء</div>`;
+    return;
+  }
+  const pts = currentUser.level || 0;
+  el.innerHTML = `
+    <div class="balance-card">
+      <div>
+        <div class="lbl">رصيدك من نقاط الصدارة</div>
+        <div class="pts"><i class="fa-solid fa-star"></i> ${pts.toLocaleString('ar-EG')}</div>
+        <div class="user-name">${currentUser.name || ''}</div>
+      </div>
+      <i class="fa-solid fa-wallet" style="font-size:32px;color:rgba(255,255,255,0.2)"></i>
+    </div>`;
+}
+
+// ── جلب بيانات المتجر للمستخدم ──
+async function loadStoreData() {
+  if (!currentUser) return null;
+  const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`);
+  if (res && res[0]) {
+    storeData = res[0];
+  } else {
+    storeData = null;
+  }
+  return storeData;
+}
+
+// ── رسم البطاقات ──
+function renderItems() {
+  const grid = document.getElementById('store-grid');
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+
+  grid.innerHTML = ITEMS.map(item => {
+    const owned = storeData && storeData[item.key] == 1;
+    const canAfford = pts >= item.price;
+
+    let btnHtml = '';
+    if (owned) {
+      btnHtml = `<button class="buy-btn already-owned"><i class="fa-solid fa-check-circle"></i> تمتلكها بالفعل</button>`;
+    } else if (!currentUser) {
+      btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول للشراء</button>`;
+    } else if (canAfford) {
+      btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}')"><i class="fa-solid fa-bag-shopping"></i> شراء الآن</button>`;
+    } else {
+      btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
+    }
+
+    return `
+    <div class="item-card${owned ? ' owned' : ''}">
+      <div class="item-img-wrap">
+        <img src="${item.img}" alt="${item.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'90\\' height=\\'90\\'><rect width=\\'90\\' height=\\'90\\' rx=\\'12\\' fill=\\'%23e8e8ed\\'/><text x=\\'45\\' y=\\'55\\' text-anchor=\\'middle\\' font-size=\\'32\\'>🏆</text></svg>'">
+        <span class="item-badge ${owned ? 'badge-owned' : item.badgeClass}">${owned ? '✓ تمتلكها' : item.badge}</span>
+      </div>
+      <div class="item-body">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price.toLocaleString('ar-EG')}</span> نقطة صدارة</div>
+        ${btnHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── فتح نافذة التأكيد ──
+function openConfirm(key) {
+  if (!currentUser) return;
+  const item = ITEMS.find(i => i.key === key);
+  if (!item) return;
+  pendingItem = item;
+  const pts = currentUser.level || 0;
+  document.getElementById('modal-item-img').src = item.img;
+  document.getElementById('modal-item-name').textContent = item.name;
+  document.getElementById('modal-before').textContent = `${pts.toLocaleString('ar-EG')} ☆`;
+  document.getElementById('modal-after').textContent = `${(pts - item.price).toLocaleString('ar-EG')} ☆`;
+  document.getElementById('modal-cost').textContent = `${item.price.toLocaleString('ar-EG')} ☆`;
+  document.getElementById('modal-confirm').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-confirm').classList.remove('show');
+  pendingItem = null;
+}
+
+// ── تنفيذ الشراء ──
+async function confirmPurchase() {
+  if (!currentUser || !pendingItem) return;
+  const item = pendingItem;
+  const pts = currentUser.level || 0;
+  if (pts < item.price) { showToast('نقاط غير كافية!', true); closeModal(); return; }
+
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الشراء...';
+
+  // خصم النقاط من system
+  const newLevel = pts - item.price;
+  const sysRes = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ level: newLevel })
+  });
+
+  if (!sysRes && sysRes !== null) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> تأكيد الشراء';
+    showToast('حدث خطأ، حاول مجدداً', true);
+    return;
+  }
+
+  // تحديث جدول store
+  const storeUpdate = { [item.key]: 1 };
+  if (storeData) {
+    // صف موجود → PATCH
+    await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(storeUpdate)
+    });
+  } else {
+    // صف جديد → POST
+    await sbFetch(`/rest/v1/store`, {
+      method: 'POST',
+      body: JSON.stringify({ id: currentUser.id, name: currentUser.name, ...storeUpdate })
+    });
+  }
+
+  // تحديث محلي
+  currentUser.level = newLevel;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
+  storeData[item.key] = 1;
+
+  closeModal();
+  renderBalance();
+  renderItems();
+  showToast(`تم شراء "${item.name}" بنجاح! 🎉`);
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.querySelector('i').className = isError ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-check-circle';
+  t.querySelector('i').style.color = isError ? '#f87171' : '#4ade80';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── إغلاق الـ modal عند النقر خارجه ──
+document.getElementById('modal-confirm').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── تشغيل ──
+async function init() {
+  loadUser();
+  renderBalance();
+  await loadStoreData();
+  renderItems();
+}
+
+init();
+</script>
+</body>
+</html>
