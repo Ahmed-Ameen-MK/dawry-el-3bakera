@@ -235,11 +235,10 @@ async function doRegister() {
   const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`, { method: 'GET' });
   if (check && check.length > 0) return showMsg(msgEl, 'هذا البريد مسجل مسبقاً', 'error');
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  showMsg(msgEl, 'جاري إنشاء الحساب...', 'info');
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug: name.trim().replace(/\s+/g, '-'), match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');
@@ -396,6 +395,7 @@ async function handleGoogleCallback(preToken) {
     email: email,
     password: 'google-oauth',
     country,
+    slug: googleName.trim().replace(/\s+/g, '-'),
     avatar_url: googleAvatar,
     match: 'off',
     points: 0,
@@ -463,6 +463,7 @@ async function handleGithubCallback(accessToken) {
     email: email,
     password: 'github-oauth',
     country,
+    slug: githubName.trim().replace(/\s+/g, '-'),
     avatar_url: githubAvatar,
     match: 'off',
     points: 0,
@@ -1432,7 +1433,7 @@ function renderLeaderboard(data, highlight='') {
       nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
     }
     return `
-    <div class="lb-row" style="cursor:pointer" onclick="window.location.href='/abqari/'+this.dataset.name.replace(/\\s+/g,'-')" data-name="${(u.name||'').replace(/"/g,'&quot;')}">
+    <div class="lb-row" style="cursor:pointer" onclick="window.location.href='/abqari/${(u.name||'').trim().replace(/\s+/g,'-')}'" >
       <div class="lb-rank ${rankClass[globalRank]||''}">
         ${globalRank === 0 ? '<i class="fa-solid fa-medal"></i>' : globalRank === 1 ? '<i class="fa-solid fa-medal" style="color:#aaa"></i>' : globalRank === 2 ? '<i class="fa-solid fa-medal" style="color:#b07d4a"></i>' : displayRank}
       </div>
