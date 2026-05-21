@@ -1,6 +1,6 @@
 // api/abqari/[slug].js
-// يعمل كـ Vercel Serverless Function بدلاً من index.php
-// الأرشفة تعتمد على عمود name مع استبدال الفراغات بـ -
+// يعمل كـ Vercel Serverless Function
+// الأرشفة تعتمد على عمود name مع استبدال الفراغات بـ - في الرابط
 
 const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
@@ -31,11 +31,10 @@ export default async function handler(req, res) {
     error = 'رابط غير صحيح';
   } else {
     try {
-      // تحويل slug إلى اسم: استبدال - بفراغ للبحث
-      // نبحث عن جميع الصفوف ونقارن بعد التطبيع
+      // تحويل الرابط إلى اسم: استبدال الشرطات بفراغات للبحث
       const nameFromSlug = slug.replace(/-/g, ' ');
 
-      // جلب المستخدمين الذين يتطابق اسمهم (case-insensitive via ilike)
+      // البحث بالاسم (case-insensitive)
       const userRes = await fetch(
         `${SB_URL}/rest/v1/system?name=ilike.${encodeURIComponent(nameFromSlug)}&select=id,name,email,points,country`,
         { headers: SB_HEADERS }
@@ -78,7 +77,8 @@ export default async function handler(req, res) {
   const country = escHtml(user?.country ?? '');
   const avatar  = '';
   const initial = name.slice(0, 1);
-  const slugSafe = escHtml(slug ?? '');
+  // إعادة بناء الرابط من الاسم الفعلي (وليس من slug المُدخل)
+  const slugSafe = user?.name ? escHtml(user.name.trim().replace(/\s+/g, '-')) : escHtml(slug ?? '');
 
   // لون الرانك
   let rankColor = '#0071e3';
