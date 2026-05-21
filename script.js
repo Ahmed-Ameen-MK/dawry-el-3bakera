@@ -238,7 +238,7 @@ async function doRegister() {
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug: name.trim().replace(/\s+/g, '-'), match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    body: JSON.stringify({ id: newId, name, email, password: pass, country, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');
@@ -395,7 +395,6 @@ async function handleGoogleCallback(preToken) {
     email: email,
     password: 'google-oauth',
     country,
-    slug: googleName.trim().replace(/\s+/g, '-'),
     avatar_url: googleAvatar,
     match: 'off',
     points: 0,
@@ -463,7 +462,6 @@ async function handleGithubCallback(accessToken) {
     email: email,
     password: 'github-oauth',
     country,
-    slug: githubName.trim().replace(/\s+/g, '-'),
     avatar_url: githubAvatar,
     match: 'off',
     points: 0,
