@@ -208,36 +208,10 @@ function switchAuthTab(tab) {
   }
 }
 
-// ==================== SLUG HELPER ====================
-function generateSlug(name) {
-  // يحافظ على العربية كما هي، والإنجليزية بحروف صغيرة
-  // المسافات تتحول إلى - فقط، ويُزال أي رمز غير مقبول
-  let slug = name.trim();
-  // حروف صغيرة للإنجليزية فقط (العربية لا تتأثر)
-  slug = slug.toLowerCase();
-  // المسافات → شرطة
-  slug = slug.replace(/\s+/g, '-');
-  // الحفاظ على: عربي + إنجليزي + أرقام + شرطة
-  slug = slug.replace(/[^\u0600-\u06FFa-z0-9\-]/g, '');
-  // إزالة الشرطات المكررة والشرطة في البداية/النهاية
-  slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
-  return slug || 'user';
-}
-
-// يولّد slug فريداً: يتحقق من قاعدة البيانات ويضيف رقماً بسيطاً لو كان مكرراً
-async function generateUniqueSlug(name) {
-  const base = generateSlug(name);
-  // جرّب الاسم كما هو أولاً
-  const check = await sbFetch(`/rest/v1/system?slug=eq.${encodeURIComponent(base)}&select=id`, { method: 'GET' });
-  if (!check || check.length === 0) return base;
-  // لو مكرر → جرّب base-2، base-3 ...
-  for (let i = 2; i <= 99; i++) {
-    const candidate = `${base}-${i}`;
-    const c2 = await sbFetch(`/rest/v1/system?slug=eq.${encodeURIComponent(candidate)}&select=id`, { method: 'GET' });
-    if (!c2 || c2.length === 0) return candidate;
-  }
-  // fallback: رقم عشوائي قصير
-  return `${base}-${Math.floor(Math.random() * 9000) + 1000}`;
+// ==================== NAME → URL HELPER ====================
+// يحوّل اسم المستخدم إلى URL-slug: مسافات → - فقط
+function nameToSlug(name) {
+  return (name || '').trim().replace(/\s+/g, '-');
 }
 
 // ==================== AUTH ====================
@@ -261,12 +235,10 @@ async function doRegister() {
   const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id`, { method: 'GET' });
   if (check && check.length > 0) return showMsg(msgEl, 'هذا البريد مسجل مسبقاً', 'error');
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  showMsg(msgEl, 'جاري إنشاء الحساب... (توليد الرابط الشخصي)', 'info');
-  const slug = await generateUniqueSlug(name);
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, slug: slug || generateSlug(name) || 'user-' + newId, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    body: JSON.stringify({ id: newId, name, email, password: pass, country, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');
@@ -417,14 +389,12 @@ async function handleGoogleCallback(preToken) {
   // New user — create record in system table
   const country = await getCountry();
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  const slug = await generateUniqueSlug(googleName);
   const newUser = {
     id: newId,
     name: googleName,
     email: email,
     password: 'google-oauth',
     country,
-    slug,
     avatar_url: googleAvatar,
     match: 'off',
     points: 0,
@@ -486,14 +456,12 @@ async function handleGithubCallback(accessToken) {
   // New GitHub user — create record
   const country = await getCountry();
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  const slug = await generateUniqueSlug(githubName);
   const newUser = {
     id: newId,
     name: githubName,
     email: email,
     password: 'github-oauth',
     country,
-    slug,
     avatar_url: githubAvatar,
     match: 'off',
     points: 0,
