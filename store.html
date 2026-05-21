@@ -55,10 +55,11 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .item-card{background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:all 0.2s;position:relative}
 .item-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
 .item-card.owned{border-color:rgba(29,131,72,0.35);background:linear-gradient(160deg,#fff 70%,var(--green-bg) 100%)}
-.item-img-wrap{background:linear-gradient(135deg,#f8f8fa,#efeff2);padding:32px;text-align:center;border-bottom:1px solid var(--line2);position:relative}
-.item-img-wrap img{width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.12));transition:transform 0.3s}
-.item-card:hover .item-img-wrap img{transform:scale(1.08) translateY(-4px)}
+.item-img-wrap{position:relative;overflow:hidden;border-bottom:none}
+.item-img-wrap img{width:100%;height:auto;display:block;object-fit:cover;transition:transform 0.35s ease}
+.item-card:hover .item-img-wrap img{transform:scale(1.04)}
 .item-img-wrap .item-badge{position:absolute;top:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+.item-section-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 100%);padding:18px 14px 10px;font-size:13px;font-weight:700;color:#fff;letter-spacing:0.2px}
 .badge-owned{background:var(--green);color:#fff}
 .badge-rare{background:linear-gradient(135deg,#b5882e,#f0c040);color:#fff}
 .badge-legendary{background:linear-gradient(135deg,#7b2ff7,#e040fb);color:#fff}
@@ -194,6 +195,7 @@ const ITEMS = [
   {
     key: 'p1',
     name: 'المخ الفضي',
+    section: 'جوائز الصدارة',
     desc: 'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون 70 نقطة صدارة.',
     price: 70,
     img: '/store/p1.png',
@@ -203,6 +205,7 @@ const ITEMS = [
   {
     key: 'p2',
     name: 'المخ الذهبي',
+    section: 'جوائز الصدارة',
     desc: 'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.',
     price: 300,
     img: '/store/p2.png',
@@ -212,6 +215,7 @@ const ITEMS = [
   {
     key: 'p3',
     name: 'كأس العباقرة',
+    section: 'ألقاب أسطورية',
     desc: 'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.',
     price: 990,
     img: '/store/p3.png',
@@ -221,6 +225,7 @@ const ITEMS = [
   {
     key: 'p4',
     name: 'إمبراطور العباقرة',
+    section: 'ألقاب أسطورية',
     desc: 'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.',
     price: 1500,
     img: '/store/p4.png',
@@ -295,8 +300,9 @@ function renderItems() {
     return `
     <div class="item-card${owned ? ' owned' : ''}">
       <div class="item-img-wrap">
-        <img src="${item.img}" alt="${item.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'90\\' height=\\'90\\'><rect width=\\'90\\' height=\\'90\\' rx=\\'12\\' fill=\\'%23e8e8ed\\'/><text x=\\'45\\' y=\\'55\\' text-anchor=\\'middle\\' font-size=\\'32\\'>🏆</text></svg>'">
+        <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='180px'">
         <span class="item-badge ${owned ? 'badge-owned' : item.badgeClass}">${owned ? '✓ تمتلكها' : item.badge}</span>
+        <div class="item-section-label"><i class="fa-solid fa-trophy" style="margin-left:5px;font-size:11px;opacity:0.85"></i>${item.section || item.name}</div>
       </div>
       <div class="item-body">
         <div class="item-name">${item.name}</div>
