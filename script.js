@@ -214,6 +214,26 @@ function nameToSlug(name) {
   return (name || '').trim().replace(/\s+/g, '-');
 }
 
+// ==================== NEW USER OBJECT ====================
+// يبني كائن المستخدم الجديد بالأعمدة الأساسية فقط
+function buildNewUserObj({ id, name, email, password, country, avatar_url }) {
+  const obj = {
+    id,
+    name,
+    email,
+    password,
+    country: country || 'غير معروف',
+    points: 0,
+    level: 0,
+    match: 'off',
+    question: 0,
+    answer: 'none',
+    'match-message': ''
+  };
+  if (avatar_url) obj.avatar_url = avatar_url;
+  return obj;
+}
+
 // ==================== AUTH ====================
 async function doRegister() {
   const name = document.getElementById('reg-name').value.trim();
@@ -238,15 +258,21 @@ async function doRegister() {
   const res = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
-    body: JSON.stringify({ id: newId, name, email, password: pass, country, match: 'off', points: 0, question: 0, answer: 'none', 'match-message': '' })
+    body: JSON.stringify(buildNewUserObj({ id: newId, name, email, password: pass, country }))
   });
   if (res && res[0] && res[0].id) {
     showMsg(msgEl, 'تم إنشاء الحساب بنجاح!', 'success');
     setTimeout(() => { loginUser(res[0]); }, 1000);
   } else if (res && res.__error) {
-    showMsg(msgEl, `خطأ: ${res.message || res.hint || JSON.stringify(res)}`, 'error');
+    // عرض الخطأ الفعلي من قاعدة البيانات
+    const errMsg = res.message || res.hint || res.details || JSON.stringify(res);
+    showMsg(msgEl, 'خطأ من قاعدة البيانات: ' + errMsg, 'error');
+    console.error('Registration Supabase error:', res);
+  } else if (res === null) {
+    showMsg(msgEl, 'فشل الاتصال بالخادم، حاول مجدداً', 'error');
   } else {
-    showMsg(msgEl, `حدث خطأ: ${JSON.stringify(res)}`, 'error');
+    showMsg(msgEl, 'خطأ غير متوقع: ' + JSON.stringify(res), 'error');
+    console.error('Registration unexpected response:', res);
   }
 }
 
@@ -259,7 +285,7 @@ async function doLogin() {
   const turnstileToken = document.querySelector('#turnstile-login [name="cf-turnstile-response"]');
   if (!turnstileToken || !turnstileToken.value) return showMsg(msgEl, 'يرجى إتمام التحقق الأمني أولاً', 'error');
   showMsg(msgEl, 'جاري التحقق...', 'info');
-  const res = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&select=*`, { method: 'GET' });
+  const res = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&select=id,name,email,password,country,level,points,match,question,answer,avatar_url`, { method: 'GET' });
   if (res && res.length > 0) { loginUser(res[0]); }
   else { showMsg(msgEl, 'البريد أو كلمة المرور غير صحيحة', 'error'); }
 }
@@ -371,7 +397,7 @@ async function handleGoogleCallback(preToken) {
   localStorage.setItem('genius_sb_token', accessToken);
 
   // Check if user already exists in system table
-  const existing = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=*`, { method: 'GET' });
+  const existing = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id,name,email,password,country,level,points,match,question,answer,avatar_url`, { method: 'GET' });
   if (existing && existing.length > 0) {
     // Update avatar if from Google
     let user = existing[0];
@@ -389,19 +415,7 @@ async function handleGoogleCallback(preToken) {
   // New user — create record in system table
   const country = await getCountry();
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  const newUser = {
-    id: newId,
-    name: googleName,
-    email: email,
-    password: 'google-oauth',
-    country,
-    avatar_url: googleAvatar,
-    match: 'off',
-    points: 0,
-    question: 0,
-    answer: 'none',
-    'match-message': ''
-  };
+  const newUser = buildNewUserObj({ id: newId, name: googleName, email, password: 'google-oauth', country, avatar_url: googleAvatar });
   const created = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
@@ -439,7 +453,7 @@ async function handleGithubCallback(accessToken) {
   localStorage.setItem('genius_sb_token', accessToken);
 
   // Check if user already exists
-  const existing = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=*`, { method: 'GET' });
+  const existing = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(email)}&select=id,name,email,password,country,level,points,match,question,answer,avatar_url`, { method: 'GET' });
   if (existing && existing.length > 0) {
     let user = existing[0];
     if (githubAvatar && !user.avatar_url) {
@@ -456,19 +470,7 @@ async function handleGithubCallback(accessToken) {
   // New GitHub user — create record
   const country = await getCountry();
   const newId = Date.now() + Math.floor(Math.random() * 9999);
-  const newUser = {
-    id: newId,
-    name: githubName,
-    email: email,
-    password: 'github-oauth',
-    country,
-    avatar_url: githubAvatar,
-    match: 'off',
-    points: 0,
-    question: 0,
-    answer: 'none',
-    'match-message': ''
-  };
+  const newUser = buildNewUserObj({ id: newId, name: githubName, email, password: 'github-oauth', country, avatar_url: githubAvatar });
   const created = await sbFetch('/rest/v1/system', {
     method: 'POST',
     headers: { 'Prefer': 'return=representation' },
@@ -1397,8 +1399,26 @@ async function loadMiniLeaderboard() {
 let lbAllData = [];
 
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100', { method: 'GET' });
   const el = document.getElementById('lb-list');
+  el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+  // جرب level أولاً — إن فشل جرب points
+  let data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100', { method: 'GET' });
+  if (data && data.__error) {
+    // العمود قد يكون points بدلاً من level
+    data = await sbFetch('/rest/v1/system?select=name,country,points,avatar_url&order=points.desc&limit=100', { method: 'GET' });
+    if (data && !data.__error && Array.isArray(data)) {
+      // normalise: أعد تسمية points إلى level للعرض
+      data = data.map(u => ({ ...u, level: u.points }));
+    }
+  }
+  if (data && data.__error) {
+    el.innerHTML = '<div style="text-align:center;color:#c0392b;padding:20px;font-size:13px">خطأ في جلب البيانات: ' + (data.message || data.hint || JSON.stringify(data)) + '</div>';
+    return;
+  }
+  if (data === null) {
+    el.innerHTML = '<div style="text-align:center;color:#c0392b;padding:20px;font-size:13px"><i class="fa-solid fa-triangle-exclamation" style="margin-left:6px"></i>تعذّر تحميل البيانات، تحقق من الاتصال وأعد المحاولة</div>';
+    return;
+  }
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
     return;
@@ -1957,7 +1977,7 @@ if (window.location.hash && window.location.hash.includes('access_token')) {
 } else if (saved) {
   try {
     currentUser = JSON.parse(saved);
-    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=*`, { method: 'GET' }).then(res => {
+    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=id,name,email,password,country,level,points,match,question,answer,avatar_url`, { method: 'GET' }).then(res => {
       if (res && res[0]) { currentUser = res[0]; localStorage.setItem('genius_user', JSON.stringify(currentUser)); }
       showDashboard();
     });
