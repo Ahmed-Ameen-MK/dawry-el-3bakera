@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حسابي — مكتبة صندوق الكتب PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --gold-dark: #8B6914;
+    --ink: #0D0D0D;
+    --cream: #F7F3EC;
+    --cream-dark: #EDE5D8;
+    --white: #FFFFFF;
+    --text-muted: #6B6B7A;
+    --border: #D5CFC4;
+    --error: #B5311A;
+    --error-bg: #FAF0EE;
+    --success: #2D7A3A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'El Messiri', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    direction: rtl;
+    min-height: 100vh;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    background: var(--ink);
+    border-bottom: 3px solid var(--gold);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 3rem; height: 68px;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 36px; height: 36px; background: var(--gold); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .logo-main { color: var(--white); font-size: 15px; font-weight: 700; }
+  .logo-sub { color: var(--gold); font-size: 10px; letter-spacing: 2px; display: block; }
+
+  .nav-back { display: flex; align-items: center; gap: 6px; color: #aaa; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+  .nav-back:hover { color: var(--gold); }
+
+  /* PAGE HEADER */
+  .page-header {
+    background: var(--ink);
+    padding: 2.5rem 3rem 3rem;
+    position: relative; overflow: hidden;
+  }
+
+  .page-header::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .header-inner { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .header-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; margin-bottom: 1.5rem; }
+  .header-breadcrumb a { color: var(--gold); text-decoration: none; }
+
+  /* PROFILE CARD */
+  .profile-wrap {
+    display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+  }
+
+  .avatar-circle {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink); font-size: 2.2rem; font-weight: 700;
+    flex-shrink: 0;
+    border: 3px solid rgba(201,168,76,0.4);
+  }
+
+  .profile-info { flex: 1; }
+
+  .profile-name {
+    font-size: 1.8rem; font-weight: 700; color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .profile-position {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.35);
+    color: var(--gold); padding: 4px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .profile-meta {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+  }
+
+  .profile-meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #888; }
+  .profile-meta-item .material-icons-round { font-size: 15px; color: var(--gold); }
+
+  /* MAIN LAYOUT */
+  .main-wrap {
+    max-width: 1000px; margin: 0 auto;
+    padding: 2.5rem 3rem;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* SIDEBAR */
+  .sidebar-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .sidebar-card-header {
+    padding: 1rem 1.4rem;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .sidebar-card-header .material-icons-round { color: var(--gold); font-size: 18px; }
+  .sidebar-card-body { padding: 1.4rem; }
+
+  .info-row {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 10px 0; border-bottom: 1px solid var(--cream-dark);
+  }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .info-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; }
+  .info-val { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  /* DANGER ZONE */
+  .danger-card {
+    background: var(--white);
+    border: 1.5px solid #e5b8b2;
+  }
+
+  .danger-header {
+    padding: 1rem 1.4rem;
+    background: var(--error-bg);
+    border-bottom: 1.5px solid #e5b8b2;
+    font-size: 13px; font-weight: 700; color: var(--error);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .danger-body { padding: 1.4rem; display: flex; flex-direction: column; gap: 10px; }
+
+  .btn-logout {
+    width: 100%; background: var(--ink); color: var(--white);
+    border: none; padding: 12px;
+    font-family: 'El Messiri', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-logout:hover { background: #333; }
+
+  .btn-delete {
+    width: 100%; background: transparent; color: var(--error);
+    border: 1.5px solid var(--error); padding: 12px;
+    font-family: 'El Messiri', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-delete:hover { background: var(--error); color: var(--white); }
+
+  /* BOOKS SECTION */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.2rem; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .section-title .material-icons-round { color: var(--gold); }
+
+  .books-count-badge {
+    background: var(--gold); color: var(--ink);
+    font-size: 11px; font-weight: 700;
+    padding: 2px 10px; letter-spacing: 1px;
+  }
+
+  .btn-publish-new {
+    background: var(--gold); color: var(--ink); border: none;
+    padding: 10px 20px;
+    font-family: 'El Messiri', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .btn-publish-new:hover { background: var(--gold-dark); color: var(--white); }
+
+  /* BOOKS GRID */
+  .my-books-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+
+  .my-book-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    display: flex; gap: 12px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .my-book-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  .my-book-cover {
+    width: 60px; height: 85px;
+    object-fit: cover; flex-shrink: 0;
+  }
+
+  .my-book-cover-placeholder {
+    width: 60px; height: 85px; flex-shrink: 0;
+    background: linear-gradient(135deg, #1A3A5C, #2D6A9F);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .my-book-info { flex: 1; min-width: 0; }
+
+  .my-book-title {
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    line-height: 1.4; margin-bottom: 6px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .my-book-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    letter-spacing: 1px; margin-bottom: 8px;
+  }
+
+  .status-on { background: rgba(45,122,58,0.1); color: var(--success); border: 1px solid rgba(45,122,58,0.3); }
+  .status-pending { background: rgba(181,49,26,0.1); color: var(--error); border: 1px solid rgba(181,49,26,0.3); }
+
+  .my-book-stats {
+    display: flex; gap: 12px;
+  }
+
+  .my-book-stat {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  .my-book-stat .material-icons-round { font-size: 13px; }
+
+  /* EMPTY */
+  .empty-books {
+    grid-column: 1 / -1; text-align: center;
+    padding: 3rem 2rem; color: var(--text-muted);
+    background: var(--white); border: 1.5px dashed var(--border);
+  }
+
+  .empty-books .material-icons-round { font-size: 3rem; color: var(--gold-light); display: block; margin-bottom: 1rem; }
+  .empty-books h3 { font-size: 1.1rem; color: var(--ink); margin-bottom: 0.5rem; }
+  .empty-books p { font-size: 13px; margin-bottom: 1.2rem; }
+
+  /* LOADER */
+  .loader-row { grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted); }
+  .loader-spin { width: 40px; height: 40px; border: 3px solid var(--cream-dark); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* NOTIFY */
+  .notify {
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink); color: var(--white);
+    padding: 12px 24px; font-size: 14px; font-weight: 600;
+    z-index: 99999; border-bottom: 3px solid var(--gold);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  }
+  .notify.show { transform: translateX(-50%) translateY(0); }
+
+  /* CONFIRM DIALOG */
+  .confirm-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 9999;
+    align-items: center; justify-content: center;
+    padding: 2rem; backdrop-filter: blur(4px);
+  }
+  .confirm-overlay.show { display: flex; }
+
+  .confirm-box {
+    background: var(--white); max-width: 420px; width: 100%;
+    padding: 2.5rem; text-align: center;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
+
+  .confirm-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--error-bg); border: 2px solid #e5b8b2;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem; color: var(--error); font-size: 1.8rem;
+  }
+
+  .confirm-title { font-size: 1.2rem; font-weight: 700; color: var(--ink); margin-bottom: 0.8rem; }
+  .confirm-desc { font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 2rem; }
+
+  .confirm-btns { display: flex; gap: 12px; }
+
+  .confirm-cancel {
+    flex: 1; background: transparent; color: var(--ink);
+    border: 1.5px solid var(--border); padding: 12px;
+    font-family: 'El Messiri', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .confirm-cancel:hover { border-color: var(--ink); }
+
+  .confirm-danger {
+    flex: 1; background: var(--error); color: var(--white);
+    border: none; padding: 12px;
+    font-family: 'El Messiri', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .confirm-danger:hover { background: #8B2010; }
+
+  /* Not logged in */
+  .not-auth {
+    min-height: calc(100vh - 68px);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem; text-align: center; padding: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .navbar { padding: 0 1.5rem; }
+    .main-wrap { grid-template-columns: 1fr; padding: 1.5rem; }
+    .my-books-grid { grid-template-columns: 1fr; }
+    .page-header { padding: 2rem 1.5rem; }
+    .profile-wrap { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <div class="logo-icon">
+      <span class="material-icons-round" style="font-size:18px;">auto_stories</span>
+    </div>
+    <div>
+      <span class="logo-main">صندوق الكتب</span>
+      <span class="logo-sub">PDF LIBRARY</span>
+    </div>
+  </a>
+  <a href="index.html" class="nav-back">
+    <span class="material-icons-round" style="font-size:18px;">arrow_forward</span>
+    العودة للمكتبة
+  </a>
+</nav>
+
+<!-- NOT AUTH STATE -->
+<div class="not-auth" id="notAuth" style="display:none;">
+  <span class="material-icons-round" style="font-size:4rem;color:var(--gold-light);">lock</span>
+  <h2 style="font-size:1.4rem;color:var(--ink);">يجب تسجيل الدخول أولاً</h2>
+  <p style="color:var(--text-muted);font-size:14px;">سجّل دخولك للوصول إلى صفحة حسابك.</p>
+  <a href="index.html" style="background:var(--gold);color:var(--ink);padding:12px 28px;font-family:'El Messiri',sans-serif;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px;margin-top:0.5rem;">
+    <span class="material-icons-round" style="font-size:18px;">home</span>
+    العودة للرئيسية
+  </a>
+</div>
+
+<!-- PAGE CONTENT -->
+<div id="pageContent" style="display:none;">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="header-inner">
+      <div class="header-breadcrumb">
+        <a href="index.html">الرئيسية</a>
+        <span class="material-icons-round" style="font-size:14px;">chevron_left</span>
+        <span style="color:#888;">حسابي</span>
+      </div>
+      <div class="profile-wrap">
+        <div class="avatar-circle" id="avatarCircle">؟</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-position" id="profilePosition">
+            <span class="material-icons-round" style="font-size:12px;">verified_user</span>
+            <span id="profilePositionText">—</span>
+          </div>
+          <div class="profile-meta">
+            <div class="profile-meta-item">
+              <span class="material-icons-round">mail</span>
+              <span id="profileEmail">—</span>
+            </div>
+            <div class="profile-meta-item" id="profileLocationItem" style="display:none;">
+              <span class="material-icons-round">location_on</span>
+              <span id="profileLocation">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+
+    <!-- SIDEBAR -->
+    <div>
+      <!-- Account Info -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-icons-round">person</span>
+          بيانات الحساب
+        </div>
+        <div class="sidebar-card-body">
+          <div class="info-row">
+            <div class="info-label">الاسم الكامل</div>
+            <div class="info-val" id="infoName">—</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">البريد الإلكتروني</div>
+            <div class="info-val" id="infoEmail">—</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">الصفة</div>
+            <div class="info-val" id="infoPosition">—</div>
+          </div>
+          <div class="info-row" id="infoCountryRow" style="display:none;">
+            <div class="info-label">البلد</div>
+            <div class="info-val" id="infoCountry">—</div>
+          </div>
+          <div class="info-row" id="infoCityRow" style="display:none;">
+            <div class="info-label">المدينة</div>
+            <div class="info-val" id="infoCity">—</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">عدد الكتب المنشورة</div>
+            <div class="info-val" id="infoBooksCount">—</div>
+          </div>
+          <div class="info-row" id="infoRatingRow" style="display:none;">
+            <div class="info-label">تقييمي من القراء</div>
+            <div class="info-val">
+              <div id="infoRatingStars" style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bio Card -->
+      <div class="sidebar-card" id="bioPanelCard" style="display:none;">
+        <div class="sidebar-card-header">
+          <span class="material-icons-round">notes</span>
+          نبذة شخصية
+        </div>
+        <div class="sidebar-card-body">
+          <div id="infoBio" style="font-size:13px;line-height:1.9;color:var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="danger-card">
+        <div class="danger-header">
+          <span class="material-icons-round">warning</span>
+          خيارات الحساب
+        </div>
+        <div class="danger-body">
+          <button class="btn-logout" onclick="handleLogout()">
+            <span class="material-icons-round" style="font-size:18px;">logout</span>
+            تسجيل الخروج
+          </button>
+          <button class="btn-delete" onclick="confirmDelete()">
+            <span class="material-icons-round" style="font-size:18px;">delete_forever</span>
+            حذف حسابي نهائياً
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY BOOKS -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">
+          <span class="material-icons-round">menu_book</span>
+          كتبي المنشورة
+          <span class="books-count-badge" id="booksCountBadge">0</span>
+        </div>
+        <a href="publish.html" class="btn-publish-new">
+          <span class="material-icons-round" style="font-size:16px;">add</span>
+          نشر كتاب جديد
+        </a>
+      </div>
+
+      <div class="my-books-grid" id="myBooksGrid">
+        <div class="loader-row">
+          <div class="loader-spin"></div>
+          <div style="font-size:13px;">جاري تحميل كتبك...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFIRM DELETE DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <span class="material-icons-round" style="font-size:1.8rem;">delete_forever</span>
+    </div>
+    <div class="confirm-title">حذف الحساب نهائياً؟</div>
+    <div class="confirm-desc">
+      هذا الإجراء لا يمكن التراجع عنه. سيتم حذف حسابك وجميع بياناتك بشكل دائم.<br>
+      كتبك المنشورة ستبقى في المكتبة.
+    </div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('show')">
+        إلغاء
+      </button>
+      <button class="confirm-danger" onclick="deleteAccount()">
+        نعم، احذف حسابي
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFY -->
+<div class="notify" id="notify">
+  <span class="material-icons-round" style="font-size:18px;color:var(--gold);">check_circle</span>
+  <span id="notifyText">تمت العملية</span>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const SUPABASE_URL = 'https://fjbvbuthrsrhiivoyhmm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqYnZidXRocnNyaGlpdm95aG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODE0NzEsImV4cCI6MjA5NTA1NzQ3MX0.PyEO3Adyl2MI2Qn12IJqBh0iSb1vN6UGVTWj9W4aYPQ';
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let userProfile = null;
+
+  function showNotify(msg) {
+    document.getElementById('notifyText').textContent = msg;
+    const n = document.getElementById('notify');
+    n.classList.add('show');
+    setTimeout(() => n.classList.remove('show'), 3000);
+  }
+
+  // ===== INIT =====
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      document.getElementById('notAuth').style.display = 'flex';
+      return;
+    }
+
+    currentUser = session.user;
+
+    // Fetch profile
+    const { data: profile } = await sb.from('users')
+      .select('name, email, position, country, city, user_avatar_url, personal_profile, rating')
+      .eq('id', currentUser.id)
+      .single();
+
+    userProfile = profile;
+    document.getElementById('pageContent').style.display = 'block';
+
+    fillProfile(profile, currentUser.email);
+    loadMyBooks(profile?.name);
+  }
+
+  function fillProfile(profile, authEmail) {
+    const name = profile?.name || authEmail?.split('@')[0] || '—';
+    const email = profile?.email || authEmail || '—';
+    const position = profile?.position || '—';
+    const country = profile?.country;
+    const city = profile?.city;
+    const avatarUrl = profile?.user_avatar_url;
+    const bio = profile?.personal_profile;
+    const rating = profile?.rating;
+
+    // Header avatar — photo or initial letter
+    const avatarEl = document.getElementById('avatarCircle');
+    if (avatarUrl) {
+      avatarEl.style.background = 'none';
+      avatarEl.style.padding = '0';
+      avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avatarEl.textContent = name.charAt(0);
+    }
+
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profilePositionText').textContent = position;
+    document.getElementById('profileEmail').textContent = email;
+
+    if (country || city) {
+      document.getElementById('profileLocationItem').style.display = 'flex';
+      document.getElementById('profileLocation').textContent = [city, country].filter(Boolean).join('، ');
+    }
+
+    // Sidebar
+    document.getElementById('infoName').textContent = name;
+    document.getElementById('infoEmail').textContent = email;
+    document.getElementById('infoPosition').textContent = position;
+
+    if (country) {
+      document.getElementById('infoCountryRow').style.display = 'flex';
+      document.getElementById('infoCountry').textContent = country;
+    }
+    if (city) {
+      document.getElementById('infoCityRow').style.display = 'flex';
+      document.getElementById('infoCity').textContent = city;
+    }
+
+    // Rating
+    if (rating) {
+      const ratings = rating.split(',').map(r => parseFloat(r)).filter(r => !isNaN(r) && r >= 1 && r <= 5);
+      if (ratings.length) {
+        const avg = ratings.reduce((a,b) => a+b, 0) / ratings.length;
+        const starsEl = document.getElementById('infoRatingStars');
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+          if (avg >= i) html += `<span class="material-icons-round" style="font-size:18px;color:var(--gold);">star</span>`;
+          else if (avg >= i - 0.5) html += `<span class="material-icons-round" style="font-size:18px;color:var(--gold);">star_half</span>`;
+          else html += `<span class="material-icons-round" style="font-size:18px;color:#ddd;">star_border</span>`;
+        }
+        html += `<span style="font-size:13px;font-weight:700;color:var(--ink);margin-right:6px;">${avg.toFixed(1)}</span>`;
+        html += `<span style="font-size:11px;color:var(--text-muted);">(${ratings.length} تقييم)</span>`;
+        starsEl.innerHTML = html;
+        document.getElementById('infoRatingRow').style.display = 'flex';
+      }
+    }
+
+    // Bio
+    if (bio && bio.trim()) {
+      document.getElementById('infoBio').textContent = bio;
+      document.getElementById('bioPanelCard').style.display = 'block';
+    }
+  }
+
+  // ===== LOAD MY BOOKS =====
+  async function loadMyBooks(authorName) {
+    const grid = document.getElementById('myBooksGrid');
+
+    if (!authorName) {
+      grid.innerHTML = `<div class="empty-books"><span class="material-icons-round">inbox</span><h3>لا توجد كتب بعد</h3><p>ابدأ بنشر أول كتاب لك</p></div>`;
+      return;
+    }
+
+    // Search by author name in books table
+    const { data: books, error } = await sb.from('books')
+      .select('*')
+      .eq('author', authorName)
+      .order('created_at', { ascending: false });
+
+    if (error || !books || books.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-books">
+          <span class="material-icons-round">inbox</span>
+          <h3>لا توجد كتب بعد</h3>
+          <p>لم تنشر أي كتاب حتى الآن، ابدأ الآن!</p>
+          <a href="publish.html" style="display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:var(--ink);padding:10px 22px;font-family:'El Messiri',sans-serif;font-weight:700;text-decoration:none;font-size:13px;margin-top:0.5rem;">
+            <span class="material-icons-round" style="font-size:16px;">upload_file</span>
+            نشر كتاب
+          </a>
+        </div>`;
+      document.getElementById('infoBooksCount').textContent = '0';
+      document.getElementById('booksCountBadge').textContent = '0';
+      return;
+    }
+
+    document.getElementById('infoBooksCount').textContent = books.length;
+    document.getElementById('booksCountBadge').textContent = books.length;
+
+    grid.innerHTML = books.map(book => {
+      const isOn = book.status === 'on';
+      const cover = book.avatar_url
+        ? `<img src="${book.avatar_url}" alt="${book.title}" class="my-book-cover">`
+        : `<div class="my-book-cover-placeholder"><span class="material-icons-round" style="font-size:1.5rem;">auto_stories</span></div>`;
+
+      return `
+        <div class="my-book-card" onclick="window.location.href='book.html?id=${book.id}'">
+          ${cover}
+          <div class="my-book-info">
+            <div class="my-book-title">${book.title}</div>
+            <div class="my-book-status ${isOn ? 'status-on' : 'status-pending'}">
+              <span class="material-icons-round" style="font-size:12px;">${isOn ? 'check_circle' : 'hourglass_top'}</span>
+              ${isOn ? 'منشور' : 'قيد المراجعة'}
+            </div>
+            <div class="my-book-stats">
+              <div class="my-book-stat">
+                <span class="material-icons-round">download</span>${book.download || 0}
+              </div>
+              <div class="my-book-stat">
+                <span class="material-icons-round">favorite_border</span>${book.like || 0}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ===== LOGOUT =====
+  window.handleLogout = async function() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  };
+
+  // ===== DELETE ACCOUNT =====
+  window.confirmDelete = function() {
+    document.getElementById('confirmOverlay').classList.add('show');
+  };
+
+  window.deleteAccount = async function() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+
+    try {
+      // Delete from users table
+      await sb.from('users').delete().eq('id', currentUser.id);
+
+      // Sign out (Supabase doesn't allow client-side auth user deletion — needs admin API)
+      await sb.auth.signOut();
+
+      showNotify('تم حذف بياناتك بنجاح');
+      setTimeout(() => window.location.href = 'index.html', 2000);
+    } catch (err) {
+      showNotify('حدث خطأ أثناء الحذف');
+    }
+  };
+
+  init();
+</script>
+</body>
+</html>

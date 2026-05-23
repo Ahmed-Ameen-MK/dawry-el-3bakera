@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الكتاب — مكتبة صندوق الكتب PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --gold-dark: #8B6914;
+    --ink: #0D0D0D;
+    --ink-mid: #1A1A2E;
+    --cream: #F7F3EC;
+    --cream-dark: #EDE5D8;
+    --white: #FFFFFF;
+    --text-muted: #6B6B7A;
+    --border: #D5CFC4;
+    --success: #2D7A3A;
+    --error: #B5311A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'El Messiri', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    direction: rtl;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    background: var(--ink);
+    border-bottom: 3px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    height: 68px;
+    position: sticky;
+    top: 0; z-index: 100;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink); font-size: 18px;
+  }
+
+  .logo-main { color: var(--white); font-size: 15px; font-weight: 700; }
+  .logo-sub { color: var(--gold); font-size: 10px; letter-spacing: 2px; display: block; }
+
+  .nav-back {
+    display: flex; align-items: center; gap: 6px;
+    color: #aaa; text-decoration: none; font-size: 13px;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--gold); }
+
+  /* LOADER */
+  .page-loader {
+    min-height: calc(100vh - 68px);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+    color: var(--text-muted);
+  }
+
+  .loader-spin {
+    width: 48px; height: 48px;
+    border: 3px solid var(--cream-dark);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR STATE */
+  .error-state {
+    display: none;
+    min-height: calc(100vh - 68px);
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem; text-align: center;
+    padding: 2rem;
+  }
+
+  /* BOOK HEADER */
+  .book-header {
+    display: none;
+    background: var(--ink);
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .book-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .book-header-inner {
+    max-width: 1100px; margin: 0 auto;
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .book-cover-wrap { position: relative; }
+
+  .book-cover {
+    width: 220px;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .book-cover-placeholder {
+    width: 220px;
+    aspect-ratio: 2/3;
+    background: linear-gradient(135deg, #1A3A5C, #2D6A9F);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 4rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .pdf-badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: var(--gold);
+    color: var(--ink);
+    font-size: 10px; font-weight: 700;
+    padding: 4px 10px;
+    letter-spacing: 1px;
+  }
+
+  .status-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 10px;
+    letter-spacing: 1px;
+  }
+
+  .status-on { background: var(--success); color: #fff; }
+  .status-pending { background: var(--error); color: #fff; }
+
+  .book-info { color: var(--white); }
+
+  .book-breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #666; margin-bottom: 1.5rem;
+  }
+
+  .book-breadcrumb a { color: var(--gold); text-decoration: none; }
+
+  .book-category-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.35);
+    color: var(--gold);
+    padding: 4px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .book-title {
+    font-size: 2rem; font-weight: 700;
+    color: var(--white);
+    line-height: 1.3;
+    margin-bottom: 0.8rem;
+  }
+
+  .book-author-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: #aaa;
+    margin-bottom: 1.5rem;
+  }
+
+  .book-author-row strong { color: var(--gold-light); }
+
+  .book-meta-row {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .meta-label {
+    font-size: 10px; font-weight: 600;
+    color: #666; letter-spacing: 1.5px;
+  }
+
+  .meta-value {
+    font-size: 14px; font-weight: 700;
+    color: var(--white);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .meta-value .material-icons-round { font-size: 16px; color: var(--gold); }
+
+  .book-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn-download {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 13px 30px;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+
+  .btn-download:hover {
+    background: var(--gold-dark);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(201,168,76,0.3);
+  }
+
+  .btn-like {
+    background: transparent;
+    color: var(--white);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    padding: 13px 24px;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-like:hover, .btn-like.liked {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    background: rgba(231,76,60,0.1);
+  }
+
+  .btn-share {
+    background: transparent;
+    color: #aaa;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    padding: 13px 18px;
+    cursor: pointer;
+    display: flex; align-items: center;
+    transition: all 0.2s;
+  }
+
+  .btn-share:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* BODY */
+  .section-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .section-card-header {
+    padding: 1.2rem 1.8rem;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+  }
+
+  .section-card-header .material-icons-round { color: var(--gold); }
+
+  .section-card-body { padding: 1.8rem; }
+
+  .book-desc-text {
+    font-size: 15px;
+    line-height: 2;
+    color: #444;
+    white-space: pre-line;
+  }
+
+  .tags-list {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 1rem;
+  }
+
+  .tag-pill {
+    background: var(--cream-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 5px 14px;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* PUBLISHER CARD */
+  .publisher-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .publisher-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: var(--gold);
+  }
+
+  .publisher-card-header {
+    padding: 1.2rem 1.8rem;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+  }
+
+  .publisher-card-header .material-icons-round { color: var(--gold); }
+
+  .publisher-card-body {
+    padding: 1.8rem;
+    display: flex; align-items: center; gap: 1.5rem;
+  }
+
+  .publisher-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--gold);
+    flex-shrink: 0;
+  }
+
+  .publisher-avatar-placeholder {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ink), var(--ink-mid));
+    border: 3px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold); font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .publisher-info { flex: 1; }
+
+  .publisher-name {
+    font-size: 1.15rem; font-weight: 700; color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .publisher-bio {
+    font-size: 13px; line-height: 1.8; color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .publisher-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--gold); text-decoration: none;
+    font-size: 13px; font-weight: 700;
+    transition: color 0.2s;
+    border: 1.5px solid var(--gold);
+    padding: 6px 16px;
+  }
+
+  .publisher-link:hover {
+    background: var(--gold);
+    color: var(--ink);
+  }
+
+  /* SIDEBAR */
+  .sidebar-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .sidebar-card-header {
+    padding: 1rem 1.4rem;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .sidebar-card-header .material-icons-round { color: var(--gold); font-size: 18px; }
+
+  .sidebar-card-body { padding: 1.4rem; }
+
+  .stat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 13px;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-row-label {
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .stat-row-label .material-icons-round { font-size: 16px; color: var(--gold); }
+
+  .stat-row-val { font-weight: 700; color: var(--ink); }
+
+  /* PDF Preview */
+  .pdf-embed-wrap {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+  }
+
+  .pdf-embed-header {
+    padding: 1.2rem 1.8rem;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .pdf-embed-title {
+    color: var(--white); font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .pdf-embed-title .material-icons-round { color: var(--gold); }
+
+  embed, iframe {
+    display: block;
+    width: 100%;
+    height: 600px;
+    border: none;
+  }
+
+  /* Notify */
+  .notify {
+    position: fixed;
+    bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: var(--white);
+    padding: 12px 24px;
+    font-size: 14px; font-weight: 600;
+    z-index: 99999;
+    border-bottom: 3px solid var(--gold);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex; align-items: center; gap: 10px;
+    white-space: nowrap;
+  }
+
+  .notify.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px) {
+    .book-header-inner { grid-template-columns: 1fr; }
+    .book-cover, .book-cover-placeholder { width: 160px; }
+    .navbar { padding: 0 1.5rem; }
+    .publisher-card-body { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <div class="logo-icon">
+      <span class="material-icons-round" style="font-size:18px;">auto_stories</span>
+    </div>
+    <div>
+      <span class="logo-main">صندوق الكتب</span>
+      <span class="logo-sub">PDF LIBRARY</span>
+    </div>
+  </a>
+  <a href="index.html" class="nav-back">
+    <span class="material-icons-round" style="font-size:18px;">arrow_forward</span>
+    العودة للمكتبة
+  </a>
+</nav>
+
+<!-- LOADER -->
+<div class="page-loader" id="pageLoader">
+  <div class="loader-spin"></div>
+  <div style="font-size:14px;color:var(--text-muted);">جاري تحميل الكتاب...</div>
+</div>
+
+<!-- ERROR STATE -->
+<div class="error-state" id="errorState">
+  <span class="material-icons-round" style="font-size:4rem;color:var(--gold-light);">search_off</span>
+  <h2 style="font-size:1.5rem;color:var(--ink);">الكتاب غير موجود</h2>
+  <p style="color:var(--text-muted);font-size:14px;">لم نتمكن من العثور على هذا الكتاب في المكتبة.</p>
+  <a href="index.html" style="margin-top:1rem;background:var(--gold);color:var(--ink);padding:12px 28px;font-family:'El Messiri',sans-serif;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px;">
+    <span class="material-icons-round" style="font-size:18px;">home</span>
+    العودة للمكتبة
+  </a>
+</div>
+
+<!-- BOOK HEADER -->
+<div class="book-header" id="bookHeader">
+  <div class="book-header-inner">
+    <div class="book-cover-wrap">
+      <div id="coverArea"></div>
+      <div class="pdf-badge">PDF</div>
+      <div class="status-badge" id="statusBadge"></div>
+    </div>
+    <div class="book-info">
+      <div class="book-breadcrumb">
+        <a href="index.html">الرئيسية</a>
+        <span class="material-icons-round" style="font-size:14px;">chevron_left</span>
+        <a href="index.html">المكتبة</a>
+        <span class="material-icons-round" style="font-size:14px;">chevron_left</span>
+        <span id="breadTitle" style="color:#888;">...</span>
+      </div>
+      <div class="book-category-tag" id="categoryTag" style="display:none;">
+        <span class="material-icons-round" style="font-size:12px;">category</span>
+        <span id="categoryText"></span>
+      </div>
+      <h1 class="book-title" id="bookTitle">—</h1>
+      <div class="book-author-row">
+        <span class="material-icons-round" style="font-size:16px;color:var(--gold);">person</span>
+        <span>بقلم</span>
+        <strong id="bookAuthor">—</strong>
+      </div>
+      <div class="book-meta-row">
+        <div class="meta-item">
+          <div class="meta-label">التحميلات</div>
+          <div class="meta-value">
+            <span class="material-icons-round">download</span>
+            <span id="metaDownloads">0</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">الإعجابات</div>
+          <div class="meta-value">
+            <span class="material-icons-round">favorite_border</span>
+            <span id="metaLikes">0</span>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">تاريخ النشر</div>
+          <div class="meta-value">
+            <span class="material-icons-round">calendar_today</span>
+            <span id="metaDate">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="book-actions">
+        <a id="btnDownload" href="#" target="_blank" class="btn-download" onclick="trackDownload()">
+          <span class="material-icons-round" style="font-size:18px;">download</span>
+          تحميل الكتاب
+        </a>
+        <button class="btn-like" id="btnLike" onclick="toggleLike()">
+          <span class="material-icons-round" style="font-size:18px;" id="likeIcon">favorite_border</span>
+          <span id="likeCount">0</span>
+        </button>
+        <button class="btn-share" onclick="shareBook()" title="مشاركة">
+          <span class="material-icons-round" style="font-size:20px;">share</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK BODY -->
+<div style="display:none;" id="bookBody">
+  <div style="max-width:1100px;margin:0 auto;padding:3rem;display:grid;grid-template-columns:1fr 320px;gap:2.5rem;" id="bookBodyGrid">
+
+    <!-- Main Content -->
+    <div>
+      <!-- Description -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="material-icons-round">description</span>
+          عن الكتاب
+        </div>
+        <div class="section-card-body">
+          <div class="book-desc-text" id="bookDesc">—</div>
+          <div class="tags-list" id="tagsList"></div>
+        </div>
+      </div>
+
+      <!-- Publisher Section -->
+      <div class="publisher-card" id="publisherSection" style="display:none;">
+        <div class="publisher-card-header">
+          <span class="material-icons-round">account_circle</span>
+          عن الناشر
+        </div>
+        <div class="publisher-card-body">
+          <div id="publisherAvatarArea">
+            <div class="publisher-avatar-placeholder">
+              <span class="material-icons-round">person</span>
+            </div>
+          </div>
+          <div class="publisher-info">
+            <div class="publisher-name" id="publisherName">—</div>
+            <div class="publisher-bio" id="publisherBio">—</div>
+            <a href="#" class="publisher-link" id="publisherLink">
+              <span class="material-icons-round" style="font-size:16px;">library_books</span>
+              عرض صفحة الناشر
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF Embed -->
+      <div class="pdf-embed-wrap">
+        <div class="pdf-embed-header">
+          <div class="pdf-embed-title">
+            <span class="material-icons-round">picture_as_pdf</span>
+            معاينة الكتاب
+          </div>
+          <a id="btnOpenPdf" href="#" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:4px;">
+            <span class="material-icons-round" style="font-size:16px;">open_in_new</span>
+            فتح في تبويب جديد
+          </a>
+        </div>
+        <div id="pdfViewerWrap" style="position:relative;min-height:600px;background:#f0f0f0;">
+          <!-- PDF iframe (main viewer) -->
+          <iframe id="pdfEmbed" src="" style="display:none;width:100%;height:600px;border:none;"></iframe>
+          <!-- Fallback: open button shown until PDF loads -->
+          <div id="pdfFallback" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:600px;gap:1.2rem;background:var(--cream);">
+            <span class="material-icons-round" style="font-size:4rem;color:var(--gold-light);">picture_as_pdf</span>
+            <div style="font-size:14px;color:var(--text-muted);font-weight:600;">اضغط لفتح معاينة الكتاب</div>
+            <a id="btnOpenPdfFallback" href="#" target="_blank" style="background:var(--gold);color:var(--ink);padding:12px 28px;font-family:'El Messiri',sans-serif;font-weight:700;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;">
+              <span class="material-icons-round" style="font-size:18px;">open_in_new</span>
+              فتح الكتاب في تبويب جديد
+            </a>
+            <button onclick="tryEmbedPDF()" style="background:transparent;border:1.5px solid var(--gold);color:var(--gold-dark);padding:10px 24px;font-family:'El Messiri',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">
+              <span class="material-icons-round" style="font-size:16px;vertical-align:middle;">preview</span>
+              معاينة هنا
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-icons-round">info</span>
+          معلومات الكتاب
+        </div>
+        <div class="sidebar-card-body">
+          <div class="stat-row">
+            <div class="stat-row-label">
+              <span class="material-icons-round">person</span>
+              المؤلف
+            </div>
+            <div class="stat-row-val" id="sideAuthor">—</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-row-label">
+              <span class="material-icons-round">download</span>
+              التحميلات
+            </div>
+            <div class="stat-row-val" id="sideDownloads">0</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-row-label">
+              <span class="material-icons-round">favorite</span>
+              الإعجابات
+            </div>
+            <div class="stat-row-val" id="sideLikes">0</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-row-label">
+              <span class="material-icons-round">calendar_today</span>
+              تاريخ الرفع
+            </div>
+            <div class="stat-row-val" id="sideDate">—</div>
+          </div>
+          <div class="stat-row" id="sideStatusRow">
+            <div class="stat-row-label">
+              <span class="material-icons-round">verified</span>
+              الحالة
+            </div>
+            <div class="stat-row-val" id="sideStatus">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share Card -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-header">
+          <span class="material-icons-round">share</span>
+          مشاركة الكتاب
+        </div>
+        <div class="sidebar-card-body" style="display:flex;flex-direction:column;gap:10px;">
+          <button onclick="shareBook()" style="width:100%;background:var(--ink);color:var(--white);border:none;padding:11px;font-family:'El Messiri',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='var(--ink)'">
+            <span class="material-icons-round" style="font-size:16px;">link</span>
+            نسخ رابط الكتاب
+          </button>
+        </div>
+      </div>
+
+      <!-- Publisher Sidebar Card -->
+      <div class="sidebar-card" id="sidebarPublisherCard" style="display:none;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold);"></div>
+        <div class="sidebar-card-header">
+          <span class="material-icons-round">account_circle</span>
+          الناشر
+        </div>
+        <div class="sidebar-card-body" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;">
+          <div id="sidebarPubAvatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--ink),#1A1A2E);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.8rem;overflow:hidden;flex-shrink:0;">
+            <span class="material-icons-round">person</span>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;" id="sidebarPubName">—</div>
+            <div id="sidebarPubRating" style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;"></div>
+            <div style="font-size:12px;line-height:1.8;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;" id="sidebarPubBio"></div>
+          </div>
+          <a href="#" class="publisher-link" id="sidebarPubLink" style="width:100%;justify-content:center;">
+            <span class="material-icons-round" style="font-size:16px;">library_books</span>
+            زيارة صفحة الناشر
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTIFY -->
+<div class="notify" id="notify">
+  <span class="material-icons-round" style="font-size:18px;color:var(--gold);">check_circle</span>
+  <span id="notifyText">تمت العملية</span>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  const SUPABASE_URL = 'https://fjbvbuthrsrhiivoyhmm.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqYnZidXRocnNyaGlpdm95aG1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODE0NzEsImV4cCI6MjA5NTA1NzQ3MX0.PyEO3Adyl2MI2Qn12IJqBh0iSb1vN6UGVTWj9W4aYPQ';
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ===== SEO SLUG HELPERS =====
+  function toSlug(str) {
+    return (str || '').trim().replace(/\s+/g, '-');
+  }
+
+  function fromSlug(slug) {
+    return (slug || '').replace(/-/g, ' ');
+  }
+
+  // ===== GET BOOK FROM URL (slug-based) =====
+  // Supports: ?title=اسم-الكتاب  OR legacy: ?id=UUID
+  const params = new URLSearchParams(window.location.search);
+  const titleSlug = params.get('title');
+  const bookId    = params.get('id');
+
+  function showNotify(msg) {
+    document.getElementById('notifyText').textContent = msg;
+    const n = document.getElementById('notify');
+    n.classList.add('show');
+    setTimeout(() => n.classList.remove('show'), 3000);
+  }
+
+  // ===== LOAD BOOK =====
+  async function loadBook() {
+    let book = null;
+    let error = null;
+
+    if (titleSlug) {
+      // Slug-based lookup (SEO-friendly)
+      const titleText = fromSlug(titleSlug);
+      const res = await sb.from('books').select('*').ilike('title', titleText).maybeSingle();
+      book = res.data; error = res.error;
+    } else if (bookId) {
+      // Legacy ID fallback
+      const res = await sb.from('books').select('*').eq('id', bookId).single();
+      book = res.data; error = res.error;
+    } else {
+      showError(); return;
+    }
+
+    if (error || !book) { showError(); return; }
+
+    // Redirect to canonical slug URL if loaded by ID
+    if (bookId && !titleSlug) {
+      const slug = toSlug(book.title);
+      window.history.replaceState(null, '', `book.html?title=${encodeURIComponent(slug)}`);
+    }
+
+    document.getElementById('pageLoader').style.display = 'none';
+    document.getElementById('bookHeader').style.display = 'block';
+    document.getElementById('bookBody').style.display = 'block';
+
+    // Fill data
+    document.title = book.title + ' — مكتبة صندوق الكتب PDF';
+    document.getElementById('bookTitle').textContent = book.title;
+    document.getElementById('breadTitle').textContent = book.title;
+    document.getElementById('bookAuthor').textContent = book.author || '—';
+    document.getElementById('bookDesc').textContent = book.descriptions || '—';
+    document.getElementById('sideAuthor').textContent = book.author || '—';
+
+    const downloads = book.download || 0;
+    const likes = book.like || 0;
+    document.getElementById('metaDownloads').textContent = downloads;
+    document.getElementById('metaLikes').textContent = likes;
+    document.getElementById('likeCount').textContent = likes;
+    document.getElementById('sideDownloads').textContent = downloads;
+    document.getElementById('sideLikes').textContent = likes;
+
+    if (book.created_at) {
+      const d = new Date(book.created_at);
+      const formatted = d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('metaDate').textContent = formatted;
+      document.getElementById('sideDate').textContent = formatted;
+    }
+
+    const isOn = book.status === 'on';
+    const badge = document.getElementById('statusBadge');
+    const sideStatus = document.getElementById('sideStatus');
+    if (isOn) {
+      badge.textContent = 'منشور';
+      badge.className = 'status-badge status-on';
+      sideStatus.textContent = '✓ منشور';
+      sideStatus.style.color = 'var(--success)';
+    } else {
+      badge.textContent = 'قيد المراجعة';
+      badge.className = 'status-badge status-pending';
+      sideStatus.textContent = '⏳ قيد المراجعة';
+      sideStatus.style.color = 'var(--error)';
+    }
+
+    // Cover
+    const coverArea = document.getElementById('coverArea');
+    if (book.avatar_url) {
+      coverArea.innerHTML = `<img src="${book.avatar_url}" alt="${book.title}" class="book-cover">`;
+    } else {
+      coverArea.innerHTML = `<div class="book-cover-placeholder"><span class="material-icons-round">auto_stories</span></div>`;
+    }
+
+    // PDF
+    if (book.book_url) {
+      document.getElementById('btnDownload').href = book.book_url;
+      document.getElementById('btnOpenPdf').href = book.book_url;
+      document.getElementById('btnOpenPdfFallback').href = book.book_url;
+      window._currentPdfUrl = book.book_url;
+    }
+
+    // Tags
+    if (book.tags) {
+      const tagsArr = book.tags.split(',').filter(t => t.trim());
+      if (tagsArr.length > 0) {
+        document.getElementById('tagsList').innerHTML = tagsArr.map(t =>
+          `<span class="tag-pill">${t.trim()}</span>`
+        ).join('');
+      }
+    }
+
+    // Publisher — fetch from users table using user_id on book
+    if (book.user_id) {
+      loadPublisher(book.user_id);
+    }
+  }
+
+  // ===== LOAD PUBLISHER =====
+  async function loadPublisher(userId) {
+    const { data: publisher, error } = await sb
+      .from('users')
+      .select('id, name, email, user_avatar_url, personal_profile, rating')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error || !publisher) return;
+
+    // ---- Main publisher section (below description) ----
+    const section = document.getElementById('publisherSection');
+    section.style.display = 'block';
+
+    document.getElementById('publisherName').textContent = publisher.name || '—';
+    document.getElementById('publisherBio').textContent = publisher.personal_profile || '';
+
+    // Avatar (main)
+    const avatarArea = document.getElementById('publisherAvatarArea');
+    if (publisher.user_avatar_url) {
+      avatarArea.innerHTML = `<img src="${publisher.user_avatar_url}" alt="${publisher.name}" class="publisher-avatar">`;
+    }
+
+    // Publisher page link (slug-based)
+    const nameSlug = toSlug(publisher.name);
+    document.getElementById('publisherLink').href = `publisher.html?name=${encodeURIComponent(nameSlug)}`;
+
+    // ---- Sidebar publisher card ----
+    const sideCard = document.getElementById('sidebarPublisherCard');
+    sideCard.style.display = 'block';
+
+    document.getElementById('sidebarPubName').textContent = publisher.name || '—';
+    document.getElementById('sidebarPubBio').textContent = publisher.personal_profile || '';
+    document.getElementById('sidebarPubLink').href = `publisher.html?name=${encodeURIComponent(nameSlug)}`;
+
+    // Avatar (sidebar)
+    if (publisher.user_avatar_url) {
+      document.getElementById('sidebarPubAvatar').innerHTML = `<img src="${publisher.user_avatar_url}" alt="${publisher.name}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      document.getElementById('sidebarPubAvatar').innerHTML = publisher.name
+        ? `<span style="font-size:1.6rem;font-weight:700;color:var(--gold);">${publisher.name.charAt(0)}</span>`
+        : `<span class="material-icons-round">person</span>`;
+    }
+
+    // Rating stars (sidebar)
+    if (publisher.rating) {
+      const ratings = publisher.rating.split(',').map(r => parseFloat(r)).filter(r => !isNaN(r));
+      if (ratings.length) {
+        const avg = ratings.reduce((a,b) => a+b, 0) / ratings.length;
+        const starsEl = document.getElementById('sidebarPubRating');
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          if (avg >= i) starsHtml += `<span class="material-icons-round" style="font-size:16px;color:var(--gold);">star</span>`;
+          else if (avg >= i - 0.5) starsHtml += `<span class="material-icons-round" style="font-size:16px;color:var(--gold);">star_half</span>`;
+          else starsHtml += `<span class="material-icons-round" style="font-size:16px;color:#ddd;">star_border</span>`;
+        }
+        starsHtml += `<span style="font-size:12px;color:var(--text-muted);margin-right:4px;">${avg.toFixed(1)}</span>`;
+        starsEl.innerHTML = starsHtml;
+      }
+    }
+  }
+
+  // ===== TRY EMBED PDF =====
+  window.tryEmbedPDF = function() {
+    const url = window._currentPdfUrl;
+    if (!url) return;
+    const iframe = document.getElementById('pdfEmbed');
+    const fallback = document.getElementById('pdfFallback');
+    iframe.src = url;
+    iframe.style.display = 'block';
+    fallback.style.display = 'none';
+  };
+
+  function showError() {
+    document.getElementById('pageLoader').style.display = 'none';
+    document.getElementById('errorState').style.display = 'flex';
+  }
+
+  // ===== TRACK DOWNLOAD =====
+  window.trackDownload = async function() {
+    const book = await getCurrentBook();
+    if (!book) return;
+    const newCount = (book.download || 0) + 1;
+    await sb.from('books').update({ download: newCount }).eq('id', book.id);
+    document.getElementById('metaDownloads').textContent = newCount;
+    document.getElementById('sideDownloads').textContent = newCount;
+  };
+
+  // ===== LIKE =====
+  let liked = false;
+  let currentBookId = null;
+
+  window.toggleLike = async function() {
+    if (!currentBookId) return;
+    const { data } = await sb.from('books').select('like').eq('id', currentBookId).single();
+    if (!data) return;
+    const currentLikes = data.like || 0;
+    liked = !liked;
+    const newLikes = liked ? currentLikes + 1 : Math.max(0, currentLikes - 1);
+    await sb.from('books').update({ like: newLikes }).eq('id', currentBookId);
+    document.getElementById('likeCount').textContent = newLikes;
+    document.getElementById('metaLikes').textContent = newLikes;
+    document.getElementById('sideLikes').textContent = newLikes;
+    document.getElementById('likeIcon').textContent = liked ? 'favorite' : 'favorite_border';
+    document.getElementById('btnLike').classList.toggle('liked', liked);
+    showNotify(liked ? 'أضفت إعجابك بالكتاب' : 'ألغيت إعجابك بالكتاب');
+  };
+
+  async function getCurrentBook() {
+    if (currentBookId) {
+      const { data } = await sb.from('books').select('*').eq('id', currentBookId).single();
+      return data;
+    }
+    return null;
+  }
+
+  // ===== SHARE =====
+  window.shareBook = function() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => showNotify('تم نسخ رابط الكتاب'));
+    } else {
+      showNotify('الرابط: ' + url);
+    }
+  };
+
+  // Store current book id after load for like/download
+  const origLoad = loadBook;
+  async function loadAndStore() {
+    let book = null;
+    if (titleSlug) {
+      const titleText = fromSlug(titleSlug);
+      const res = await sb.from('books').select('id').ilike('title', titleText).maybeSingle();
+      if (res.data) currentBookId = res.data.id;
+    } else if (bookId) {
+      currentBookId = bookId;
+    }
+    await origLoad();
+  }
+
+  loadAndStore();
+</script>
+</body>
+</html>
