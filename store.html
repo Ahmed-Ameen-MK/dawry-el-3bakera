@@ -541,6 +541,7 @@ function closeModal() {
 async function confirmPurchase() {
   if (!currentUser || !pendingItem) return;
   const item = pendingItem;
+  const isChar = pendingIsChar;
   const pts = currentUser.level || 0;
   if (pts < item.price) { showToast('نقاط غير كافية!', true); closeModal(); return; }
 
@@ -549,20 +550,23 @@ async function confirmPurchase() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الشراء...';
 
   const newLevel = pts - item.price;
+
+  // 1) خصم النقاط من جدول system
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
     body: JSON.stringify({ level: newLevel })
   });
 
+  // 2) حساب القيمة الجديدة للعمود
   let storeUpdate = {};
-  if (pendingIsChar) {
-    // الشخصيات: أضف 3 للعداد الحالي
+  if (isChar) {
     const currentCount = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
     storeUpdate[item.key] = currentCount + 3;
   } else {
     storeUpdate[item.key] = 1;
   }
 
+  // 3) تحديث أو إنشاء صف في جدول store
   if (storeData) {
     await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
       method: 'PATCH',
@@ -573,14 +577,15 @@ async function confirmPurchase() {
       method: 'POST',
       body: JSON.stringify({ id: currentUser.id, name: currentUser.name, ...storeUpdate })
     });
+    storeData = { id: currentUser.id, name: currentUser.name };
   }
 
+  // 4) تحديث الحالة المحلية (مرة واحدة فقط)
   currentUser.level = newLevel;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
-  if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
-  if (pendingIsChar) {
-    const currentCount = parseInt(storeData[item.key]) || 0;
-    storeData[item.key] = currentCount + 3;
+
+  if (isChar) {
+    storeData[item.key] = storeUpdate[item.key];
   } else {
     storeData[item.key] = 1;
   }
@@ -590,7 +595,7 @@ async function confirmPurchase() {
   renderPrizes();
   renderChars();
   renderMyFriends();
-  showToast(pendingIsChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` : `تم شراء "${item.name}" بنجاح! 🎉`);
+  showToast(isChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` : `تم شراء "${item.name}" بنجاح! 🎉`);
   btn.disabled = false;
   btn.innerHTML = '<i class="fa-solid fa-check"></i> تأكيد الشراء';
 }
