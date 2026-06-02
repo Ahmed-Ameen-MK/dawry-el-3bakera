@@ -566,19 +566,13 @@ async function confirmPurchase() {
     storeUpdate[item.key] = 1;
   }
 
-  // 3) تحديث أو إنشاء صف في جدول store
-  if (storeData) {
-    await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(storeUpdate)
-    });
-  } else {
-    await sbFetch(`/rest/v1/store`, {
-      method: 'POST',
-      body: JSON.stringify({ id: currentUser.id, name: currentUser.name, ...storeUpdate })
-    });
-    storeData = { id: currentUser.id, name: currentUser.name };
-  }
+  // 3) upsert في جدول store (ينشئ أو يحدّث تلقائياً)
+  await sbFetch(`/rest/v1/store`, {
+    method: 'POST',
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ id: currentUser.id, name: currentUser.name, ...storeUpdate })
+  });
+  if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
 
   // 4) تحديث الحالة المحلية (مرة واحدة فقط)
   currentUser.level = newLevel;
