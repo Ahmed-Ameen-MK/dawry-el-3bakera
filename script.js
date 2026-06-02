@@ -1963,3 +1963,206 @@ if (window.location.hash && window.location.hash.includes('access_token')) {
     });
   } catch(e) { localStorage.removeItem('genius_user'); }
 }
+
+// ==================== CALL A FRIEND SYSTEM ====================
+
+// بيانات الشخصيات (نفس store.html لكن في index)
+const FRIEND_CHARS = [
+  { key:'cody',     name:'كودي',      nameEn:'Cody',     img:'/store/cody.png',     correctRate:0.40, specialKey:'programming', thinkTime:3000,
+    props:['البرمجة','السرعة'], details:['نسبة إجابة صحيحة: 40% عام / 99% برمجة','مدة التفكير: 3 ثوانٍ'] },
+  { key:'conan',    name:'كونان',     nameEn:'Conan',    img:'/store/conan.png',    correctRate:0.75, specialKey:null,           thinkTime:10000,
+    props:['الإجابة الصحيحة','البطء'], details:['نسبة إجابة صحيحة: 75%','مدة التفكير: 10 ثوانٍ'] },
+  { key:'gakusei',  name:'غاكوسي',   nameEn:'Gakusei',  img:'/store/gakusei.png',  correctRate:0.50, specialKey:null,           thinkTime:5000,
+    props:['الإجابة الصحيحة'], details:['نسبة إجابة صحيحة: 50%','مدة التفكير: 5 ثوانٍ'] },
+  { key:'sakura',   name:'ساكورا',   nameEn:'Sakura',   img:'/store/sakura.png',   correctRate:0.40, specialKey:null,           thinkTime:2000,
+    props:['السرعة'], details:['نسبة إجابة صحيحة: 40%','مدة التفكير: 2 ثانية'] },
+  { key:'duo',      name:'دوو',       nameEn:'Duo',      img:'/store/duo.png',      correctRate:0.40, specialKey:'languages',    thinkTime:3000,
+    props:['اللغات','السرعة'], details:['نسبة إجابة صحيحة: 40% عام / 99% لغات','مدة التفكير: 3 ثوانٍ'] },
+  { key:'einstein', name:'أينشتاين', nameEn:'Einstein', img:'/store/einstein.png', correctRate:0.90, specialKey:null,           thinkTime:15000,
+    props:['الإجابة الصحيحة','البطء'], details:['نسبة إجابة صحيحة: 90%','مدة التفكير: 15 ثانية'] }
+];
+
+let callFriendUsed = false; // مرة واحدة في المباراة
+let friendCallingTimeout = null;
+
+function openCallFriend() {
+  if (callFriendUsed) {
+    setStatus('⚠️ استخدمت هذه الميزة بالفعل في هذه المباراة!', 'warn');
+    return;
+  }
+  const panel = document.getElementById('call-friend-panel');
+  const listEl = document.getElementById('call-friend-list');
+  panel.style.display = 'block';
+
+  // جلب بيانات store من localStorage أو من قاعدة البيانات
+  const storeRaw = localStorage.getItem('genius_store_' + (currentUser ? currentUser.id : ''));
+  let storeData = storeRaw ? JSON.parse(storeRaw) : null;
+
+  if (!storeData && currentUser) {
+    // حاول جلب من DB
+    sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`).then(res => {
+      const data = res && res[0] ? res[0] : null;
+      if (data) localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(data));
+      renderFriendList(listEl, data);
+    });
+  } else {
+    renderFriendList(listEl, storeData);
+  }
+}
+
+function renderFriendList(listEl, storeData) {
+  const available = FRIEND_CHARS.filter(ch => {
+    const count = storeData ? (parseInt(storeData[ch.key]) || 0) : 0;
+    return count > 0;
+  });
+
+  if (available.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center;padding:20px;background:var(--red-bg);border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius-sm);color:var(--red)">
+        <i class="fa-solid fa-users-slash" style="font-size:24px;margin-bottom:8px;display:block"></i>
+        <strong>لا يوجد لديك أصدقاء، اذهب للمتجر للشراء</strong><br>
+        <a href="store.html" style="color:var(--blue);font-size:13px;margin-top:6px;display:inline-block">
+          <i class="fa-solid fa-store"></i> المتجر
+        </a>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">` +
+    available.map(ch => {
+      const count = storeData ? (parseInt(storeData[ch.key]) || 0) : 0;
+      return `<button onclick="callFriend('${ch.key}')"
+        style="background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:14px 10px;cursor:pointer;transition:all 0.15s;font-family:'El Messiri',sans-serif;text-align:center"
+        onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(0,113,227,0.04)'"
+        onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--bg)'">
+        <img src="${ch.img}" alt="${ch.name}" style="width:52px;height:52px;object-fit:contain;border-radius:50%;background:var(--bg2);display:block;margin:0 auto 8px"
+          onerror="this.style.display='none'">
+        <div style="font-size:14px;font-weight:700;color:var(--ink)">${ch.name}</div>
+        <div style="font-size:11px;color:var(--ink3)">${ch.nameEn}</div>
+        <div style="font-size:11px;color:var(--blue);font-weight:600;margin-top:4px;background:rgba(0,113,227,0.08);border-radius:10px;padding:2px 6px;display:inline-block">${count} استخدام</div>
+      </button>`;
+    }).join('') + '</div>';
+}
+
+function closeCallFriend() {
+  document.getElementById('call-friend-panel').style.display = 'none';
+  if (friendCallingTimeout) { clearTimeout(friendCallingTimeout); friendCallingTimeout = null; }
+}
+
+async function callFriend(charKey) {
+  if (!currentUser) return;
+  const ch = FRIEND_CHARS.find(c => c.key === charKey);
+  if (!ch) return;
+
+  // تحقق من الرصيد مجدداً
+  const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`);
+  const storeData = res && res[0] ? res[0] : null;
+  const count = storeData ? (parseInt(storeData[charKey]) || 0) : 0;
+  if (count <= 0) {
+    setStatus('انتهت استخدامات هذه الشخصية!', 'bad');
+    closeCallFriend();
+    return;
+  }
+
+  // خصم استخدام واحد
+  await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ [charKey]: count - 1 })
+  });
+  // تحديث localStorage
+  if (storeData) {
+    storeData[charKey] = count - 1;
+    localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeData));
+  }
+
+  callFriendUsed = true;
+  closeCallFriend();
+  document.getElementById('call-friend-btn').disabled = true;
+  document.getElementById('call-friend-btn').style.opacity = '0.5';
+
+  // حدد الإجابة الصحيحة بناءً على منطق الشخصية
+  setStatus(`<img src="${ch.img}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"> ${ch.name} يفكر...`, '');
+
+  friendCallingTimeout = setTimeout(() => {
+    if (!currentQ) return;
+    const qText = currentQ.q || '';
+
+    let rate = ch.correctRate;
+    // تطبيق الخاصية الخاصة
+    if (ch.specialKey === 'programming' && /[<>$/\[\]{}]/.test(qText)) {
+      rate = 0.99;
+    } else if (ch.specialKey === 'languages' && /[a-zA-Zàáâãäåæçèéêëìíîïðñòóôõöùúûü]/i.test(qText)) {
+      rate = 0.99;
+    }
+
+    const willAnswer = Math.random() < rate;
+    if (willAnswer) {
+      // الإجابة الصحيحة
+      const correctIdx = currentQ.a;
+      const btns = document.querySelectorAll('.option-btn');
+      setStatus(`✅ ${ch.name} يقترح الإجابة: "${currentQ.opts[correctIdx]}"`, 'good');
+      if (btns[correctIdx]) {
+        btns[correctIdx].style.boxShadow = '0 0 0 3px rgba(29,131,72,0.4)';
+        btns[correctIdx].style.borderColor = 'rgba(29,131,72,0.5)';
+        btns[correctIdx].style.background = 'rgba(29,131,72,0.06)';
+      }
+    } else {
+      // إجابة خاطئة عشوائية
+      const wrongOptions = currentQ.opts.map((o,i)=>i).filter(i=>i!==currentQ.a);
+      const randomWrong = wrongOptions[Math.floor(Math.random()*wrongOptions.length)];
+      const btns = document.querySelectorAll('.option-btn');
+      setStatus(`🤔 ${ch.name} يقترح الإجابة: "${currentQ.opts[randomWrong]}" (قد لا يكون متأكداً!)`, '');
+      if (btns[randomWrong]) {
+        btns[randomWrong].style.boxShadow = '0 0 0 3px rgba(181,136,46,0.4)';
+        btns[randomWrong].style.borderColor = 'rgba(181,136,46,0.5)';
+        btns[randomWrong].style.background = 'rgba(181,136,46,0.06)';
+      }
+    }
+    setTimeout(() => {
+      // إزالة التمييز بعد 8 ثوانٍ
+      document.querySelectorAll('.option-btn').forEach(b => {
+        b.style.boxShadow = '';
+        b.style.borderColor = '';
+        b.style.background = '';
+      });
+    }, 8000);
+  }, ch.thinkTime);
+}
+
+// إعادة تعيين callFriend عند بدء مباراة جديدة
+const _origStartMatch = window.startMatch;
+if (typeof startMatch === 'function') {
+  const __sm = startMatch;
+  window.startMatch = function(...args) {
+    callFriendUsed = false;
+    const cfBtn = document.getElementById('call-friend-btn');
+    if (cfBtn) { cfBtn.disabled = false; cfBtn.style.opacity = '1'; }
+    if (friendCallingTimeout) { clearTimeout(friendCallingTimeout); friendCallingTimeout = null; }
+    document.getElementById('call-friend-panel').style.display = 'none';
+    // جلب store data وتخزينها
+    if (currentUser) {
+      sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`).then(res => {
+        if (res && res[0]) localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(res[0]));
+      });
+    }
+    return __sm.apply(this, args);
+  };
+}
+
+// إعادة تعيين عند المباراة الفردية أيضاً
+const _origStartOffline = window.startOfflineMatch;
+if (typeof startOfflineMatch === 'function') {
+  const __sof = startOfflineMatch;
+  window.startOfflineMatch = function(...args) {
+    callFriendUsed = false;
+    const cfBtn = document.getElementById('call-friend-btn');
+    if (cfBtn) { cfBtn.disabled = false; cfBtn.style.opacity = '1'; }
+    document.getElementById('call-friend-panel').style.display = 'none';
+    if (currentUser) {
+      sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`).then(res => {
+        if (res && res[0]) localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(res[0]));
+      });
+    }
+    return __sof.apply(this, args);
+  };
+}

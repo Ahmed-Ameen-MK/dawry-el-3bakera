@@ -16,6 +16,7 @@
   --green:#1d8348; --green-bg:#f0faf4;
   --red:#c0392b; --red-bg:#fef1ef;
   --gold:#b5882e; --gold-bg:#fdf6e3;
+  --purple:#7b2ff7;
   --radius:18px; --radius-sm:10px;
   --shadow:0 2px 20px rgba(0,0,0,0.08);
   --shadow-lg:0 8px 40px rgba(0,0,0,0.14);
@@ -39,7 +40,7 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .store-hero p{font-size:15px;color:var(--ink3)}
 
 /* ── BALANCE BAR ── */
-.balance-bar{max-width:680px;margin:0 auto;padding:0 24px}
+.balance-bar{max-width:960px;margin:0 auto;padding:0 24px}
 .balance-card{background:var(--ink);border-radius:var(--radius);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;margin:28px 0 36px;gap:16px;flex-wrap:wrap}
 .balance-card .lbl{font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:4px}
 .balance-card .pts{font-size:32px;font-weight:700;color:#fff;letter-spacing:-1px;display:flex;align-items:center;gap:8px}
@@ -48,14 +49,26 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .not-logged{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px 28px;text-align:center;margin:28px 0 36px;font-size:14px;color:var(--ink3)}
 .not-logged a{color:var(--blue);text-decoration:none;font-weight:600}
 
-/* ── GRID ── */
-.store-grid{max-width:680px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+/* ── SECTION TITLE ── */
+.section-title{max-width:960px;margin:0 auto 16px;padding:0 24px;display:flex;align-items:center;gap:10px}
+.section-title h2{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.3px}
+.section-title .icon-wrap{width:36px;height:36px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:15px}
+
+/* ── PRIZES GRID (4 columns on desktop) ── */
+.prizes-grid{max-width:960px;margin:0 auto;padding:0 24px 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:860px){.prizes-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.prizes-grid{grid-template-columns:1fr;padding:0 16px 24px}}
+
+/* ── CHARS GRID (3 columns on desktop) ── */
+.chars-grid{max-width:960px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.chars-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.chars-grid{grid-template-columns:1fr;padding:0 16px 40px}}
 
 /* ── ITEM CARD ── */
 .item-card{background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:all 0.2s;position:relative}
 .item-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
 .item-card.owned{border-color:rgba(29,131,72,0.35);background:linear-gradient(160deg,#fff 70%,var(--green-bg) 100%)}
-.item-img-wrap{position:relative;overflow:hidden;border-bottom:none}
+.item-img-wrap{position:relative;overflow:hidden}
 .item-img-wrap img{width:100%;height:auto;display:block;object-fit:cover;transition:transform 0.35s ease}
 .item-card:hover .item-img-wrap img{transform:scale(1.04)}
 .item-img-wrap .item-badge{position:absolute;top:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
@@ -63,25 +76,48 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .badge-owned{background:var(--green);color:#fff}
 .badge-rare{background:linear-gradient(135deg,#b5882e,#f0c040);color:#fff}
 .badge-legendary{background:linear-gradient(135deg,#7b2ff7,#e040fb);color:#fff}
+.badge-char{background:linear-gradient(135deg,#0071e3,#34aadc);color:#fff}
 
-.item-body{padding:18px 20px 20px}
-.item-name{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:-0.3px}
-.item-desc{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:16px}
-.item-price{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700;color:var(--gold);margin-bottom:14px}
-.item-price i{font-size:13px}
-.item-price .price-num{font-size:22px;letter-spacing:-0.5px}
+.item-body{padding:16px 18px 18px}
+.item-name{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:5px;letter-spacing:-0.3px;display:flex;align-items:center;gap:6px}
+.item-desc{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:14px}
+.item-price{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--gold);margin-bottom:12px}
+.item-price i{font-size:12px}
+.item-price .price-num{font-size:20px;letter-spacing:-0.5px}
+.item-owned-count{font-size:13px;color:var(--green);font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:5px}
 
-.buy-btn{width:100%;padding:11px;border:none;border-radius:var(--radius-sm);font-family:'El Messiri',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+/* Help button */
+.help-btn{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:14px;padding:2px;transition:color 0.15s;margin-right:2px}
+.help-btn:hover{color:var(--blue)}
+
+.buy-btn{width:100%;padding:10px;border:none;border-radius:var(--radius-sm);font-family:'El Messiri',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
 .buy-btn.available{background:var(--blue);color:#fff}
 .buy-btn.available:hover{background:var(--blue-hover)}
 .buy-btn.available:active{transform:scale(0.97)}
 .buy-btn.no-funds{background:var(--bg2);color:var(--ink3);border:1px solid var(--line);cursor:not-allowed}
 .buy-btn.already-owned{background:var(--green-bg);color:var(--green);border:1px solid rgba(29,131,72,0.25);cursor:default}
 
+/* ── FRIENDS SECTION ── */
+.friends-section{max-width:960px;margin:0 auto 48px;padding:0 24px}
+.friends-card{background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
+.friends-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.friends-header .icon-wrap{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#eef4fb,#dde8f8);border:1px solid rgba(0,113,227,0.2);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:16px}
+.friends-header h2{font-size:19px;font-weight:700;color:var(--ink)}
+.friends-empty{text-align:center;padding:24px;color:var(--ink3);font-size:14px;background:var(--bg2);border-radius:var(--radius-sm);border:1px dashed var(--line)}
+.friends-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.friend-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;display:flex;align-items:center;gap:12px;transition:all 0.15s}
+.friend-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(0,113,227,0.1)}
+.friend-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff}
+.friend-avatar img{width:100%;height:100%;object-fit:cover}
+.friend-info{flex:1;min-width:0}
+.friend-name{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.friend-char{font-size:11px;color:var(--ink3);margin-top:2px}
+.friend-count-badge{font-size:11px;color:var(--blue);font-weight:700;background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.15);border-radius:12px;padding:2px 8px;margin-top:4px;display:inline-block}
+
 /* ── MODAL CONFIRM ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
-.modal-box{background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:36px 32px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);animation:pop 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;text-align:center}
+.modal-box{background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:36px 32px;max-width:440px;width:100%;box-shadow:var(--shadow-lg);animation:pop 0.3s cubic-bezier(0.34,1.56,0.64,1);position:relative;text-align:center}
 @keyframes pop{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
 .modal-close{position:absolute;top:14px;left:14px;width:30px;height:30px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--ink3);transition:all 0.15s}
 .modal-close:hover{background:var(--bg3);color:var(--ink)}
@@ -100,6 +136,13 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .btn-cancel{background:var(--bg2);color:var(--ink);border:1px solid var(--line) !important}
 .btn-cancel:hover{background:var(--bg3)}
 
+/* ── CHAR INFO MODAL ── */
+.char-info-list{text-align:right;margin:16px 0;background:var(--bg2);border-radius:var(--radius-sm);padding:16px}
+.char-info-list li{font-size:13px;color:var(--ink2);line-height:1.9;list-style:none;display:flex;align-items:flex-start;gap:6px}
+.char-info-list li::before{content:'•';color:var(--blue);font-weight:900;margin-top:2px;flex-shrink:0}
+.char-props{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:16px}
+.char-prop-tag{background:linear-gradient(135deg,rgba(0,113,227,0.1),rgba(0,113,227,0.05));border:1px solid rgba(0,113,227,0.2);color:var(--blue);font-size:12px;font-weight:700;border-radius:20px;padding:3px 10px}
+
 /* ── SUCCESS TOAST ── */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:500;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:var(--shadow-lg)}
 .toast.show{transform:translateX(-50%) translateY(0)}
@@ -109,11 +152,9 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-@media(max-width:520px){
-  .store-grid{grid-template-columns:1fr}
-  .balance-card{padding:16px 20px}
-  .balance-card .pts{font-size:26px}
-}
+/* ── DIVIDER ── */
+.store-divider{max-width:960px;margin:0 auto 32px;padding:0 24px}
+.store-divider hr{border:none;border-top:1px solid var(--line2)}
 </style>
 </head>
 <body>
@@ -127,9 +168,9 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 
 <!-- HERO -->
 <div class="store-hero">
-  <div class="eyebrow"><i class="fa-solid fa-star"></i> متجر الجوائز</div>
-  <h1>أنفق نقاطك على <span>جوائز حصرية</span></h1>
-  <p>اشترِ ألقاباً فريدة تُعرض على صفحتك الشخصية للعالم كله</p>
+  <div class="eyebrow"><i class="fa-solid fa-star"></i> متجر دوري العباقرة</div>
+  <h1>أنفق نقاطك على <span>جوائز وأصدقاء</span></h1>
+  <p>اشترِ ألقاباً فريدة وشخصيات مساعدة تنضم لمباريات الأسئلة</p>
 </div>
 
 <!-- BALANCE -->
@@ -137,11 +178,43 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
   <div id="balance-area"></div>
 </div>
 
-<!-- ITEMS GRID -->
-<div class="store-grid" id="store-grid">
-  <!-- Skeleton loaders -->
-  <div class="item-card"><div class="item-img-wrap skeleton" style="height:154px"></div><div class="item-body"><div class="skeleton" style="height:18px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;border-radius:6px;width:60%;margin-bottom:16px"></div><div class="skeleton" style="height:44px;border-radius:10px"></div></div></div>
-  <div class="item-card"><div class="item-img-wrap skeleton" style="height:154px"></div><div class="item-body"><div class="skeleton" style="height:18px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;border-radius:6px;width:60%;margin-bottom:16px"></div><div class="skeleton" style="height:44px;border-radius:10px"></div></div></div>
+<!-- ═══ قسم الجوائز ═══ -->
+<div class="section-title">
+  <div class="icon-wrap"><i class="fa-solid fa-trophy"></i></div>
+  <h2>جوائز الصدارة</h2>
+</div>
+<div class="prizes-grid" id="prizes-grid">
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+</div>
+
+<div class="store-divider"><hr></div>
+
+<!-- ═══ قسم الأصدقاء / الشخصيات ═══ -->
+<div class="section-title">
+  <div class="icon-wrap" style="color:var(--purple);background:linear-gradient(135deg,rgba(123,47,247,0.1),rgba(123,47,247,0.05));border-color:rgba(123,47,247,0.2)"><i class="fa-solid fa-users"></i></div>
+  <h2>الأصدقاء المساعدون</h2>
+</div>
+<div style="max-width:960px;margin:-8px auto 20px;padding:0 24px">
+  <p style="font-size:13px;color:var(--ink3);line-height:1.7"><i class="fa-solid fa-circle-info" style="color:var(--blue);margin-left:5px"></i> اشترِ شخصيات مساعدة واستخدمها في مباريات الأسئلة عبر زر "اتصل بصديق". كل شراء يضيف <strong>3 استخدامات</strong> للشخصية.</p>
+</div>
+<div class="chars-grid" id="chars-grid">
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:140px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:140px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:140px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+</div>
+
+<!-- ═══ قسم أصدقائي (للعرض) ═══ -->
+<div class="friends-section" id="my-friends-section" style="display:none">
+  <div class="friends-card">
+    <div class="friends-header">
+      <div class="icon-wrap"><i class="fa-solid fa-address-book"></i></div>
+      <h2>أصدقائي المتوفرون</h2>
+    </div>
+    <div id="my-friends-list"><div class="friends-empty">جاري التحميل...</div></div>
+  </div>
 </div>
 
 <!-- CONFIRM MODAL -->
@@ -150,7 +223,7 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
     <div class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></div>
     <img class="modal-img" id="modal-item-img" src="" alt="">
     <div class="modal-title" id="modal-item-name"></div>
-    <div class="modal-sub">هل أنت متأكد من شراء هذه الجائزة؟</div>
+    <div class="modal-sub" id="modal-item-sub">هل أنت متأكد من شراء هذه الجائزة؟</div>
     <div class="modal-price-row">
       <span class="before" id="modal-before"></span>
       <span class="arrow">→</span>
@@ -165,6 +238,18 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
       </button>
       <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
     </div>
+  </div>
+</div>
+
+<!-- CHAR INFO MODAL -->
+<div class="modal-overlay" id="modal-char-info">
+  <div class="modal-box">
+    <div class="modal-close" onclick="closeCharInfo()"><i class="fa-solid fa-xmark"></i></div>
+    <img class="modal-img" id="charinfo-img" src="" alt="" style="width:90px;height:90px">
+    <div class="modal-title" id="charinfo-name"></div>
+    <div class="char-props" id="charinfo-props"></div>
+    <ul class="char-info-list" id="charinfo-list"></ul>
+    <button class="btn-confirm" style="width:100%;padding:12px;border:none;border-radius:var(--radius-sm);font-family:'El Messiri',sans-serif;font-size:15px;font-weight:600;cursor:pointer;background:var(--blue);color:#fff" onclick="closeCharInfo()">حسناً</button>
   </div>
 </div>
 
@@ -190,55 +275,97 @@ async function sbFetch(path, opts = {}) {
   try { return JSON.parse(text); } catch { return null; }
 }
 
-// ── الجوائز المتاحة ──
-const ITEMS = [
+// ── الجوائز الأربع ──
+const PRIZES = [
+  { key:'p1', name:'المخ الفضي', section:'جوائز الصدارة', desc:'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون 70 نقطة صدارة.', price:70, img:'/store/p1.png', badge:'نادر', badgeClass:'badge-rare' },
+  { key:'p2', name:'المخ الذهبي', section:'جوائز الصدارة', desc:'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.', price:300, img:'/store/p2.png', badge:'ذهبي', badgeClass:'badge-rare' },
+  { key:'p3', name:'كأس العباقرة', section:'ألقاب أسطورية', desc:'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.', price:990, img:'/store/p3.png', badge:'أسطوري', badgeClass:'badge-legendary' },
+  { key:'p4', name:'إمبراطور العباقرة', section:'ألقاب أسطورية', desc:'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.', price:1500, img:'/store/p4.png', badge:'إمبراطور', badgeClass:'badge-legendary' }
+];
+
+// ── الشخصيات الست ──
+const CHARS = [
   {
-    key: 'p1',
-    name: 'المخ الفضي',
-    section: 'جوائز الصدارة',
-    desc: 'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون 70 نقطة صدارة.',
-    price: 70,
-    img: '/store/p1.png',
-    badge: 'نادر',
-    badgeClass: 'badge-rare'
+    key:'cody', name:'كودي', nameEn:'Cody', img:'/store/cody.png',
+    price:5, priceType:'normal',
+    badge:'مبرمج', badgeClass:'badge-char',
+    props:['البرمجة','السرعة'],
+    desc:'عبقري البرمجة. سريع في التفكير ومتخصص في الأسئلة التقنية.',
+    details:[
+      'نسبة الإجابة الصحيحة: 40% في الأسئلة العامة',
+      'ميزة خاصة: ترتفع النسبة إلى 99% في أسئلة البرمجة (عند وجود رموز مثل <> $ [] /)',
+      'مدة التفكير: 3 ثوانٍ'
+    ],
+    correctRate:0.40, specialKey:'programming', thinkTime:3000
   },
   {
-    key: 'p2',
-    name: 'المخ الذهبي',
-    section: 'جوائز الصدارة',
-    desc: 'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.',
-    price: 300,
-    img: '/store/p2.png',
-    badge: 'ذهبي',
-    badgeClass: 'badge-rare'
+    key:'conan', name:'كونان', nameEn:'Conan', img:'/store/conan.png',
+    price:11, priceType:'normal',
+    badge:'محقق', badgeClass:'badge-char',
+    props:['الإجابة الصحيحة','البطء'],
+    desc:'المحقق الذكي. يستغرق وقتاً أطول لكنه يصل للحل الصحيح.',
+    details:[
+      'نسبة الإجابة الصحيحة: 75% لجميع أنواع الأسئلة',
+      'مدة التفكير: 10 ثوانٍ'
+    ],
+    correctRate:0.75, specialKey:null, thinkTime:10000
   },
   {
-    key: 'p3',
-    name: 'كأس العباقرة',
-    section: 'ألقاب أسطورية',
-    desc: 'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.',
-    price: 990,
-    img: '/store/p3.png',
-    badge: 'أسطوري',
-    badgeClass: 'badge-legendary'
+    key:'gakusei', name:'غاكوسي', nameEn:'Gakusei', img:'/store/gakusei.png',
+    price:5, priceType:'upgrade',
+    badge:'طالب', badgeClass:'badge-char',
+    props:['الإجابة الصحيحة'],
+    desc:'الطالب المجتهد. متوازن في جميع المجالات.',
+    details:[
+      'نسبة الإجابة الصحيحة: 50% لجميع أنواع الأسئلة',
+      'مدة التفكير: 5 ثوانٍ'
+    ],
+    correctRate:0.50, specialKey:null, thinkTime:5000
   },
   {
-    key: 'p4',
-    name: 'إمبراطور العباقرة',
-    section: 'ألقاب أسطورية',
-    desc: 'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.',
-    price: 1500,
-    img: '/store/p4.png',
-    badge: 'إمبراطور',
-    badgeClass: 'badge-legendary'
+    key:'sakura', name:'ساكورا', nameEn:'Sakura', img:'/store/sakura.png',
+    price:5, priceType:'normal',
+    badge:'سريعة', badgeClass:'badge-char',
+    props:['السرعة'],
+    desc:'الأسرع في الإجابة. تُقلّل الوقت المستهلك بشكل كبير.',
+    details:[
+      'نسبة الإجابة الصحيحة: 40% لجميع أنواع الأسئلة',
+      'مدة التفكير: 2 ثانية فقط'
+    ],
+    correctRate:0.40, specialKey:null, thinkTime:2000
+  },
+  {
+    key:'duo', name:'دوو', nameEn:'Duo', img:'/store/duo.png',
+    price:8, priceType:'upgrade',
+    badge:'لغات', badgeClass:'badge-char',
+    props:['اللغات','السرعة'],
+    desc:'خبير اللغات. يبرع في الأسئلة التي تحتوي كلمات غير عربية.',
+    details:[
+      'نسبة الإجابة الصحيحة: 40% في الأسئلة العامة',
+      'ميزة خاصة: ترتفع النسبة إلى 99% في أسئلة اللغات (عند وجود كلمات غير عربية)',
+      'مدة التفكير: 3 ثوانٍ'
+    ],
+    correctRate:0.40, specialKey:'languages', thinkTime:3000
+  },
+  {
+    key:'einstein', name:'أينشتاين', nameEn:'Einstein', img:'/store/einstein.png',
+    price:15, priceType:'normal',
+    badge:'عبقري', badgeClass:'badge-legendary',
+    props:['الإجابة الصحيحة','البطء'],
+    desc:'أذكى الجميع. نسبة إجابة عالية جداً لكنه يحتاج وقتاً للتفكير.',
+    details:[
+      'نسبة الإجابة الصحيحة: 90% لجميع أنواع الأسئلة',
+      'مدة التفكير: 15 ثانية'
+    ],
+    correctRate:0.90, specialKey:null, thinkTime:15000
   }
 ];
 
 let currentUser = null;
-let storeData = null; // store row for current user
+let storeData = null;
 let pendingItem = null;
+let pendingIsChar = false;
 
-// ── تحميل المستخدم من localStorage ──
 function loadUser() {
   try {
     const saved = localStorage.getItem('genius_user');
@@ -246,7 +373,6 @@ function loadUser() {
   } catch {}
 }
 
-// ── عرض رصيد المستخدم ──
 function renderBalance() {
   const el = document.getElementById('balance-area');
   if (!currentUser) {
@@ -265,64 +391,141 @@ function renderBalance() {
     </div>`;
 }
 
-// ── جلب بيانات المتجر للمستخدم ──
 async function loadStoreData() {
   if (!currentUser) return null;
   const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`);
-  if (res && res[0]) {
-    storeData = res[0];
-  } else {
-    storeData = null;
-  }
+  storeData = (res && res[0]) ? res[0] : null;
   return storeData;
 }
 
-// ── رسم البطاقات ──
-function renderItems() {
-  const grid = document.getElementById('store-grid');
+// ── رسم الجوائز (4 عمود) ──
+function renderPrizes() {
+  const grid = document.getElementById('prizes-grid');
   const pts = currentUser ? (currentUser.level || 0) : 0;
-
-  grid.innerHTML = ITEMS.map(item => {
+  grid.innerHTML = PRIZES.map(item => {
     const owned = storeData && storeData[item.key] == 1;
     const canAfford = pts >= item.price;
-
     let btnHtml = '';
     if (owned) {
       btnHtml = `<button class="buy-btn already-owned"><i class="fa-solid fa-check-circle"></i> تمتلكها بالفعل</button>`;
     } else if (!currentUser) {
-      btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول للشراء</button>`;
+      btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول</button>`;
     } else if (canAfford) {
-      btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}')"><i class="fa-solid fa-bag-shopping"></i> شراء الآن</button>`;
+      btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}',false)"><i class="fa-solid fa-bag-shopping"></i> شراء</button>`;
     } else {
       btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
     }
-
     return `
-    <div class="item-card${owned ? ' owned' : ''}">
+    <div class="item-card${owned?' owned':''}">
       <div class="item-img-wrap">
-        <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='180px'">
-        <span class="item-badge ${owned ? 'badge-owned' : item.badgeClass}">${owned ? '✓ تمتلكها' : item.badge}</span>
-        <div class="item-section-label"><i class="fa-solid fa-trophy" style="margin-left:5px;font-size:11px;opacity:0.85"></i>${item.section || item.name}</div>
+        <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='120px'">
+        <span class="item-badge ${owned?'badge-owned':item.badgeClass}">${owned?'✓ تمتلكها':item.badge}</span>
+        <div class="item-section-label"><i class="fa-solid fa-trophy" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${item.section}</div>
       </div>
       <div class="item-body">
         <div class="item-name">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
-        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price.toLocaleString('ar-EG')}</span> نقطة صدارة</div>
+        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price.toLocaleString('ar-EG')}</span> نقطة</div>
         ${btnHtml}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── فتح نافذة التأكيد ──
-function openConfirm(key) {
+// ── رسم الشخصيات ──
+function renderChars() {
+  const grid = document.getElementById('chars-grid');
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  grid.innerHTML = CHARS.map(ch => {
+    const count = storeData ? (parseInt(storeData[ch.key]) || 0) : 0;
+    const canAfford = pts >= ch.price;
+    const priceLabel = ch.priceType === 'upgrade'
+      ? `<span style="font-size:11px;color:var(--blue);background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.2);border-radius:12px;padding:1px 7px;margin-right:4px">ترقية</span>`
+      : '';
+    let btnHtml = '';
+    if (!currentUser) {
+      btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول</button>`;
+    } else if (canAfford) {
+      btnHtml = `<button class="buy-btn available" onclick="openConfirm('${ch.key}',true)"><i class="fa-solid fa-bag-shopping"></i> شراء (+3 استخدامات)</button>`;
+    } else {
+      btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
+    }
+    const ownedSection = count > 0 ? `<div class="item-owned-count"><i class="fa-solid fa-circle-check"></i> لديك ${count} استخدام</div>` : '';
+    const propsHtml = ch.props.map(p=>`<span class="char-prop-tag">${p}</span>`).join('');
+    return `
+    <div class="item-card${count>0?' owned':''}">
+      <div class="item-img-wrap">
+        <img src="${ch.img}" alt="${ch.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='140px'">
+        <span class="item-badge ${ch.badgeClass}">${ch.badge}</span>
+        <div class="item-section-label"><i class="fa-solid fa-user-graduate" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${ch.name} (${ch.nameEn})</div>
+      </div>
+      <div class="item-body">
+        <div class="item-name">
+          ${ch.name}
+          <button class="help-btn" onclick="showCharInfo('${ch.key}')" title="معلومات الشخصية"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${propsHtml}</div>
+        <div class="item-desc">${ch.desc}</div>
+        ${ownedSection}
+        <div class="item-price">${priceLabel}<i class="fa-solid fa-star"></i> <span class="price-num">${ch.price.toLocaleString('ar-EG')}</span> نقطة</div>
+        ${btnHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── عرض معلومات شخصية ──
+function showCharInfo(key) {
+  const ch = CHARS.find(c=>c.key===key);
+  if (!ch) return;
+  document.getElementById('charinfo-img').src = ch.img;
+  document.getElementById('charinfo-name').textContent = `${ch.name} (${ch.nameEn})`;
+  document.getElementById('charinfo-props').innerHTML = ch.props.map(p=>`<span class="char-prop-tag">${p}</span>`).join('');
+  document.getElementById('charinfo-list').innerHTML = ch.details.map(d=>`<li>${d}</li>`).join('');
+  document.getElementById('modal-char-info').classList.add('show');
+}
+function closeCharInfo() { document.getElementById('modal-char-info').classList.remove('show'); }
+
+// ── رسم قسم أصدقائي ──
+function renderMyFriends() {
+  if (!currentUser || !storeData) return;
+  const section = document.getElementById('my-friends-section');
+  const list = document.getElementById('my-friends-list');
+  const friends = CHARS.filter(ch => {
+    const count = parseInt(storeData[ch.key]) || 0;
+    return count > 0;
+  });
+  if (friends.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  list.innerHTML = `<div class="friends-list">${friends.map(ch=>{
+    const count = parseInt(storeData[ch.key]) || 0;
+    return `<div class="friend-card">
+      <div class="friend-avatar"><img src="${ch.img}" alt="${ch.name}" onerror="this.parentElement.textContent='${ch.name[0]}'"></div>
+      <div class="friend-info">
+        <div class="friend-name">${ch.name}</div>
+        <div class="friend-char">${ch.nameEn}</div>
+        <div class="friend-count-badge"><i class="fa-solid fa-bolt" style="font-size:9px"></i> ${count} استخدام</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── فتح modal التأكيد ──
+function openConfirm(key, isChar) {
   if (!currentUser) return;
-  const item = ITEMS.find(i => i.key === key);
+  pendingIsChar = isChar;
+  const item = isChar ? CHARS.find(c=>c.key===key) : PRIZES.find(p=>p.key===key);
   if (!item) return;
   pendingItem = item;
   const pts = currentUser.level || 0;
   document.getElementById('modal-item-img').src = item.img;
   document.getElementById('modal-item-name').textContent = item.name;
+  document.getElementById('modal-item-sub').textContent = isChar
+    ? 'سيتم إضافة 3 استخدامات لهذه الشخصية.'
+    : 'هل أنت متأكد من شراء هذه الجائزة؟';
   document.getElementById('modal-before').textContent = `${pts.toLocaleString('ar-EG')} ☆`;
   document.getElementById('modal-after').textContent = `${(pts - item.price).toLocaleString('ar-EG')} ☆`;
   document.getElementById('modal-cost').textContent = `${item.price.toLocaleString('ar-EG')} ☆`;
@@ -345,46 +548,51 @@ async function confirmPurchase() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الشراء...';
 
-  // خصم النقاط من system
   const newLevel = pts - item.price;
-  const sysRes = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
     body: JSON.stringify({ level: newLevel })
   });
 
-  if (!sysRes && sysRes !== null) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> تأكيد الشراء';
-    showToast('حدث خطأ، حاول مجدداً', true);
-    return;
+  let storeUpdate = {};
+  if (pendingIsChar) {
+    // الشخصيات: أضف 3 للعداد الحالي
+    const currentCount = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
+    storeUpdate[item.key] = currentCount + 3;
+  } else {
+    storeUpdate[item.key] = 1;
   }
 
-  // تحديث جدول store
-  const storeUpdate = { [item.key]: 1 };
   if (storeData) {
-    // صف موجود → PATCH
     await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
       method: 'PATCH',
       body: JSON.stringify(storeUpdate)
     });
   } else {
-    // صف جديد → POST
     await sbFetch(`/rest/v1/store`, {
       method: 'POST',
       body: JSON.stringify({ id: currentUser.id, name: currentUser.name, ...storeUpdate })
     });
   }
 
-  // تحديث محلي
   currentUser.level = newLevel;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
   if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
-  storeData[item.key] = 1;
+  if (pendingIsChar) {
+    const currentCount = parseInt(storeData[item.key]) || 0;
+    storeData[item.key] = currentCount + 3;
+  } else {
+    storeData[item.key] = 1;
+  }
 
   closeModal();
   renderBalance();
-  renderItems();
-  showToast(`تم شراء "${item.name}" بنجاح! 🎉`);
+  renderPrizes();
+  renderChars();
+  renderMyFriends();
+  showToast(pendingIsChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` : `تم شراء "${item.name}" بنجاح! 🎉`);
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> تأكيد الشراء';
 }
 
 function showToast(msg, isError = false) {
@@ -396,20 +604,21 @@ function showToast(msg, isError = false) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── إغلاق الـ modal عند النقر خارجه ──
-document.getElementById('modal-confirm').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+document.getElementById('modal-confirm').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+document.getElementById('modal-char-info').addEventListener('click', function(e) { if (e.target===this) closeCharInfo(); });
 
-// ── تشغيل ──
 async function init() {
   loadUser();
   renderBalance();
   await loadStoreData();
-  renderItems();
+  renderPrizes();
+  renderChars();
+  renderMyFriends();
 }
-
 init();
+
+// ── تصدير بيانات الشخصيات للاستخدام من index.html ──
+window.STORE_CHARS = CHARS;
 </script>
 </body>
 </html>

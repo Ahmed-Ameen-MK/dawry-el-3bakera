@@ -1618,14 +1618,31 @@
 
       <div class="status-bar" id="match-status"></div>
 
-      <!-- زر الانسحاب -->
-      <div style="text-align:center;margin-bottom:10px">
+      <!-- أزرار الإجراءات: اتصل بصديق + انسحاب -->
+      <div style="text-align:center;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+        <button id="call-friend-btn" onclick="openCallFriend()"
+          style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.3);border-radius:20px;padding:7px 22px;
+                 font-family:'El Messiri',sans-serif;font-size:13px;color:var(--blue);
+                 cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-phone"></i> اتصل بصديق
+        </button>
         <button id="forfeit-btn" onclick="confirmForfeit()"
           style="background:none;border:1px solid rgba(192,57,43,0.3);border-radius:20px;padding:7px 22px;
                  font-family:'El Messiri',sans-serif;font-size:13px;color:var(--red);
                  cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
           <i class="fa-solid fa-flag"></i> انسحاب من المباراة
         </button>
+      </div>
+
+      <!-- قسم الأصدقاء داخل المباراة -->
+      <div id="call-friend-panel" style="display:none;margin-bottom:16px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:20px;animation:up 0.3s ease">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink)">
+            <i class="fa-solid fa-users" style="color:var(--blue)"></i> اختر صديقاً للمساعدة
+          </div>
+          <button onclick="closeCallFriend()" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:4px"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="call-friend-list"></div>
       </div>
       <div class="match-chat" id="match-chat" style="display:none">
         <div class="match-chat-header">
