@@ -2045,60 +2045,82 @@ function closeCallFriend() {
   if (friendCallingTimeout) { clearTimeout(friendCallingTimeout); friendCallingTimeout = null; }
 }
 
-// ── أنيميشن الشخصية: تفكر في المنتصف ثم تتحرك لليمين وتظهر الإجابة من اليسار ──
+// ── أنيميشن الشخصية: تفكر في المنتصف ثم تنزلق لأقصى اليمين والبابل تملأ باقي الشاشة ──
 function showFriendOverlay(ch, onThinkDone, thinkTime) {
-  // إزالة أي overlay سابق
   const old = document.getElementById('friend-overlay');
   if (old) old.remove();
+
+  // حجم الشخصية – نسبي حسب عرض الشاشة
+  const vw = window.innerWidth;
+  const charSize = Math.min(120, Math.max(72, vw * 0.18)); // 18vw بين 72-120px
+  const labelH  = 44; // ارتفاع تسمية الاسم
 
   const overlay = document.createElement('div');
   overlay.id = 'friend-overlay';
   overlay.style.cssText = `
     position:fixed;inset:0;z-index:9999;
-    background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);
-    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     pointer-events:none;
+    overflow:hidden;
   `;
 
-  overlay.innerHTML = `
-    <div id="friend-char-wrap" style="
-      display:flex;flex-direction:column;align-items:center;gap:12px;
-      transition:transform 0.6s cubic-bezier(0.34,1.2,0.64,1);
+  // ── الشخصية: تبدأ في المنتصف ثم تنتقل لأقصى اليمين ──
+  // نضعها في مركز الشاشة بـ position:absolute
+  const charWrap = document.createElement('div');
+  charWrap.id = 'friend-char-wrap';
+  charWrap.style.cssText = `
+    position:absolute;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    width:${charSize + 24}px;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    transition:transform 0.65s cubic-bezier(0.34,1.1,0.64,1),
+               left 0.65s cubic-bezier(0.34,1.1,0.64,1);
+    will-change:transform,left;
+  `;
+  charWrap.innerHTML = `
+    <img src="${ch.img}" alt="${ch.name}" style="
+      width:${charSize}px;height:${charSize}px;border-radius:50%;
+      border:4px solid rgba(255,255,255,0.3);
+      background:rgba(255,255,255,0.08);
+      object-fit:contain;
+      box-shadow:0 8px 40px rgba(0,0,0,0.5);
+      display:block;
+    " onerror="this.style.display='none'">
+    <div style="
+      background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);
+      color:#fff;border-radius:20px;padding:6px 16px;
+      font-size:clamp(11px,3vw,14px);font-weight:700;
+      font-family:'El Messiri',sans-serif;
+      display:flex;align-items:center;gap:8px;white-space:nowrap;
     ">
-      <img src="${ch.img}" alt="${ch.name}" style="
-        width:110px;height:110px;border-radius:50%;
-        border:4px solid rgba(255,255,255,0.25);
-        background:rgba(255,255,255,0.1);
-        object-fit:contain;box-shadow:0 8px 32px rgba(0,0,0,0.4);
-      " onerror="this.style.display='none'">
-      <div style="
-        background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
-        color:#fff;border-radius:20px;padding:7px 18px;font-size:14px;font-weight:600;
-        font-family:'El Messiri',sans-serif;
-        display:flex;align-items:center;gap:8px;
-      ">
-        <span>${ch.name}</span>
-        <span id="think-dots" style="letter-spacing:2px">●●●</span>
-      </div>
+      <span>${ch.name}</span>
+      <span id="think-dots" style="letter-spacing:3px;font-size:10px">●●●</span>
     </div>
   `;
-
+  overlay.appendChild(charWrap);
   document.body.appendChild(overlay);
 
   // أنيميشن نقاط التفكير
-  const dotsEl = overlay.querySelector('#think-dots');
+  const dotsEl = charWrap.querySelector('#think-dots');
   let dotState = 0;
   const dotsAnim = setInterval(() => {
-    const states = ['●○○','○●○','○○●','●●●'];
-    dotsEl.textContent = states[dotState++ % states.length];
-  }, 350);
+    const s = ['●○○','○●○','○○●','●●●'];
+    dotsEl.textContent = s[dotState++ % s.length];
+  }, 380);
 
-  // بعد وقت التفكير → حرّك الشخصية لليمين
+  // بعد وقت التفكير → انقل الشخصية لأقصى اليمين
   friendCallingTimeout = setTimeout(() => {
     clearInterval(dotsAnim);
-    const wrap = document.getElementById('friend-char-wrap');
-    if (wrap) wrap.style.transform = 'translateX(45%)';
-    setTimeout(() => onThinkDone(), 650);
+    dotsEl.textContent = '';
+    const w = charWrap.offsetWidth;
+    const screenW = window.innerWidth;
+    // ننقلها لأقصى اليمين: left = 100% - charWidth - 8px padding
+    charWrap.style.left = (screenW - w - 8) + 'px';
+    charWrap.style.transform = 'translate(0,-50%)';
+    setTimeout(() => onThinkDone(), 680);
   }, thinkTime);
 }
 
@@ -2108,32 +2130,50 @@ function showFriendAnswer(ch, answerText, onClose) {
 
   overlay.style.pointerEvents = 'all';
 
-  // أضف البابل من اليسار
+  const charWrap = document.getElementById('friend-char-wrap');
+  const charW = charWrap ? charWrap.offsetWidth + 8 : 140;
+  const screenW = window.innerWidth;
+  const bubbleW = screenW - charW - 24; // باقي الشاشة مع هامش
+
   const bubble = document.createElement('div');
   bubble.id = 'friend-answer-bubble';
   bubble.style.cssText = `
     position:absolute;
-    left:8%;top:50%;transform:translateY(-50%);
-    max-width:42%;
-    background:#fff;border-radius:20px;padding:24px 22px;
-    box-shadow:0 12px 48px rgba(0,0,0,0.25);
+    left:12px;
+    top:50%;
+    width:${bubbleW}px;
+    max-width:${bubbleW}px;
+    transform:translateY(-50%) translateX(-28px);
+    background:#fff;
+    border-radius:20px;
+    padding:clamp(16px,4vw,28px) clamp(14px,4vw,26px);
+    box-shadow:0 12px 56px rgba(0,0,0,0.3);
     font-family:'El Messiri',sans-serif;
     opacity:0;
-    transition:opacity 0.4s ease,transform 0.4s ease;
-    transform:translateY(-50%) translateX(-20px);
+    transition:opacity 0.4s ease, transform 0.4s ease;
+    box-sizing:border-box;
   `;
   bubble.innerHTML = `
-    <div style="font-size:13px;color:#6e6e73;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-      <img src="${ch.img}" style="width:22px;height:22px;border-radius:50%;object-fit:contain;background:#f5f5f7" onerror="this.style.display='none'">
+    <div style="font-size:clamp(11px,3vw,13px);color:#6e6e73;margin-bottom:10px;
+      display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <img src="${ch.img}" style="
+        width:clamp(18px,5vw,24px);height:clamp(18px,5vw,24px);
+        border-radius:50%;object-fit:contain;background:#f5f5f7;flex-shrink:0
+      " onerror="this.style.display='none'">
       <span>${ch.name} يقترح:</span>
     </div>
-    <div style="font-size:17px;font-weight:700;color:#1d1d1f;line-height:1.5;margin-bottom:18px">
+    <div style="
+      font-size:clamp(14px,4vw,19px);font-weight:700;color:#1d1d1f;
+      line-height:1.55;margin-bottom:18px;word-break:break-word;
+    ">
       ${answerText}
     </div>
     <button onclick="closeFriendOverlay()" style="
-      width:100%;padding:11px;border:none;border-radius:12px;
+      width:100%;padding:clamp(9px,2.5vw,13px);
+      border:none;border-radius:12px;
       background:#0071e3;color:#fff;
-      font-family:'El Messiri',sans-serif;font-size:15px;font-weight:700;
+      font-family:'El Messiri',sans-serif;
+      font-size:clamp(13px,3.5vw,16px);font-weight:700;
       cursor:pointer;transition:background 0.15s;
     " onmouseover="this.style.background='#0077ed'" onmouseout="this.style.background='#0071e3'">
       <i class="fa-solid fa-check" style="margin-left:5px"></i> حسناً
@@ -2141,7 +2181,6 @@ function showFriendAnswer(ch, answerText, onClose) {
   `;
   overlay.appendChild(bubble);
 
-  // أنيمت الدخول
   requestAnimationFrame(() => requestAnimationFrame(() => {
     bubble.style.opacity = '1';
     bubble.style.transform = 'translateY(-50%) translateX(0)';
@@ -2180,7 +2219,6 @@ async function callFriend(charKey) {
     method: 'PATCH',
     body: JSON.stringify({ [charKey]: count - 1 })
   });
-  // تحديث localStorage
   if (storeData) {
     storeData[charKey] = count - 1;
     localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeData));
@@ -2188,12 +2226,6 @@ async function callFriend(charKey) {
 
   friendCallInProgress = true;
   closeCallFriend();
-
-  // تحديث localStorage بالرصيد الجديد
-  if (storeData) {
-    storeData[charKey] = count - 1;
-    localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeData));
-  }
 
   // أظهر overlay الشخصية
   showFriendOverlay(ch, () => {

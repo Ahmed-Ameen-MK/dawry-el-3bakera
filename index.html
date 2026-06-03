@@ -47,6 +47,32 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  /* ── منع التحديد والنسخ في كل الموقع ── */
+  * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  /* السماح بالتحديد في حقول الإدخال فقط */
+  input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+  }
+  /* منع تمييز النص تماماً */
+  ::selection { background: transparent; }
+  ::-moz-selection { background: transparent; }
+
+  /* الأسئلة والخيارات: منع النسخ بشكل صارم */
+  .q-text, .option-btn, .options-grid {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none;
+    cursor: default;
+  }
+  .option-btn { cursor: pointer; }
+
   body {
     font-family: 'El Messiri', sans-serif;
     background: var(--bg);
@@ -725,7 +751,13 @@
     box-shadow: 0 4px 20px rgba(0,113,227,0.4);
     transition: all 0.2s;
     color: #fff; font-size: 20px;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
+  .contact-fab-btn:focus { outline: none; box-shadow: 0 4px 20px rgba(0,113,227,0.4); }
+  .contact-fab-btn:focus-visible { outline: none; }
   .contact-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
   .contact-fab-btn.open { background: var(--ink); transform: rotate(45deg); }
   .contact-fab-popup {
@@ -1927,7 +1959,7 @@
 </div>
 
 <script src="questions.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
 </body>
 </html>
 
