@@ -189,10 +189,10 @@ function showMsg(el, txt, type) {
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  const nb = document.getElementById('nav-' + (name === 'leaderboard' ? 'lb' : name === 'profile' ? 'profile' : 'home'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  const nb = document.getElementById('nav-' + (name === 'profile' ? 'profile' : 'home'));
   if (nb) nb.classList.add('active');
-  if (name === 'leaderboard') loadLeaderboard();
   if (name === 'profile') loadProfile();
 }
 
@@ -1982,14 +1982,10 @@ const FRIEND_CHARS = [
     props:['الإجابة الصحيحة','البطء'], details:['نسبة إجابة صحيحة: 90%','مدة التفكير: 15 ثانية'] }
 ];
 
-let callFriendUsed = false; // مرة واحدة في المباراة
 let friendCallingTimeout = null;
+let friendCallInProgress = false; // منع الاتصال المتزامن فقط
 
 function openCallFriend() {
-  if (callFriendUsed) {
-    setStatus('⚠️ استخدمت هذه الميزة بالفعل في هذه المباراة!', 'warn');
-    return;
-  }
   const panel = document.getElementById('call-friend-panel');
   const listEl = document.getElementById('call-friend-list');
   panel.style.display = 'block';
@@ -2049,8 +2045,123 @@ function closeCallFriend() {
   if (friendCallingTimeout) { clearTimeout(friendCallingTimeout); friendCallingTimeout = null; }
 }
 
+// ── أنيميشن الشخصية: تفكر في المنتصف ثم تتحرك لليمين وتظهر الإجابة من اليسار ──
+function showFriendOverlay(ch, onThinkDone, thinkTime) {
+  // إزالة أي overlay سابق
+  const old = document.getElementById('friend-overlay');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'friend-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+  `;
+
+  overlay.innerHTML = `
+    <div id="friend-char-wrap" style="
+      display:flex;flex-direction:column;align-items:center;gap:12px;
+      transition:transform 0.6s cubic-bezier(0.34,1.2,0.64,1);
+    ">
+      <img src="${ch.img}" alt="${ch.name}" style="
+        width:110px;height:110px;border-radius:50%;
+        border:4px solid rgba(255,255,255,0.25);
+        background:rgba(255,255,255,0.1);
+        object-fit:contain;box-shadow:0 8px 32px rgba(0,0,0,0.4);
+      " onerror="this.style.display='none'">
+      <div style="
+        background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
+        color:#fff;border-radius:20px;padding:7px 18px;font-size:14px;font-weight:600;
+        font-family:'El Messiri',sans-serif;
+        display:flex;align-items:center;gap:8px;
+      ">
+        <span>${ch.name}</span>
+        <span id="think-dots" style="letter-spacing:2px">●●●</span>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // أنيميشن نقاط التفكير
+  const dotsEl = overlay.querySelector('#think-dots');
+  let dotState = 0;
+  const dotsAnim = setInterval(() => {
+    const states = ['●○○','○●○','○○●','●●●'];
+    dotsEl.textContent = states[dotState++ % states.length];
+  }, 350);
+
+  // بعد وقت التفكير → حرّك الشخصية لليمين
+  friendCallingTimeout = setTimeout(() => {
+    clearInterval(dotsAnim);
+    const wrap = document.getElementById('friend-char-wrap');
+    if (wrap) wrap.style.transform = 'translateX(45%)';
+    setTimeout(() => onThinkDone(), 650);
+  }, thinkTime);
+}
+
+function showFriendAnswer(ch, answerText, onClose) {
+  const overlay = document.getElementById('friend-overlay');
+  if (!overlay) { onClose(); return; }
+
+  overlay.style.pointerEvents = 'all';
+
+  // أضف البابل من اليسار
+  const bubble = document.createElement('div');
+  bubble.id = 'friend-answer-bubble';
+  bubble.style.cssText = `
+    position:absolute;
+    left:8%;top:50%;transform:translateY(-50%);
+    max-width:42%;
+    background:#fff;border-radius:20px;padding:24px 22px;
+    box-shadow:0 12px 48px rgba(0,0,0,0.25);
+    font-family:'El Messiri',sans-serif;
+    opacity:0;
+    transition:opacity 0.4s ease,transform 0.4s ease;
+    transform:translateY(-50%) translateX(-20px);
+  `;
+  bubble.innerHTML = `
+    <div style="font-size:13px;color:#6e6e73;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <img src="${ch.img}" style="width:22px;height:22px;border-radius:50%;object-fit:contain;background:#f5f5f7" onerror="this.style.display='none'">
+      <span>${ch.name} يقترح:</span>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:#1d1d1f;line-height:1.5;margin-bottom:18px">
+      ${answerText}
+    </div>
+    <button onclick="closeFriendOverlay()" style="
+      width:100%;padding:11px;border:none;border-radius:12px;
+      background:#0071e3;color:#fff;
+      font-family:'El Messiri',sans-serif;font-size:15px;font-weight:700;
+      cursor:pointer;transition:background 0.15s;
+    " onmouseover="this.style.background='#0077ed'" onmouseout="this.style.background='#0071e3'">
+      <i class="fa-solid fa-check" style="margin-left:5px"></i> حسناً
+    </button>
+  `;
+  overlay.appendChild(bubble);
+
+  // أنيمت الدخول
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'translateY(-50%) translateX(0)';
+  }));
+
+  window._friendOverlayCloseCallback = onClose;
+}
+
+function closeFriendOverlay() {
+  const overlay = document.getElementById('friend-overlay');
+  if (overlay) overlay.remove();
+  if (window._friendOverlayCloseCallback) {
+    window._friendOverlayCloseCallback();
+    window._friendOverlayCloseCallback = null;
+  }
+}
+
 async function callFriend(charKey) {
   if (!currentUser) return;
+  if (friendCallInProgress) return; // منع الاتصال المتزامن
   const ch = FRIEND_CHARS.find(c => c.key === charKey);
   if (!ch) return;
 
@@ -2075,57 +2186,30 @@ async function callFriend(charKey) {
     localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeData));
   }
 
-  callFriendUsed = true;
+  friendCallInProgress = true;
   closeCallFriend();
-  document.getElementById('call-friend-btn').disabled = true;
-  document.getElementById('call-friend-btn').style.opacity = '0.5';
 
-  // حدد الإجابة الصحيحة بناءً على منطق الشخصية
-  setStatus(`<img src="${ch.img}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-left:5px" onerror="this.style.display='none'"> ${ch.name} يفكر...`, '');
+  // تحديث localStorage بالرصيد الجديد
+  if (storeData) {
+    storeData[charKey] = count - 1;
+    localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeData));
+  }
 
-  friendCallingTimeout = setTimeout(() => {
-    if (!currentQ) return;
+  // أظهر overlay الشخصية
+  showFriendOverlay(ch, () => {
+    if (!currentQ) { friendCallInProgress = false; return; }
     const qText = currentQ.q || '';
-
     let rate = ch.correctRate;
-    // تطبيق الخاصية الخاصة
-    if (ch.specialKey === 'programming' && /[<>$/\[\]{}]/.test(qText)) {
-      rate = 0.99;
-    } else if (ch.specialKey === 'languages' && /[a-zA-Zàáâãäåæçèéêëìíîïðñòóôõöùúûü]/i.test(qText)) {
-      rate = 0.99;
-    }
+    if (ch.specialKey === 'programming' && /[<>$/\[\]{}]/.test(qText)) rate = 0.99;
+    else if (ch.specialKey === 'languages' && /[a-zA-Zàáâãäåæçèéêëìíîïðñòóôõöùúûü]/i.test(qText)) rate = 0.99;
 
     const willAnswer = Math.random() < rate;
-    if (willAnswer) {
-      // الإجابة الصحيحة
-      const correctIdx = currentQ.a;
-      const btns = document.querySelectorAll('.option-btn');
-      setStatus(`✅ ${ch.name} يقترح الإجابة: "${currentQ.opts[correctIdx]}"`, 'good');
-      if (btns[correctIdx]) {
-        btns[correctIdx].style.boxShadow = '0 0 0 3px rgba(29,131,72,0.4)';
-        btns[correctIdx].style.borderColor = 'rgba(29,131,72,0.5)';
-        btns[correctIdx].style.background = 'rgba(29,131,72,0.06)';
-      }
-    } else {
-      // إجابة خاطئة عشوائية
-      const wrongOptions = currentQ.opts.map((o,i)=>i).filter(i=>i!==currentQ.a);
-      const randomWrong = wrongOptions[Math.floor(Math.random()*wrongOptions.length)];
-      const btns = document.querySelectorAll('.option-btn');
-      setStatus(`🤔 ${ch.name} يقترح الإجابة: "${currentQ.opts[randomWrong]}" (قد لا يكون متأكداً!)`, '');
-      if (btns[randomWrong]) {
-        btns[randomWrong].style.boxShadow = '0 0 0 3px rgba(181,136,46,0.4)';
-        btns[randomWrong].style.borderColor = 'rgba(181,136,46,0.5)';
-        btns[randomWrong].style.background = 'rgba(181,136,46,0.06)';
-      }
-    }
-    setTimeout(() => {
-      // إزالة التمييز بعد 8 ثوانٍ
-      document.querySelectorAll('.option-btn').forEach(b => {
-        b.style.boxShadow = '';
-        b.style.borderColor = '';
-        b.style.background = '';
-      });
-    }, 8000);
+    const answerIdx = willAnswer
+      ? currentQ.a
+      : (() => { const w = currentQ.opts.map((_,i)=>i).filter(i=>i!==currentQ.a); return w[Math.floor(Math.random()*w.length)]; })();
+    const answerText = currentQ.opts[answerIdx];
+
+    showFriendAnswer(ch, answerText, () => { friendCallInProgress = false; });
   }, ch.thinkTime);
 }
 
@@ -2134,10 +2218,11 @@ const _origStartMatch = window.startMatch;
 if (typeof startMatch === 'function') {
   const __sm = startMatch;
   window.startMatch = function(...args) {
-    callFriendUsed = false;
+    friendCallInProgress = false;
     const cfBtn = document.getElementById('call-friend-btn');
     if (cfBtn) { cfBtn.disabled = false; cfBtn.style.opacity = '1'; }
     if (friendCallingTimeout) { clearTimeout(friendCallingTimeout); friendCallingTimeout = null; }
+    closeFriendOverlay();
     document.getElementById('call-friend-panel').style.display = 'none';
     // جلب store data وتخزينها
     if (currentUser) {
@@ -2154,9 +2239,10 @@ const _origStartOffline = window.startOfflineMatch;
 if (typeof startOfflineMatch === 'function') {
   const __sof = startOfflineMatch;
   window.startOfflineMatch = function(...args) {
-    callFriendUsed = false;
+    friendCallInProgress = false;
     const cfBtn = document.getElementById('call-friend-btn');
     if (cfBtn) { cfBtn.disabled = false; cfBtn.style.opacity = '1'; }
+    closeFriendOverlay();
     document.getElementById('call-friend-panel').style.display = 'none';
     if (currentUser) {
       sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=*`).then(res => {

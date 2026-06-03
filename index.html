@@ -1292,9 +1292,11 @@
       <button onclick="safeShowPage('home')" class="active" id="nav-home">
         <i class="fa-solid fa-house"></i> <span class="nav-text">الرئيسية</span>
       </button>
-      <button onclick="safeShowPage('leaderboard')" id="nav-lb">
+      <a href="leaderboard.html" id="nav-lb" style="background:none;border:none;color:var(--ink3);padding:6px 14px;border-radius:20px;cursor:pointer;font-family:'El Messiri',sans-serif;font-size:14px;font-weight:500;transition:all 0.15s;display:flex;align-items:center;gap:6px;text-decoration:none"
+        onmouseover="this.style.background='var(--bg2)';this.style.color='var(--ink)'"
+        onmouseout="this.style.background='';this.style.color=''">
         <i class="fa-solid fa-ranking-star"></i> <span class="nav-text">المتصدرون</span>
-      </button>
+      </a>
       <button onclick="window.location.href='store.html'" id="nav-store">
         <i class="fa-solid fa-store"></i> <span class="nav-text">المتجر</span>
       </button>
@@ -1562,9 +1564,9 @@
               </div>
 
               <div class="side-lb-footer">
-                <button class="btn-view-more" onclick="safeShowPage('leaderboard')">
+                <a href="leaderboard.html" class="btn-view-more">
                   <i class="fa-solid fa-arrow-left"></i> عرض المزيد
-                </button>
+                </a>
               </div>
             </div>
           </div><!-- end sidebar -->
@@ -1659,26 +1661,6 @@
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- LEADERBOARD PAGE -->
-  <div class="page" id="page-leaderboard">
-    <div class="section">
-      <div class="card">
-        <div class="card-header">
-          <div class="icon-wrap"><i class="fa-solid fa-ranking-star"></i></div>
-          <h2>لوحة المتصدرين</h2>
-        </div>
-        <div style="margin-bottom:20px;position:relative">
-          <input type="text" id="lb-search" placeholder="ابحث عن لاعب..." oninput="filterLeaderboard()"
-            style="width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px 11px 40px;color:var(--ink);font-family:'El Messiri',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s,box-shadow 0.15s"
-            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(0,113,227,0.12)'"
-            onblur="this.style.borderColor='';this.style.boxShadow=''">
-          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:14px;pointer-events:none"></i>
-        </div>
-        <div id="lb-list"><div style="text-align:center;color:var(--ink3);padding:40px">جاري التحميل...</div></div>
-      </div>
     </div>
   </div>
 
