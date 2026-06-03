@@ -1652,13 +1652,20 @@
 
       <div class="status-bar" id="match-status"></div>
 
-      <!-- أزرار الإجراءات: اتصل بصديق + انسحاب -->
+      <!-- أزرار الإجراءات: اتصل بصديق + استبعاد + انسحاب -->
       <div style="text-align:center;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
         <button id="call-friend-btn" onclick="openCallFriend()"
           style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.3);border-radius:20px;padding:7px 22px;
                  font-family:'El Messiri',sans-serif;font-size:13px;color:var(--blue);
                  cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
           <i class="fa-solid fa-phone"></i> اتصل بصديق
+        </button>
+        <button id="exclusion-btn" onclick="useExclusion()"
+          style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:20px;padding:7px 22px;
+                 font-family:'El Messiri',sans-serif;font-size:13px;color:#e74c3c;
+                 cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-ban"></i> استبعاد خيار
+          <span id="exclusion-count-badge" style="background:rgba(231,76,60,0.15);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">0</span>
         </button>
         <button id="forfeit-btn" onclick="confirmForfeit()"
           style="background:none;border:1px solid rgba(192,57,43,0.3);border-radius:20px;padding:7px 22px;

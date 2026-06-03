@@ -178,6 +178,17 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
   <div id="balance-area"></div>
 </div>
 
+<!-- ═══ قسم بطاقة الاستبعاد ═══ -->
+<div class="section-title">
+  <div class="icon-wrap" style="color:#e74c3c;background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.2)"><i class="fa-solid fa-ban"></i></div>
+  <h2>أدوات المباراة</h2>
+</div>
+<div class="prizes-grid" id="exclusion-grid" style="grid-template-columns:repeat(2,1fr);max-width:520px;margin-bottom:32px">
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+</div>
+
+<div class="store-divider"><hr></div>
+
 <!-- ═══ قسم الجوائز ═══ -->
 <div class="section-title">
   <div class="icon-wrap"><i class="fa-solid fa-trophy"></i></div>
@@ -274,6 +285,19 @@ async function sbFetch(path, opts = {}) {
   const text = await res.text();
   try { return JSON.parse(text); } catch { return null; }
 }
+
+// ── بطاقة الاستبعاد ──
+const EXCLUSION_ITEM = {
+  key: 'exclusion',
+  name: 'بطاقة الاستبعاد',
+  section: 'أدوات المباراة',
+  desc: 'استبعد اختياراً خاطئاً من بين الأربعة خيارات! يمنحك ×٣ استخدامات، ويمكن استخدامها ٣ مرات في السؤال الواحد.',
+  price: 1,
+  img: '/store/exclusion.png',
+  badge: 'مميز',
+  badgeClass: 'badge-char',
+  isExclusion: true
+};
 
 // ── الجوائز الأربع ──
 const PRIZES = [
@@ -398,7 +422,40 @@ async function loadStoreData() {
   return storeData;
 }
 
-// ── رسم الجوائز (4 عمود) ──
+// ── رسم بطاقة الاستبعاد ──
+function renderExclusion() {
+  const grid = document.getElementById('exclusion-grid');
+  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const item = EXCLUSION_ITEM;
+  const count = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
+  const canAfford = pts >= item.price;
+  const ownedSection = count > 0 ? `<div class="item-owned-count"><i class="fa-solid fa-circle-check"></i> لديك ${count} استخدام</div>` : '';
+  let btnHtml = '';
+  if (!currentUser) {
+    btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول</button>`;
+  } else if (canAfford) {
+    btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}',false,'exclusion')"><i class="fa-solid fa-bag-shopping"></i> شراء (+3 استخدامات)</button>`;
+  } else {
+    btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
+  }
+  grid.innerHTML = `
+    <div class="item-card${count>0?' owned':''}">
+      <div class="item-img-wrap">
+        <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='120px'">
+        <span class="item-badge ${item.badgeClass}">${item.badge}</span>
+        <div class="item-section-label"><i class="fa-solid fa-ban" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${item.section}</div>
+      </div>
+      <div class="item-body">
+        <div class="item-name"><i class="fa-solid fa-ban" style="color:#e74c3c;font-size:13px"></i> ${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        ${ownedSection}
+        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price}</span> نقطة</div>
+        ${btnHtml}
+      </div>
+    </div>`;
+}
+
+
 function renderPrizes() {
   const grid = document.getElementById('prizes-grid');
   const pts = currentUser ? (currentUser.level || 0) : 0;
@@ -514,17 +571,24 @@ function renderMyFriends() {
 }
 
 // ── فتح modal التأكيد ──
-function openConfirm(key, isChar) {
+function openConfirm(key, isChar, type) {
   if (!currentUser) return;
   pendingIsChar = isChar;
-  const item = isChar ? CHARS.find(c=>c.key===key) : PRIZES.find(p=>p.key===key);
+  const pendingType = type || (isChar ? 'char' : 'prize');
+  window._pendingType = pendingType;
+  let item;
+  if (pendingType === 'exclusion') {
+    item = EXCLUSION_ITEM;
+  } else {
+    item = isChar ? CHARS.find(c=>c.key===key) : PRIZES.find(p=>p.key===key);
+  }
   if (!item) return;
   pendingItem = item;
   const pts = currentUser.level || 0;
   document.getElementById('modal-item-img').src = item.img;
   document.getElementById('modal-item-name').textContent = item.name;
-  document.getElementById('modal-item-sub').textContent = isChar
-    ? 'سيتم إضافة 3 استخدامات لهذه الشخصية.'
+  document.getElementById('modal-item-sub').textContent = (isChar || pendingType === 'exclusion')
+    ? 'سيتم إضافة 3 استخدامات لهذه البطاقة.'
     : 'هل أنت متأكد من شراء هذه الجائزة؟';
   document.getElementById('modal-before').textContent = `${pts.toLocaleString('ar-EG')} ☆`;
   document.getElementById('modal-after').textContent = `${(pts - item.price).toLocaleString('ar-EG')} ☆`;
@@ -559,7 +623,8 @@ async function confirmPurchase() {
 
   // 2) حساب القيمة الجديدة للعمود
   let storeUpdate = {};
-  if (isChar) {
+  const pendingType = window._pendingType || (isChar ? 'char' : 'prize');
+  if (isChar || pendingType === 'exclusion') {
     const currentCount = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
     storeUpdate[item.key] = currentCount + 3;
   } else {
@@ -578,7 +643,7 @@ async function confirmPurchase() {
   currentUser.level = newLevel;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
 
-  if (isChar) {
+  if (isChar || pendingType === 'exclusion') {
     storeData[item.key] = storeUpdate[item.key];
   } else {
     storeData[item.key] = 1;
@@ -586,10 +651,16 @@ async function confirmPurchase() {
 
   closeModal();
   renderBalance();
+  renderExclusion();
   renderPrizes();
   renderChars();
   renderMyFriends();
-  showToast(isChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` : `تم شراء "${item.name}" بنجاح! 🎉`);
+  const pendingTypeLocal = window._pendingType || (isChar ? 'char' : 'prize');
+  showToast(
+    pendingTypeLocal === 'exclusion' ? `تم شراء بطاقة الاستبعاد! +3 استخدامات 🎉` :
+    isChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` :
+    `تم شراء "${item.name}" بنجاح! 🎉`
+  );
   btn.disabled = false;
   btn.innerHTML = '<i class="fa-solid fa-check"></i> تأكيد الشراء';
 }
@@ -610,6 +681,7 @@ async function init() {
   loadUser();
   renderBalance();
   await loadStoreData();
+  renderExclusion();
   renderPrizes();
   renderChars();
   renderMyFriends();

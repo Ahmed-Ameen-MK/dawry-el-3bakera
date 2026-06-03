@@ -787,6 +787,18 @@ function startMatch(opp) {
   isInMatch = true;
   history.pushState(null, '', window.location.href); // لاعتراض زر الرجوع
 
+  // ── تحقق من نقاط الخصم وأعدها لـ 0 إذا لم تكن كذلك ──
+  if (opp && opp.id && opp.id !== 'cpu') {
+    sbFetch(`/rest/v1/system?id=eq.${opp.id}&select=points`, { method: 'GET' }).then(res => {
+      if (res && res[0] && (res[0].points || 0) !== 0) {
+        sbFetch(`/rest/v1/system?id=eq.${opp.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ points: 0 })
+        });
+      }
+    });
+  }
+
   document.getElementById('my-name-m').textContent = currentUser.name;
   document.getElementById('my-pts-m').textContent = '0';
   document.getElementById('my-country-m').textContent = currentUser.country || '';
@@ -835,6 +847,7 @@ function startMatch(opp) {
 
   startChatPolling();
   startOpponentResultPolling();
+  startOpponentCallFriendListener();
 
   const iAmSmaller = currentUser.id < opponent.id;
   if (iAmSmaller) loadNextQuestion();
@@ -877,6 +890,7 @@ function pollForQuestion() {
 }
 
 function renderQuestion(q) {
+  exclusionUsedThisQuestion = 0;
   const labels = ['أ', 'ب', 'ج', 'د'];
   document.getElementById('q-num').textContent = `السؤال ${usedQIds.length}`;
   document.getElementById('q-text').textContent = q.q;
@@ -890,6 +904,7 @@ function renderQuestion(q) {
     btn.onclick = () => isOfflineMatch ? answerOfflineQ(i, btn) : answerQ(i, btn);
     grid.appendChild(btn);
   });
+  updateExclusionBtn();
 }
 
 function setStatus(text, cls='') {
@@ -1104,6 +1119,8 @@ async function endMatch(reason) {
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
   rtUnsubscribe('chat-listen');
+  rtUnsubscribe('opp-call-friend');
+  hideOppCallingFriend();
   document.getElementById('match-chat').style.display = 'none';
 
   // حساب نتيجة لوحة الصدارة (level)
@@ -1200,6 +1217,8 @@ async function forfeitMatch() {
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
   rtUnsubscribe('chat-listen');
+  rtUnsubscribe('opp-call-friend');
+  hideOppCallingFriend();
 
   const newLevel = Math.max(0, (currentUser.level || 0) - 2);
 
@@ -1299,6 +1318,60 @@ function startOpponentResultPolling() {
       showMatchResult(displayResult);
     }
   }, 2000);
+}
+
+// ==================== OPPONENT CALL FRIEND LISTENER (Realtime) ====================
+let _oppCallFriendToast = null;
+
+function startOpponentCallFriendListener() {
+  if (!opponent || !opponent.id || opponent.id === 'cpu') return;
+  rtUnsubscribe('opp-call-friend');
+
+  rtSubscribe('opp-call-friend', `id=eq.${opponent.id}`, (record) => {
+    const friendName = record && record['call_friend'];
+    if (friendName) {
+      showOppCallingFriend(friendName);
+    } else {
+      hideOppCallingFriend();
+    }
+  });
+}
+
+function showOppCallingFriend(friendName) {
+  hideOppCallingFriend();
+  const toast = document.createElement('div');
+  toast.id = 'opp-call-friend-toast';
+  toast.style.cssText = `
+    position:fixed;top:70px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#1d1d1f,#3d3d3f);
+    color:#fff;padding:10px 22px;border-radius:28px;
+    font-family:'El Messiri',sans-serif;font-size:14px;font-weight:700;
+    z-index:8000;display:flex;align-items:center;gap:10px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.35);
+    animation:slideDown 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    white-space:nowrap;
+  `;
+  toast.innerHTML = `
+    <i class="fa-solid fa-phone-volume" style="color:#4ade80;font-size:16px"></i>
+    <span>خصمك يتصل بـ: <strong style="color:#f0c040">${friendName}</strong></span>
+  `;
+  if (!document.getElementById('opp-call-style')) {
+    const s = document.createElement('style');
+    s.id = 'opp-call-style';
+    s.textContent = `@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  _oppCallFriendToast = toast;
+}
+
+function hideOppCallingFriend() {
+  if (_oppCallFriendToast) {
+    _oppCallFriendToast.remove();
+    _oppCallFriendToast = null;
+  }
+  const existing = document.getElementById('opp-call-friend-toast');
+  if (existing) existing.remove();
 }
 
 // ==================== MATCH CHAT ====================
@@ -1964,6 +2037,94 @@ if (window.location.hash && window.location.hash.includes('access_token')) {
   } catch(e) { localStorage.removeItem('genius_user'); }
 }
 
+// ==================== EXCLUSION SYSTEM ====================
+let exclusionUsedThisQuestion = 0; // عدد مرات الاستخدام في السؤال الحالي
+const EXCLUSION_MAX_PER_Q = 3;
+
+function updateExclusionBtn() {
+  const btn = document.getElementById('exclusion-btn');
+  const badge = document.getElementById('exclusion-count-badge');
+  if (!btn || !badge) return;
+
+  const storeRaw = localStorage.getItem('genius_store_' + (currentUser ? currentUser.id : ''));
+  const storeData = storeRaw ? JSON.parse(storeRaw) : null;
+  const count = storeData ? (parseInt(storeData['exclusion']) || 0) : 0;
+
+  badge.textContent = count;
+
+  if (count <= 0 || exclusionUsedThisQuestion >= EXCLUSION_MAX_PER_Q || answered) {
+    btn.disabled = true;
+    btn.style.opacity = '0.45';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+async function useExclusion() {
+  if (!currentUser || !currentQ || answered) return;
+  if (exclusionUsedThisQuestion >= EXCLUSION_MAX_PER_Q) {
+    setStatus('استخدمت بطاقة الاستبعاد ٣ مرات في هذا السؤال!', 'bad');
+    return;
+  }
+
+  // تحقق من الرصيد
+  const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=exclusion`);
+  const storeRow = res && res[0] ? res[0] : null;
+  const count = storeRow ? (parseInt(storeRow['exclusion']) || 0) : 0;
+  if (count <= 0) {
+    setStatus('ليس لديك بطاقات استبعاد! اشترِ من المتجر.', 'bad');
+    updateExclusionBtn();
+    return;
+  }
+
+  // إيجاد الخيارات الخاطئة غير المخفية
+  const btns = document.querySelectorAll('.option-btn');
+  const wrongVisible = [];
+  btns.forEach((btn, i) => {
+    if (i !== currentQ.a && !btn.disabled && !btn.classList.contains('excluded-option')) {
+      wrongVisible.push({ btn, i });
+    }
+  });
+
+  if (wrongVisible.length === 0) {
+    setStatus('لا يوجد خيارات يمكن استبعادها!', 'bad');
+    return;
+  }
+
+  // اختر خياراً خاطئاً عشوائياً للاستبعاد
+  const pick = wrongVisible[Math.floor(Math.random() * wrongVisible.length)];
+  pick.btn.disabled = true;
+  pick.btn.style.opacity = '0.35';
+  pick.btn.classList.add('excluded-option');
+  pick.btn.style.textDecoration = 'line-through';
+
+  // خصم استخدام
+  await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ exclusion: count - 1 })
+  });
+  const storeRaw = localStorage.getItem('genius_store_' + currentUser.id);
+  const storeLocal = storeRaw ? JSON.parse(storeRaw) : {};
+  storeLocal['exclusion'] = count - 1;
+  localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeLocal));
+
+  exclusionUsedThisQuestion++;
+  updateExclusionBtn();
+  setStatus(`✂️ تم استبعاد خيار خاطئ! (${EXCLUSION_MAX_PER_Q - exclusionUsedThisQuestion} استخدام متبقٍ في هذا السؤال)`, 'good');
+}
+
+// إعادة ضبط عداد الاستبعاد عند كل سؤال جديد
+const _origRenderQuestion = window.renderQuestion;
+if (typeof renderQuestion === 'function') {
+  const __rq = renderQuestion;
+  window.renderQuestion = function(...args) {
+    exclusionUsedThisQuestion = 0;
+    __rq.apply(this, args);
+    updateExclusionBtn();
+  };
+}
+
 // ==================== CALL A FRIEND SYSTEM ====================
 
 // بيانات الشخصيات (نفس store.html لكن في index)
@@ -2227,8 +2388,20 @@ async function callFriend(charKey) {
   friendCallInProgress = true;
   closeCallFriend();
 
+  // ── أخبر الخصم أنك تتصل بصديق عبر عمود call_friend ──
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ call_friend: ch.name })
+  });
+
   // أظهر overlay الشخصية
-  showFriendOverlay(ch, () => {
+  showFriendOverlay(ch, async () => {
+    // امسح اسم الصديق بعد انتهاء التفكير
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ call_friend: null })
+    });
+
     if (!currentQ) { friendCallInProgress = false; return; }
     const qText = currentQ.q || '';
     let rate = ch.correctRate;
