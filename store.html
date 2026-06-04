@@ -71,6 +71,12 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .item-img-wrap{position:relative;overflow:hidden}
 .item-img-wrap img{width:100%;height:auto;display:block;object-fit:cover;transition:transform 0.35s ease}
 .item-card:hover .item-img-wrap img{transform:scale(1.04)}
+
+/* ── CHAR VIDEO BG ── */
+.char-img-container{position:relative;overflow:hidden;min-height:160px;background:#000}
+.char-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;z-index:0}
+.char-img-container img{position:relative;z-index:1;width:100%;height:auto;display:block;object-fit:cover;transition:transform 0.35s ease}
+.item-card:hover .char-img-container img{transform:scale(1.04)}
 .item-img-wrap .item-badge{position:absolute;top:12px;right:12px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
 .item-section-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.55) 0%,transparent 100%);padding:18px 14px 10px;font-size:13px;font-weight:700;color:#fff;letter-spacing:0.2px}
 .badge-owned{background:var(--green);color:#fff}
@@ -178,17 +184,6 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
   <div id="balance-area"></div>
 </div>
 
-<!-- ═══ قسم بطاقة الاستبعاد ═══ -->
-<div class="section-title">
-  <div class="icon-wrap" style="color:#e74c3c;background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.2)"><i class="fa-solid fa-ban"></i></div>
-  <h2>أدوات المباراة</h2>
-</div>
-<div class="prizes-grid" id="exclusion-grid" style="grid-template-columns:repeat(2,1fr);max-width:520px;margin-bottom:32px">
-  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
-</div>
-
-<div class="store-divider"><hr></div>
-
 <!-- ═══ قسم الجوائز ═══ -->
 <div class="section-title">
   <div class="icon-wrap"><i class="fa-solid fa-trophy"></i></div>
@@ -198,6 +193,17 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
   <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
   <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
   <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+  <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
+</div>
+
+<div class="store-divider"><hr></div>
+
+<!-- ═══ قسم أدوات المباراة ═══ -->
+<div class="section-title">
+  <div class="icon-wrap" style="color:#e74c3c;background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.2)"><i class="fa-solid fa-ban"></i></div>
+  <h2>أدوات المباراة</h2>
+</div>
+<div class="prizes-grid" id="exclusion-grid" style="grid-template-columns:repeat(2,1fr);max-width:780px;margin-bottom:32px">
   <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
 </div>
 
@@ -298,6 +304,34 @@ const EXCLUSION_ITEM = {
   badgeClass: 'badge-char',
   isExclusion: true
 };
+
+// ── بطاقة استبدال السؤال ──
+const REPLACE_ITEM = {
+  key: 'replace',
+  name: 'بطاقة استبدال السؤال',
+  section: 'أدوات المباراة',
+  desc: 'استبدل السؤال الحالي بسؤال جديد من قائمة الأسئلة. الوقت لا يُعاد! السؤال الجديد يُرى فقط من طرفك.',
+  price: 1,
+  img: '/store/replace.png',
+  badge: 'استبدال',
+  badgeClass: 'badge-char',
+  isReplace: true
+};
+
+// ── بطاقة قلب السؤال للخصم ──
+const FLIP_ITEM = {
+  key: 'flip',
+  name: 'بطاقة قلب السؤال',
+  section: 'أدوات المباراة',
+  desc: 'اقلب نص السؤال عند خصمك! تظهر الحروف معكوسة لديه فقط. تُزال تلقائياً بعد انتهاء السؤال.',
+  price: 2,
+  img: '/store/flip.png',
+  badge: 'فوضى',
+  badgeClass: 'badge-legendary',
+  isFlip: true
+};
+
+const TOOL_ITEMS = [EXCLUSION_ITEM, REPLACE_ITEM, FLIP_ITEM];
 
 // ── الجوائز الأربع ──
 const PRIZES = [
@@ -422,37 +456,40 @@ async function loadStoreData() {
   return storeData;
 }
 
-// ── رسم بطاقة الاستبعاد ──
+// ── رسم أدوات المباراة (استبعاد + استبدال + قلب) ──
 function renderExclusion() {
   const grid = document.getElementById('exclusion-grid');
   const pts = currentUser ? (currentUser.level || 0) : 0;
-  const item = EXCLUSION_ITEM;
-  const count = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
-  const canAfford = pts >= item.price;
-  const ownedSection = count > 0 ? `<div class="item-owned-count"><i class="fa-solid fa-circle-check"></i> لديك ${count} استخدام</div>` : '';
-  let btnHtml = '';
-  if (!currentUser) {
-    btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول</button>`;
-  } else if (canAfford) {
-    btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}',false,'exclusion')"><i class="fa-solid fa-bag-shopping"></i> شراء (+3 استخدامات)</button>`;
-  } else {
-    btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
-  }
-  grid.innerHTML = `
+  grid.innerHTML = TOOL_ITEMS.map(item => {
+    const count = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
+    const canAfford = pts >= item.price;
+    const ownedSection = count > 0 ? `<div class="item-owned-count"><i class="fa-solid fa-circle-check"></i> لديك ${count} استخدام</div>` : '';
+    let btnHtml = '';
+    if (!currentUser) {
+      btnHtml = `<button class="buy-btn no-funds" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-right-to-bracket"></i> سجّل الدخول</button>`;
+    } else if (canAfford) {
+      btnHtml = `<button class="buy-btn available" onclick="openConfirm('${item.key}',false,'tool')"><i class="fa-solid fa-bag-shopping"></i> شراء (+3 استخدامات)</button>`;
+    } else {
+      btnHtml = `<button class="buy-btn no-funds"><i class="fa-solid fa-lock"></i> نقاط غير كافية</button>`;
+    }
+    const icon = item.key === 'exclusion' ? 'fa-ban' : item.key === 'replace' ? 'fa-arrows-rotate' : 'fa-rotate';
+    const iconColor = item.key === 'exclusion' ? '#e74c3c' : item.key === 'replace' ? '#0071e3' : '#7b2ff7';
+    return `
     <div class="item-card${count>0?' owned':''}">
       <div class="item-img-wrap">
         <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='120px'">
         <span class="item-badge ${item.badgeClass}">${item.badge}</span>
-        <div class="item-section-label"><i class="fa-solid fa-ban" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${item.section}</div>
+        <div class="item-section-label"><i class="fa-solid ${icon}" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${item.section}</div>
       </div>
       <div class="item-body">
-        <div class="item-name"><i class="fa-solid fa-ban" style="color:#e74c3c;font-size:13px"></i> ${item.name}</div>
+        <div class="item-name"><i class="fa-solid ${icon}" style="color:${iconColor};font-size:13px"></i> ${item.name}</div>
         <div class="item-desc">${item.desc}</div>
         ${ownedSection}
         <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price}</span> نقطة</div>
         ${btnHtml}
       </div>
     </div>`;
+  }).join('');
 }
 
 
@@ -511,10 +548,11 @@ function renderChars() {
     const propsHtml = ch.props.map(p=>`<span class="char-prop-tag">${p}</span>`).join('');
     return `
     <div class="item-card${count>0?' owned':''}">
-      <div class="item-img-wrap">
-        <img src="${ch.img}" alt="${ch.name}" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#e8e8ed,#f5f5f7)';this.parentElement.style.minHeight='140px'">
-        <span class="item-badge ${ch.badgeClass}">${ch.badge}</span>
-        <div class="item-section-label"><i class="fa-solid fa-user-graduate" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${ch.name} (${ch.nameEn})</div>
+      <div class="char-img-container">
+        <video class="char-bg-video" autoplay muted loop playsinline src="/store/card-bg.mp4"></video>
+        <img src="${ch.img}" alt="${ch.name}" onerror="this.style.display='none'">
+        <span class="item-badge ${ch.badgeClass}" style="position:absolute;top:12px;right:12px;z-index:2">${ch.badge}</span>
+        <div class="item-section-label" style="z-index:2"><i class="fa-solid fa-user-graduate" style="margin-left:5px;font-size:10px;opacity:0.85"></i>${ch.name} (${ch.nameEn})</div>
       </div>
       <div class="item-body">
         <div class="item-name">
@@ -577,7 +615,9 @@ function openConfirm(key, isChar, type) {
   const pendingType = type || (isChar ? 'char' : 'prize');
   window._pendingType = pendingType;
   let item;
-  if (pendingType === 'exclusion') {
+  if (pendingType === 'tool') {
+    item = TOOL_ITEMS.find(t => t.key === key);
+  } else if (pendingType === 'exclusion') {
     item = EXCLUSION_ITEM;
   } else {
     item = isChar ? CHARS.find(c=>c.key===key) : PRIZES.find(p=>p.key===key);
@@ -624,7 +664,7 @@ async function confirmPurchase() {
   // 2) حساب القيمة الجديدة للعمود
   let storeUpdate = {};
   const pendingType = window._pendingType || (isChar ? 'char' : 'prize');
-  if (isChar || pendingType === 'exclusion') {
+  if (isChar || pendingType === 'exclusion' || pendingType === 'tool') {
     const currentCount = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
     storeUpdate[item.key] = currentCount + 3;
   } else {
@@ -643,7 +683,7 @@ async function confirmPurchase() {
   currentUser.level = newLevel;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
 
-  if (isChar || pendingType === 'exclusion') {
+  if (isChar || pendingType === 'exclusion' || pendingType === 'tool') {
     storeData[item.key] = storeUpdate[item.key];
   } else {
     storeData[item.key] = 1;
@@ -658,6 +698,7 @@ async function confirmPurchase() {
   const pendingTypeLocal = window._pendingType || (isChar ? 'char' : 'prize');
   showToast(
     pendingTypeLocal === 'exclusion' ? `تم شراء بطاقة الاستبعاد! +3 استخدامات 🎉` :
+    pendingTypeLocal === 'tool' ? `تم شراء ${item.name}! +3 استخدامات 🎉` :
     isChar ? `تم شراء ${item.name}! +3 استخدامات 🎉` :
     `تم شراء "${item.name}" بنجاح! 🎉`
   );

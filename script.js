@@ -787,6 +787,18 @@ function startMatch(opp) {
   isInMatch = true;
   history.pushState(null, '', window.location.href); // لاعتراض زر الرجوع
 
+  // ── إعادة ضبط نقاطي إلى 0 عند البداية ──
+  if (currentUser) {
+    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=points`, { method: 'GET' }).then(res => {
+      if (res && res[0] && (res[0].points || 0) !== 0) {
+        sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ points: 0 })
+        });
+      }
+    });
+  }
+
   // ── تحقق من نقاط الخصم وأعدها لـ 0 إذا لم تكن كذلك ──
   if (opp && opp.id && opp.id !== 'cpu') {
     sbFetch(`/rest/v1/system?id=eq.${opp.id}&select=points`, { method: 'GET' }).then(res => {
@@ -848,6 +860,11 @@ function startMatch(opp) {
   startChatPolling();
   startOpponentResultPolling();
   startOpponentCallFriendListener();
+  startInternetMonitoring();
+  startOppInternetWatcher();
+  _myFlipSubscribed = false;
+  _oppDisconnected = false;
+  startFlipListener();
 
   const iAmSmaller = currentUser.id < opponent.id;
   if (iAmSmaller) loadNextQuestion();
@@ -905,6 +922,8 @@ function renderQuestion(q) {
     grid.appendChild(btn);
   });
   updateExclusionBtn();
+  if (typeof updateReplaceBtn === 'function') updateReplaceBtn();
+  if (typeof updateFlipBtn === 'function') updateFlipBtn();
 }
 
 function setStatus(text, cls='') {
@@ -1118,8 +1137,13 @@ async function endMatch(reason) {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
+  clearInterval(_internetInterval);
+  clearInterval(_oppInternetInterval);
   rtUnsubscribe('chat-listen');
   rtUnsubscribe('opp-call-friend');
+  rtUnsubscribe('my-flip');
+  _myFlipSubscribed = false;
+  _oppDisconnected = false;
   hideOppCallingFriend();
   document.getElementById('match-chat').style.display = 'none';
 
@@ -1216,8 +1240,11 @@ async function forfeitMatch() {
   clearInterval(qTimerInterval);
   clearInterval(chatPollInterval);
   clearInterval(oppResultPollInterval);
+  clearInterval(_internetInterval);
+  clearInterval(_oppInternetInterval);
   rtUnsubscribe('chat-listen');
   rtUnsubscribe('opp-call-friend');
+  rtUnsubscribe('my-flip');
   hideOppCallingFriend();
 
   const newLevel = Math.max(0, (currentUser.level || 0) - 2);
@@ -2457,3 +2484,328 @@ if (typeof startOfflineMatch === 'function') {
     return __sof.apply(this, args);
   };
 }
+
+// ==================== REPLACE QUESTION SYSTEM ====================
+let replaceUsedThisQuestion = false;
+
+function updateReplaceBtn() {
+  const btn = document.getElementById('replace-btn');
+  const badge = document.getElementById('replace-count-badge');
+  if (!btn || !badge) return;
+  const storeRaw = localStorage.getItem('genius_store_' + (currentUser ? currentUser.id : ''));
+  const sd = storeRaw ? JSON.parse(storeRaw) : null;
+  const count = sd ? (parseInt(sd['replace']) || 0) : 0;
+  badge.textContent = count;
+  if (count <= 0 || replaceUsedThisQuestion || answered || isOfflineMatch) {
+    btn.disabled = true;
+    btn.style.opacity = '0.45';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+async function useReplace() {
+  if (!currentUser || !currentQ || answered || replaceUsedThisQuestion || isOfflineMatch) return;
+  const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=replace`);
+  const storeRow = res && res[0] ? res[0] : null;
+  const count = storeRow ? (parseInt(storeRow['replace']) || 0) : 0;
+  if (count <= 0) {
+    setStatus('ليس لديك بطاقات استبدال! اشترِ من المتجر.', 'bad');
+    updateReplaceBtn();
+    return;
+  }
+
+  // اختر سؤالاً جديداً غير مستخدم وغير نفس السؤال الحالي
+  const available = QUESTIONS.filter(q => !usedQIds.includes(q.id) && q.id !== currentQ.id);
+  if (!available.length) {
+    setStatus('لا يوجد أسئلة بديلة متاحة!', 'bad');
+    return;
+  }
+  const newQ = available[Math.floor(Math.random() * available.length)];
+
+  // خصم استخدام
+  await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ replace: count - 1 })
+  });
+  const storeRaw = localStorage.getItem('genius_store_' + currentUser.id);
+  const storeLocal = storeRaw ? JSON.parse(storeRaw) : {};
+  storeLocal['replace'] = count - 1;
+  localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeLocal));
+
+  // نضيف id السؤال الجديد بدلاً من القديم
+  usedQIds = usedQIds.filter(id => id !== currentQ.id);
+  usedQIds.push(newQ.id);
+  currentQ = newQ;
+  replaceUsedThisQuestion = true;
+
+  // أوقف المؤقت الحالي وأعد رسم السؤال بدون إعادة الوقت
+  clearInterval(qTimerInterval);
+  renderQuestionNoTimerReset(newQ);
+  updateReplaceBtn();
+  setStatus('🔄 تم استبدال السؤال!', 'good');
+}
+
+function renderQuestionNoTimerReset(q) {
+  // رسم السؤال بدون إعادة ضبط المؤقت
+  exclusionUsedThisQuestion = 0;
+  const labels = ['أ', 'ب', 'ج', 'د'];
+  document.getElementById('q-num').textContent = `السؤال ${usedQIds.length}`;
+  document.getElementById('q-text').textContent = q.q;
+  setStatus('', '');
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-label">${labels[i]}</span>${opt}`;
+    btn.onclick = () => isOfflineMatch ? answerOfflineQ(i, btn) : answerQ(i, btn);
+    grid.appendChild(btn);
+  });
+  // أعد تشغيل المؤقت من حيث توقف (نحتفظ بالوقت المتبقي)
+  continueQTimer();
+  updateExclusionBtn();
+  updateReplaceBtn();
+  updateFlipBtn();
+}
+
+let _remainingTimerSecs = 60;
+function continueQTimer() {
+  // احفظ الوقت المتبقي من المؤقت الحالي
+  qTimerInterval = setInterval(() => {
+    _remainingTimerSecs--;
+    document.getElementById('q-timer-text').textContent = _remainingTimerSecs;
+    document.getElementById('q-timer-bar').style.width = (_remainingTimerSecs / 60 * 100) + '%';
+    if (_remainingTimerSecs <= 15) document.getElementById('q-timer-bar').style.background = 'var(--red)';
+    if (_remainingTimerSecs <= 0) {
+      clearInterval(qTimerInterval);
+      setStatus('⏱ انتهى وقت السؤال!', 'warn');
+      disableOptions();
+      const btns2 = document.querySelectorAll('.option-btn');
+      if (btns2[currentQ.a]) btns2[currentQ.a].classList.add('correct');
+      if (!answered) {
+        answered = true;
+        sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+          method: 'PATCH', body: JSON.stringify({ answer: 'timeout' })
+        });
+      }
+      setTimeout(() => nextQuestion(), 2200);
+    }
+  }, 1000);
+}
+
+// نعيد ضبط المتغير عند كل سؤال جديد - بحيث نحفظ الوقت من بداية السؤال
+const _origStartQTimer = window.startQTimer;
+if (typeof startQTimer === 'function') {
+  const __sqt = startQTimer;
+  window.startQTimer = function(...args) {
+    _remainingTimerSecs = 60;
+    replaceUsedThisQuestion = false;
+    return __sqt.apply(this, args);
+  };
+}
+
+// ==================== FLIP QUESTION SYSTEM ====================
+function updateFlipBtn() {
+  const btn = document.getElementById('flip-btn');
+  const badge = document.getElementById('flip-count-badge');
+  if (!btn || !badge) return;
+  const storeRaw = localStorage.getItem('genius_store_' + (currentUser ? currentUser.id : ''));
+  const sd = storeRaw ? JSON.parse(storeRaw) : null;
+  const count = sd ? (parseInt(sd['flip']) || 0) : 0;
+  badge.textContent = count;
+  if (count <= 0 || answered || isOfflineMatch || !opponent || opponent.id === 'cpu') {
+    btn.disabled = true;
+    btn.style.opacity = '0.45';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+async function useFlip() {
+  if (!currentUser || !currentQ || answered || isOfflineMatch || !opponent || opponent.id === 'cpu') return;
+  const res = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=flip`);
+  const storeRow = res && res[0] ? res[0] : null;
+  const count = storeRow ? (parseInt(storeRow['flip']) || 0) : 0;
+  if (count <= 0) {
+    setStatus('ليس لديك بطاقات قلب! اشترِ من المتجر.', 'bad');
+    updateFlipBtn();
+    return;
+  }
+
+  // خصم استخدام
+  await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ flip: count - 1 })
+  });
+  const storeRaw = localStorage.getItem('genius_store_' + currentUser.id);
+  const storeLocal = storeRaw ? JSON.parse(storeRaw) : {};
+  storeLocal['flip'] = count - 1;
+  localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeLocal));
+
+  // أكتب "on" في عمود flip في system للخصم
+  await sbFetch(`/rest/v1/system?id=eq.${opponent.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ flip: 'on' })
+  });
+
+  setStatus('🔀 تم قلب السؤال عند خصمك!', 'good');
+  updateFlipBtn();
+}
+
+// مراقبة عمود flip الخاص بي وتطبيق القلب إذا كان "on"
+let _myFlipSubscribed = false;
+function startFlipListener() {
+  if (_myFlipSubscribed || !currentUser) return;
+  _myFlipSubscribed = true;
+  rtSubscribe('my-flip', `id=eq.${currentUser.id}`, (record) => {
+    if (record && record.flip === 'on') {
+      applyFlipToQuestion();
+    }
+  });
+}
+
+function applyFlipToQuestion() {
+  const qEl = document.getElementById('q-text');
+  if (!qEl) return;
+  // اعكس النص حرفاً حرفاً
+  qEl.textContent = qEl.textContent.split('').reverse().join('');
+  // امسح flip من قاعدة البيانات
+  sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ flip: null })
+  });
+}
+
+// ابدأ الاستماع لـ flip عند بدء المباراة
+const _origStartMatchForFlip = window.startMatch;
+if (typeof startMatch === 'function') {
+  const __smf = window.startMatch;
+  window.startMatch = function(...args) {
+    _myFlipSubscribed = false;
+    startFlipListener();
+    return __smf.apply(this, args);
+  };
+}
+
+// امسح flip للخصم عند الانتقال للسؤال التالي (بعد انتهاء السؤال)
+const _origNextQ = window.nextQuestion;
+if (typeof nextQuestion === 'function') {
+  const __nq = nextQuestion;
+  window.nextQuestion = function(...args) {
+    // امسح flip الخاص بالخصم إذا كان مفعلاً
+    if (opponent && opponent.id && opponent.id !== 'cpu') {
+      sbFetch(`/rest/v1/system?id=eq.${opponent.id}&select=flip`).then(res => {
+        if (res && res[0] && res[0].flip === 'on') {
+          sbFetch(`/rest/v1/system?id=eq.${opponent.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ flip: null })
+          });
+        }
+      });
+    }
+    replaceUsedThisQuestion = false;
+    updateReplaceBtn();
+    updateFlipBtn();
+    return __nq.apply(this, args);
+  };
+}
+
+// ==================== INTERNET / WIFI MONITORING ====================
+let _internetInterval = null;
+let _oppInternetInterval = null;
+
+async function measureConnection() {
+  try {
+    const nav = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    let speed = 0;
+    if (nav && nav.downlink) {
+      speed = nav.downlink; // Mbps
+    } else {
+      // قياس بسيط عبر fetch صغير
+      const start = Date.now();
+      await fetch(SB_URL + '/rest/v1/', { method: 'HEAD', headers: { 'apikey': SB_KEY } }).catch(() => {});
+      const ms = Date.now() - start;
+      speed = ms < 300 ? 5 : ms < 800 ? 2 : ms < 2000 ? 0.5 : 0.1;
+    }
+    return Math.round(speed * 10) / 10;
+  } catch { return 0; }
+}
+
+async function startInternetMonitoring() {
+  clearInterval(_internetInterval);
+  _internetInterval = setInterval(async () => {
+    if (!currentUser || !isInMatch) { clearInterval(_internetInterval); return; }
+    const speed = await measureConnection();
+    // احفظ في عمود internet في system
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ internet: speed })
+    });
+    // حدّث أيقونة wifi الخاصة بي
+    updateWifiIcon('my-wifi-indicator', speed);
+  }, 5000);
+}
+
+function updateWifiIcon(elId, speed) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  let color, label;
+  if (speed === null || speed === undefined || speed <= 0) {
+    color = '#aaa'; label = 'منقطع';
+  } else if (speed < 1) {
+    color = '#e74c3c'; label = speed + ' M';
+  } else {
+    color = '#27ae60'; label = speed + ' M';
+  }
+  el.innerHTML = `
+    <i class="fa-solid fa-wifi" style="color:${color};font-size:11px"></i>
+    <span style="font-size:9px;color:${color};display:block;line-height:1">${label}</span>
+  `;
+  el.title = speed <= 0 ? 'لا يوجد اتصال' : `السرعة: ${speed} Mbps`;
+}
+
+function startOppInternetWatcher() {
+  clearInterval(_oppInternetInterval);
+  if (!opponent || opponent.id === 'cpu') return;
+  let wasOffline = false;
+  _oppInternetInterval = setInterval(async () => {
+    if (!isInMatch || !opponent) { clearInterval(_oppInternetInterval); return; }
+    const res = await sbFetch(`/rest/v1/system?id=eq.${opponent.id}&select=internet`, { method: 'GET' });
+    if (!res || !res[0]) return;
+    const speed = res[0].internet;
+    updateWifiIcon('opp-wifi-indicator', speed);
+    const isOffline = (speed === null || speed === undefined || speed === 0 || speed === '' );
+    if (isOffline && !wasOffline) {
+      wasOffline = true;
+      setStatus('📡 خصمك فقد الاتصال بالإنترنت!', 'warn');
+      // إذا انقطع الخصم → المباراة تكمل بدون انتظار
+      _oppDisconnected = true;
+    } else if (!isOffline) {
+      wasOffline = false;
+      _oppDisconnected = false;
+    }
+  }, 4000);
+}
+
+let _oppDisconnected = false;
+
+// عند انقطاع الخصم، لا نتوقف في pollForOpponentAnswer بل نتجاوز السؤال
+const _origPollForOppAns = window.pollForOpponentAnswer;
+if (typeof pollForOpponentAnswer === 'function') {
+  const __poa = pollForOpponentAnswer;
+  window.pollForOpponentAnswer = function(...args) {
+    // نضيف مؤقتاً يتحقق من انقطاع الخصم كل ثانيتين
+    const disconnectCheck = setInterval(() => {
+      if (_oppDisconnected && !answered) {
+        clearInterval(disconnectCheck);
+        // الخصم منقطع → تجاوز السؤال مباشرة
+        setTimeout(() => nextQuestion(), 1500);
+      }
+    }, 2000);
+    return __poa.apply(this, args);
+  };
+}
+

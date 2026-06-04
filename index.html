@@ -1618,6 +1618,7 @@
           <div class="p-name" id="my-name-m"></div>
           <div class="p-pts" id="my-pts-m">0</div>
           <div class="p-country" id="my-country-m"></div>
+          <div id="my-wifi-indicator" style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;margin-top:3px;cursor:default"></div>
         </div>
         <div class="vs-mid">
           <div class="vs-badge">VS</div>
@@ -1631,6 +1632,7 @@
           <div class="p-name" id="opp-name-m"></div>
           <div class="p-pts" id="opp-pts-m">0</div>
           <div class="p-country" id="opp-country-m"></div>
+          <div id="opp-wifi-indicator" style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;margin-top:3px;cursor:default"></div>
         </div>
       </div>
 
@@ -1652,26 +1654,40 @@
 
       <div class="status-bar" id="match-status"></div>
 
-      <!-- أزرار الإجراءات: اتصل بصديق + استبعاد + انسحاب -->
-      <div style="text-align:center;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+      <!-- أزرار الإجراءات: اتصل بصديق + استبعاد + استبدال + قلب + انسحاب -->
+      <div style="text-align:center;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
         <button id="call-friend-btn" onclick="openCallFriend()"
-          style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.3);border-radius:20px;padding:7px 22px;
+          style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.3);border-radius:20px;padding:7px 16px;
                  font-family:'El Messiri',sans-serif;font-size:13px;color:var(--blue);
                  cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
           <i class="fa-solid fa-phone"></i> اتصل بصديق
         </button>
         <button id="exclusion-btn" onclick="useExclusion()"
-          style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:20px;padding:7px 22px;
+          style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:20px;padding:7px 16px;
                  font-family:'El Messiri',sans-serif;font-size:13px;color:#e74c3c;
                  cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
-          <i class="fa-solid fa-ban"></i> استبعاد خيار
+          <i class="fa-solid fa-ban"></i> استبعاد
           <span id="exclusion-count-badge" style="background:rgba(231,76,60,0.15);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">0</span>
         </button>
+        <button id="replace-btn" onclick="useReplace()"
+          style="background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.3);border-radius:20px;padding:7px 16px;
+                 font-family:'El Messiri',sans-serif;font-size:13px;color:#0071e3;
+                 cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-arrows-rotate"></i> استبدال
+          <span id="replace-count-badge" style="background:rgba(0,113,227,0.15);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">0</span>
+        </button>
+        <button id="flip-btn" onclick="useFlip()"
+          style="background:rgba(123,47,247,0.08);border:1px solid rgba(123,47,247,0.3);border-radius:20px;padding:7px 16px;
+                 font-family:'El Messiri',sans-serif;font-size:13px;color:#7b2ff7;
+                 cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-rotate"></i> قلب للخصم
+          <span id="flip-count-badge" style="background:rgba(123,47,247,0.15);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700">0</span>
+        </button>
         <button id="forfeit-btn" onclick="confirmForfeit()"
-          style="background:none;border:1px solid rgba(192,57,43,0.3);border-radius:20px;padding:7px 22px;
+          style="background:none;border:1px solid rgba(192,57,43,0.3);border-radius:20px;padding:7px 16px;
                  font-family:'El Messiri',sans-serif;font-size:13px;color:var(--red);
                  cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px">
-          <i class="fa-solid fa-flag"></i> انسحاب من المباراة
+          <i class="fa-solid fa-flag"></i> انسحاب
         </button>
       </div>
 
