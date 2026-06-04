@@ -169,16 +169,18 @@ async function sbFetch(path, opts={}, retries=2) {
   return null;
 }
 
+// خريطة رموز البلدان إلى أسماء عربية
+const COUNTRY_AR = {
+  AF:'أفغانستان',AL:'ألبانيا',DZ:'الجزائر',AD:'أندورا',AO:'أنغولا',AG:'أنتيغوا وبربودا',AR:'الأرجنتين',AM:'أرمينيا',AU:'أستراليا',AT:'النمسا',AZ:'أذربيجان',BS:'جزر البهاما',BH:'البحرين',BD:'بنغلاديش',BB:'بربادوس',BY:'بيلاروسيا',BE:'بلجيكا',BZ:'بليز',BJ:'بنين',BT:'بوتان',BO:'بوليفيا',BA:'البوسنة والهرسك',BW:'بوتسوانا',BR:'البرازيل',BN:'بروناي',BG:'بلغاريا',BF:'بوركينا فاسو',BI:'بوروندي',CV:'الرأس الأخضر',KH:'كمبوديا',CM:'الكاميرون',CA:'كندا',CF:'أفريقيا الوسطى',TD:'تشاد',CL:'تشيلي',CN:'الصين',CO:'كولومبيا',KM:'جزر القمر',CG:'الكونغو',CD:'الكونغو الديموقراطية',CR:'كوستاريكا',CI:"كوت ديفوار",HR:'كرواتيا',CU:'كوبا',CY:'قبرص',CZ:'التشيك',DK:'الدنمارك',DJ:'جيبوتي',DM:'دومينيكا',DO:'الدومينيكان',EC:'الإكوادور',EG:'مصر',SV:'السلفادور',GQ:'غينيا الاستوائية',ER:'إريتريا',EE:'إستونيا',SZ:'إسواتيني',ET:'إثيوبيا',FJ:'فيجي',FI:'فنلندا',FR:'فرنسا',GA:'الغابون',GM:'غامبيا',GE:'جورجيا',DE:'ألمانيا',GH:'غانا',GR:'اليونان',GD:'غرينادا',GT:'غواتيمالا',GN:'غينيا',GW:'غينيا بيساو',GY:'غيانا',HT:'هايتي',HN:'هندوراس',HU:'المجر',IS:'آيسلندا',IN:'الهند',ID:'إندونيسيا',IR:'إيران',IQ:'العراق',IE:'أيرلندا',IL:'إسرائيل',IT:'إيطاليا',JM:'جامايكا',JP:'اليابان',JO:'الأردن',KZ:'كازاخستان',KE:'كينيا',KI:'كيريباتي',KP:'كوريا الشمالية',KR:'كوريا الجنوبية',KW:'الكويت',KG:'قيرغيزستان',LA:'لاوس',LV:'لاتفيا',LB:'لبنان',LS:'ليسوتو',LR:'ليبيريا',LY:'ليبيا',LI:'ليختنشتاين',LT:'ليتوانيا',LU:'لوكسمبورغ',MG:'مدغشقر',MW:'ملاوي',MY:'ماليزيا',MV:'المالديف',ML:'مالي',MT:'مالطا',MH:'جزر مارشال',MR:'موريتانيا',MU:'موريشيوس',MX:'المكسيك',FM:'ميكرونيسيا',MD:'مولدوفا',MC:'موناكو',MN:'منغوليا',ME:'الجبل الأسود',MA:'المغرب',MZ:'موزمبيق',MM:'ميانمار',NA:'ناميبيا',NR:'ناورو',NP:'نيبال',NL:'هولندا',NZ:'نيوزيلندا',NI:'نيكاراغوا',NE:'النيجر',NG:'نيجيريا',MK:'مقدونيا الشمالية',NO:'النرويج',OM:'عُمان',PK:'باكستان',PW:'بالاو',PA:'بنما',PG:'بابوا غينيا الجديدة',PY:'باراغواي',PE:'بيرو',PH:'الفلبين',PL:'بولندا',PT:'البرتغال',QA:'قطر',RO:'رومانيا',RU:'روسيا',RW:'رواندا',KN:'سانت كيتس ونيفيس',LC:'سانت لوسيا',VC:'سانت فنسنت',WS:'ساموا',SM:'سان مارينو',ST:'ساو تومي وبرينسيب',SA:'السعودية',SN:'السنغال',RS:'صربيا',SC:'سيشيل',SL:'سيراليون',SG:'سنغافورة',SK:'سلوفاكيا',SI:'سلوفينيا',SB:'جزر سليمان',SO:'الصومال',ZA:'جنوب أفريقيا',SS:'جنوب السودان',ES:'إسبانيا',LK:'سريلانكا',SD:'السودان',SR:'سورينام',SE:'السويد',CH:'سويسرا',SY:'سوريا',TW:'تايوان',TJ:'طاجيكستان',TZ:'تنزانيا',TH:'تايلاند',TL:'تيمور الشرقية',TG:'توغو',TO:'تونغا',TT:'ترينيداد وتوباغو',TN:'تونس',TR:'تركيا',TM:'تركمانستان',TV:'توفالو',UG:'أوغندا',UA:'أوكرانيا',AE:'الإمارات',GB:'المملكة المتحدة',US:'الولايات المتحدة',UY:'أوروغواي',UZ:'أوزبكستان',VU:'فانواتو',VE:'فنزويلا',VN:'فيتنام',YE:'اليمن',ZM:'زامبيا',ZW:'زيمبابوي',PS:'فلسطين',XK:'كوسوفو',TF:'أراضي فرنسا الجنوبية',
+};
+
 async function getCountry() {
   try {
     const r = await fetch('https://ipapi.co/json/');
     const d = await r.json();
-    return (d.country_name || 'غير معروف') + ' ' + (d.country_code ? countryFlag(d.country_code) : '');
+    const cc = (d.country_code || '').toUpperCase();
+    return COUNTRY_AR[cc] || d.country_name || 'غير معروف';
   } catch { return 'غير معروف'; }
-}
-
-function countryFlag(cc) {
-  return cc.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt()));
 }
 
 function showMsg(el, txt, type) {
@@ -484,8 +486,6 @@ async function handleGithubCallback(accessToken) {
 // ==================== MATCHMAKING ====================
 const SEARCH_MAX = 60;
 
-let searchHeartbeatInterval = null;
-
 async function startSearch() {
   if (!currentUser) return;
   document.getElementById('play-btn').disabled = true;
@@ -495,18 +495,8 @@ async function startSearch() {
 
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ match: 'searching', last_seen: new Date().toISOString() })
+    body: JSON.stringify({ match: 'searching' })
   });
-
-  // ── Heartbeat: حدّث last_seen كل 5 ثوانٍ لإثبات أنك لا تزال متصلاً ──
-  clearInterval(searchHeartbeatInterval);
-  searchHeartbeatInterval = setInterval(() => {
-    if (!currentUser) { clearInterval(searchHeartbeatInterval); return; }
-    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ last_seen: new Date().toISOString() })
-    });
-  }, 5000);
 
   // ── Realtime: استمع لتغيير حقل match في صفي ──
   rtSubscribe('match-listen', `id=eq.${currentUser.id}`, async (record) => {
@@ -515,7 +505,6 @@ async function startSearch() {
     // وجدنا خصماً!
     clearInterval(searchTimerInterval);
     clearInterval(searchPollInterval);
-    clearInterval(searchHeartbeatInterval);
     rtUnsubscribe('match-listen');
     const opp = await sbFetch(`/rest/v1/system?id=eq.${newMatch}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
     if (opp && opp[0]) startMatch(opp[0]);
@@ -539,7 +528,6 @@ async function startSearch() {
     if (timeLeft <= 0) {
       clearInterval(searchTimerInterval);
       clearInterval(searchPollInterval);
-      clearInterval(searchHeartbeatInterval);
       rtUnsubscribe('match-listen');
       if (currentUser) sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
       document.getElementById('searching-anim').classList.remove('show');
@@ -573,7 +561,6 @@ async function matchMake() {
   if (myMatchVal && myMatchVal !== 'searching' && myMatchVal !== 'off') {
     clearInterval(searchPollInterval);
     clearInterval(searchTimerInterval);
-    clearInterval(searchHeartbeatInterval);
     const oppId = myMatchVal;
     const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
     if (opp && opp[0]) startMatch(opp[0]);
@@ -581,26 +568,17 @@ async function matchMake() {
   }
 
   // ما زلت searching → تحقق من قائمة المنتظرين وحاول التزاوج
-  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level,avatar_url,last_seen&order=id.asc`, { method: 'GET' });
+  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level,avatar_url&order=id.asc`, { method: 'GET' });
   if (!searchers) return;
-
-  // فلتر: احتفظ فقط بمن حدّث last_seen خلال الـ 15 ثانية الأخيرة
-  const now = Date.now();
-  const activeSearCHERS = searchers.filter(u => {
-    if (!u.last_seen) return false; // لا يوجد last_seen → قديم، تجاهله
-    const diff = now - new Date(u.last_seen).getTime();
-    return diff < 15000; // أقل من 15 ثانية
-  });
-  const myIdx = activeSearCHERS.findIndex(u => u.id === currentUser.id);
+  const myIdx = searchers.findIndex(u => u.id === currentUser.id);
   if (myIdx === -1 || myIdx % 2 !== 0) return; // انتظر دورك أو لست في قائمة
 
-  const partner = activeSearCHERS[myIdx + 1];
+  const partner = searchers[myIdx + 1];
   if (!partner) return;
 
   // أنا الطرف الزوجي → أُعيِّن الخصم لكلينا
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
-  clearInterval(searchHeartbeatInterval);
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(partner.id) }) });
   await sbFetch(`/rest/v1/system?id=eq.${partner.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(currentUser.id) }) });
   startMatch(partner);
@@ -610,7 +588,6 @@ async function matchMake() {
 async function cancelSearch() {
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
-  clearInterval(searchHeartbeatInterval);
   rtUnsubscribe('match-listen');
   if (currentUser) {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
@@ -1177,6 +1154,9 @@ async function endMatch(reason) {
   let matchResult = ''; // 'win' | 'lose' | 'draw'
 
   if (reason === 'win') {
+    matchResult = 'win';
+    levelDelta = 3;
+  } else if (reason === 'disconnect-win') {
     matchResult = 'win';
     levelDelta = 3;
   } else if (reason === 'lose') {
@@ -2742,20 +2722,23 @@ if (typeof nextQuestion === 'function') {
 let _internetInterval = null;
 let _oppInternetInterval = null;
 
+let _lastBytesTime = null;
+let _lastBytesVal = 0;
+
 async function measureConnection() {
   try {
-    const nav = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    let speed = 0;
-    if (nav && nav.downlink) {
-      speed = nav.downlink; // Mbps
-    } else {
-      // قياس بسيط عبر fetch صغير
-      const start = Date.now();
-      await fetch(SB_URL + '/rest/v1/', { method: 'HEAD', headers: { 'apikey': SB_KEY } }).catch(() => {});
-      const ms = Date.now() - start;
-      speed = ms < 300 ? 5 : ms < 800 ? 2 : ms < 2000 ? 0.5 : 0.1;
-    }
-    return Math.round(speed * 10) / 10;
+    // قياس دقيق بـ KB/s عبر fetch صغير مع حساب الحجم الفعلي
+    const start = performance.now();
+    const resp = await fetch(SB_URL + '/rest/v1/', {
+      method: 'GET',
+      headers: { 'apikey': SB_KEY },
+      cache: 'no-store'
+    });
+    const buffer = await resp.arrayBuffer();
+    const elapsed = (performance.now() - start) / 1000; // seconds
+    const bytes = buffer.byteLength || 512;
+    const kbps = Math.round(bytes / elapsed / 1024 * 10) / 10; // KB/s
+    return Math.max(0.1, kbps);
   } catch { return 0; }
 }
 
@@ -2780,39 +2763,69 @@ function updateWifiIcon(elId, speed) {
   let color, label;
   if (speed === null || speed === undefined || speed <= 0) {
     color = '#aaa'; label = 'منقطع';
-  } else if (speed < 1) {
-    color = '#e74c3c'; label = speed + ' M';
+  } else if (speed < 5) {
+    color = '#e74c3c'; label = speed + ' KB/s';
+  } else if (speed < 50) {
+    color = '#e67e22'; label = speed + ' KB/s';
   } else {
-    color = '#27ae60'; label = speed + ' M';
+    color = '#27ae60'; label = speed + ' KB/s';
   }
   el.innerHTML = `
     <i class="fa-solid fa-wifi" style="color:${color};font-size:11px"></i>
     <span style="font-size:9px;color:${color};display:block;line-height:1">${label}</span>
   `;
-  el.title = speed <= 0 ? 'لا يوجد اتصال' : `السرعة: ${speed} Mbps`;
+  el.title = speed <= 0 ? 'لا يوجد اتصال' : `السرعة: ${speed} KB/s`;
 }
 
 function startOppInternetWatcher() {
   clearInterval(_oppInternetInterval);
   if (!opponent || opponent.id === 'cpu') return;
-  let wasOffline = false;
+  let offlineSince = null;
+  let disconnectHandled = false;
+
   _oppInternetInterval = setInterval(async () => {
     if (!isInMatch || !opponent) { clearInterval(_oppInternetInterval); return; }
     const res = await sbFetch(`/rest/v1/system?id=eq.${opponent.id}&select=internet`, { method: 'GET' });
     if (!res || !res[0]) return;
     const speed = res[0].internet;
     updateWifiIcon('opp-wifi-indicator', speed);
-    const isOffline = (speed === null || speed === undefined || speed === 0 || speed === '' );
-    if (isOffline && !wasOffline) {
-      wasOffline = true;
-      setStatus('📡 خصمك فقد الاتصال بالإنترنت!', 'warn');
-      // إذا انقطع الخصم → المباراة تكمل بدون انتظار
-      _oppDisconnected = true;
-    } else if (!isOffline) {
-      wasOffline = false;
+
+    const isOffline = (speed === null || speed === undefined || speed === 0 || speed === '');
+
+    if (isOffline) {
+      if (!offlineSince) offlineSince = Date.now();
+      const elapsed = Date.now() - offlineSince;
+
+      if (elapsed >= 3000 && !disconnectHandled) {
+        disconnectHandled = true;
+        _oppDisconnected = true;
+
+        // +3 نقاط للاعب الحالي
+        myMatchPts += 3;
+        const myPtsEl = document.getElementById('my-pts-m');
+        if (myPtsEl) myPtsEl.textContent = myMatchPts;
+
+        // -1 نقطة من الخصم (لا تقل عن 0)
+        oppMatchPts = Math.max(0, oppMatchPts - 1);
+        const oppPtsEl = document.getElementById('opp-pts-m');
+        if (oppPtsEl) oppPtsEl.textContent = oppMatchPts;
+
+        // رسالة واضحة
+        setStatus('📡 انقطع اتصال خصمك! حصلت على +3 نقاط 🎉', 'good');
+
+        // انتهاء المباراة بفوزك
+        setTimeout(() => {
+          if (isInMatch) endMatch('disconnect-win');
+        }, 2500);
+      } else if (!disconnectHandled) {
+        setStatus('📡 خصمك فقد الاتصال...', 'warn');
+      }
+    } else {
+      offlineSince = null;
+      disconnectHandled = false;
       _oppDisconnected = false;
     }
-  }, 4000);
+  }, 1000); // كل ثانية للدقة
 }
 
 let _oppDisconnected = false;
