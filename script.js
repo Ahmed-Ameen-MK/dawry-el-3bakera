@@ -484,6 +484,8 @@ async function handleGithubCallback(accessToken) {
 // ==================== MATCHMAKING ====================
 const SEARCH_MAX = 60;
 
+let searchHeartbeatInterval = null;
+
 async function startSearch() {
   if (!currentUser) return;
   document.getElementById('play-btn').disabled = true;
@@ -493,8 +495,18 @@ async function startSearch() {
 
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ match: 'searching' })
+    body: JSON.stringify({ match: 'searching', last_seen: new Date().toISOString() })
   });
+
+  // ── Heartbeat: حدّث last_seen كل 5 ثوانٍ لإثبات أنك لا تزال متصلاً ──
+  clearInterval(searchHeartbeatInterval);
+  searchHeartbeatInterval = setInterval(() => {
+    if (!currentUser) { clearInterval(searchHeartbeatInterval); return; }
+    sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ last_seen: new Date().toISOString() })
+    });
+  }, 5000);
 
   // ── Realtime: استمع لتغيير حقل match في صفي ──
   rtSubscribe('match-listen', `id=eq.${currentUser.id}`, async (record) => {
@@ -503,6 +515,7 @@ async function startSearch() {
     // وجدنا خصماً!
     clearInterval(searchTimerInterval);
     clearInterval(searchPollInterval);
+    clearInterval(searchHeartbeatInterval);
     rtUnsubscribe('match-listen');
     const opp = await sbFetch(`/rest/v1/system?id=eq.${newMatch}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
     if (opp && opp[0]) startMatch(opp[0]);
@@ -526,6 +539,7 @@ async function startSearch() {
     if (timeLeft <= 0) {
       clearInterval(searchTimerInterval);
       clearInterval(searchPollInterval);
+      clearInterval(searchHeartbeatInterval);
       rtUnsubscribe('match-listen');
       if (currentUser) sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
       document.getElementById('searching-anim').classList.remove('show');
@@ -559,6 +573,7 @@ async function matchMake() {
   if (myMatchVal && myMatchVal !== 'searching' && myMatchVal !== 'off') {
     clearInterval(searchPollInterval);
     clearInterval(searchTimerInterval);
+    clearInterval(searchHeartbeatInterval);
     const oppId = myMatchVal;
     const opp = await sbFetch(`/rest/v1/system?id=eq.${oppId}&select=id,name,country,points,level,avatar_url`, { method: 'GET' });
     if (opp && opp[0]) startMatch(opp[0]);
@@ -566,17 +581,26 @@ async function matchMake() {
   }
 
   // ما زلت searching → تحقق من قائمة المنتظرين وحاول التزاوج
-  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level,avatar_url&order=id.asc`, { method: 'GET' });
+  const searchers = await sbFetch(`/rest/v1/system?match=eq.searching&select=id,name,country,points,level,avatar_url,last_seen&order=id.asc`, { method: 'GET' });
   if (!searchers) return;
-  const myIdx = searchers.findIndex(u => u.id === currentUser.id);
+
+  // فلتر: احتفظ فقط بمن حدّث last_seen خلال الـ 15 ثانية الأخيرة
+  const now = Date.now();
+  const activeSearCHERS = searchers.filter(u => {
+    if (!u.last_seen) return false; // لا يوجد last_seen → قديم، تجاهله
+    const diff = now - new Date(u.last_seen).getTime();
+    return diff < 15000; // أقل من 15 ثانية
+  });
+  const myIdx = activeSearCHERS.findIndex(u => u.id === currentUser.id);
   if (myIdx === -1 || myIdx % 2 !== 0) return; // انتظر دورك أو لست في قائمة
 
-  const partner = searchers[myIdx + 1];
+  const partner = activeSearCHERS[myIdx + 1];
   if (!partner) return;
 
   // أنا الطرف الزوجي → أُعيِّن الخصم لكلينا
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
+  clearInterval(searchHeartbeatInterval);
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(partner.id) }) });
   await sbFetch(`/rest/v1/system?id=eq.${partner.id}`, { method: 'PATCH', body: JSON.stringify({ match: String(currentUser.id) }) });
   startMatch(partner);
@@ -586,6 +610,7 @@ async function matchMake() {
 async function cancelSearch() {
   clearInterval(searchPollInterval);
   clearInterval(searchTimerInterval);
+  clearInterval(searchHeartbeatInterval);
   rtUnsubscribe('match-listen');
   if (currentUser) {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method: 'PATCH', body: JSON.stringify({ match: 'off' }) });
