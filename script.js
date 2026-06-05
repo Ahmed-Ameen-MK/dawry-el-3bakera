@@ -295,15 +295,23 @@ function showDashboard() {
   }
   document.getElementById('dash-name').textContent = u.name;
   document.getElementById('dash-email').textContent = u.email;
-  document.getElementById('dash-country').textContent = u.country || '';
+  document.getElementById('dash-country') && (document.getElementById('dash-country').textContent = u.country || '');
   document.getElementById('dash-points').textContent = u.level || 0;
   document.getElementById('stat-pts').textContent = u.level || 0;
   document.getElementById('stat-country').textContent = u.country || '';
+  // تحديث عملة الهيدر
+  const navCoinEl = document.getElementById('nav-coin-count');
+  if (navCoinEl) navCoinEl.textContent = u.coin || 0;
+  // تحديث عملة الداشبورد
+  const dashCoinsEl = document.getElementById('dash-coins');
+  if (dashCoinsEl) dashCoinsEl.textContent = u.coin || 0;
   loadRank();
   updateNavAvatar();
   startLiveStats();
   startLeaderboardRealtime();
   loadMiniLeaderboard();
+  // تهيئة المهام اليومية
+  setTimeout(() => renderDailyTasks(), 100);
 }
 
 function updateNavAvatar() {
@@ -316,6 +324,11 @@ function updateNavAvatar() {
   } else {
     navBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span class="nav-text">حسابي</span>`;
   }
+  // إظهار عملة الهيدر
+  const coinPill = document.getElementById('nav-coin-pill');
+  const coinCount = document.getElementById('nav-coin-count');
+  if (coinPill) coinPill.style.display = 'flex';
+  if (coinCount) coinCount.textContent = u.coin || 0;
 }
 
 async function loadRank() {
@@ -1142,34 +1155,43 @@ async function endMatch(reason) {
 
   // حساب نتيجة لوحة الصدارة (level)
   let levelDelta = 0;
+  let coinDelta = 0;
   let matchResult = ''; // 'win' | 'lose' | 'draw'
 
   if (reason === 'win') {
     matchResult = 'win';
     levelDelta = 3;
+    coinDelta = 10;
   } else if (reason === 'disconnect-win') {
     matchResult = 'win';
     levelDelta = 3;
+    coinDelta = 10;
   } else if (reason === 'lose') {
     matchResult = 'lose';
-    levelDelta = -2;
+    levelDelta = -1;
+    coinDelta = 0;
   } else {
     // انتهى الوقت
-    if (myMatchPts > oppMatchPts) { matchResult = 'win'; levelDelta = 3; }
-    else if (myMatchPts === oppMatchPts) { matchResult = 'draw'; levelDelta = 1; }
-    else { matchResult = 'lose'; levelDelta = -2; }
+    if (myMatchPts > oppMatchPts) { matchResult = 'win'; levelDelta = 3; coinDelta = 10; }
+    else if (myMatchPts === oppMatchPts) { matchResult = 'draw'; levelDelta = 2; coinDelta = 5; }
+    else { matchResult = 'lose'; levelDelta = -1; coinDelta = 0; }
   }
 
   const newLevel = Math.max(0, (currentUser.level || 0) + levelDelta);
+  const newCoin = Math.max(0, (currentUser.coin || 0) + coinDelta);
 
-  // إعادة ضبط النقاط (points) بعد المباراة + تحديث level
+  // إعادة ضبط النقاط (points) بعد المباراة + تحديث level + coin
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ match: 'off', question: 0, answer: 'none', 'match-message': '', points: 0, level: newLevel })
+    body: JSON.stringify({ match: 'off', question: 0, answer: 'none', 'match-message': '', points: 0, level: newLevel, coin: newCoin })
   });
   currentUser.points = 0;
   currentUser.level = newLevel;
+  currentUser.coin = newCoin;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
+
+  // حفظ المباراة في local storage
+  saveMatchHistory(matchResult, myMatchPts, oppMatchPts, coinDelta, levelDelta);
 
   // إشعار الخصم بنتيجته
   if (opponent) {
@@ -1195,22 +1217,22 @@ function showMatchResult(result) {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'أنت الفائز! 🎉';
-    document.getElementById('win-sub').textContent = `أحسنت! حصلت على +3 نقاط في لوحة الصدارة`;
+    document.getElementById('win-sub').textContent = `أحسنت! +3 نقطة صدارة · +10 🪙 عملة`;
   } else if (result === 'win-forfeit') {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'فزت! 🏆';
-    document.getElementById('win-sub').textContent = 'خصمك انسحب من المباراة — حصلت على +3 نقاط في لوحة الصدارة';
+    document.getElementById('win-sub').textContent = 'خصمك انسحب — +3 نقطة صدارة · +10 🪙 عملة';
   } else if (result === 'lose') {
     icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
     icon.className = 'win-icon lose';
     document.getElementById('win-title').textContent = 'خسرت المباراة 😔';
-    document.getElementById('win-sub').textContent = 'لا تستسلم! -2 نقطة من لوحة الصدارة. حاول مرة أخرى!';
+    document.getElementById('win-sub').textContent = 'لا تستسلم! -1 نقطة صدارة. حاول مرة أخرى!';
   } else {
     icon.innerHTML = '<i class="fa-solid fa-handshake"></i>';
     icon.className = 'win-icon';
     document.getElementById('win-title').textContent = 'تعادل!';
-    document.getElementById('win-sub').textContent = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +1 نقطة لوحة صدارة`;
+    document.getElementById('win-sub').textContent = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 🪙 عملة`;
   }
 }
 
@@ -1243,7 +1265,7 @@ async function forfeitMatch() {
   rtUnsubscribe('my-flip');
   hideOppCallingFriend();
 
-  const newLevel = Math.max(0, (currentUser.level || 0) - 2);
+  const newLevel = Math.max(0, (currentUser.level || 0) - 1);
 
   // سجّل خسارتي + أبلغ الخصم بالفوز
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
@@ -1253,6 +1275,8 @@ async function forfeitMatch() {
   currentUser.points = 0;
   currentUser.level = newLevel;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
+
+  saveMatchHistory('lose', myMatchPts, oppMatchPts, 0, -1);
 
   if (opponent) {
     const oppNewLevel = Math.max(0, (opponent.level || 0) + 3);
@@ -1455,7 +1479,7 @@ function startLeaderboardRealtime() {
 }
 
 async function loadMiniLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url&order=level.desc&limit=5', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url,coin&order=level.desc&limit=5', { method: 'GET' });
   const el = document.getElementById('side-lb-list');
   if (!el) return;
   if (!data || data.length === 0) {
@@ -1475,6 +1499,7 @@ async function loadMiniLeaderboard() {
       ? `<img src="${u.avatar_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${initial}'">`
       : initial;
     const rankHtml = i < 3 ? rankIcon[i] : `<span class="side-lb-rank ${rankClass[i]||''}">${i+1}</span>`;
+    const coinHtml = u.coin ? `<span style="font-size:10px;color:var(--gold);display:block;margin-top:2px"><img src="coin.png" style="width:11px;height:11px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> ${u.coin}</span>` : '';
     return `
       <div class="side-lb-row${isMe ? ' me-row' : ''}">
         <div class="side-lb-rank ${rankClass[i]||''}">${rankHtml}</div>
@@ -1483,7 +1508,10 @@ async function loadMiniLeaderboard() {
           <div class="side-lb-name">${u.name || 'لاعب'}${isMe ? ' <span style="font-size:10px;color:var(--blue)">(أنت)</span>' : ''}</div>
           <div class="side-lb-country">${u.country || ''}</div>
         </div>
-        <div class="side-lb-pts">${u.level || 0}</div>
+        <div style="text-align:left">
+          <div class="side-lb-pts">${u.level || 0}</div>
+          ${coinHtml}
+        </div>
       </div>
     `;
   }).join('');
@@ -1551,6 +1579,60 @@ function loadProfile() {
   const avatarHtml = avatarUrl
     ? `<img src="${avatarUrl}" class="avatar-img" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line)">`
     : `<div class="avatar" style="width:60px;height:60px;font-size:22px;background:var(--ink);color:#fff">${currentUser.name[0].toUpperCase()}</div>`;
+
+  const history = getMatchHistory();
+  const winRate = getWinRate();
+  const coins = getUserCoins();
+
+  // سجل المباريات
+  const historyHtml = history.length === 0 ? `
+    <div style="text-align:center;color:var(--ink3);padding:24px;font-size:14px">
+      <i class="fa-solid fa-gamepad" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>
+      لم تلعب أي مباراة بعد
+    </div>
+  ` : history.slice(0, 50).map(m => {
+    const d = new Date(m.date);
+    const dateStr = d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+    const icons = { win: '🏆', lose: '😔', draw: '🤝' };
+    const colors = { win: 'var(--green)', lose: 'var(--red)', draw: 'var(--gold)' };
+    const labels = { win: 'فوز', lose: 'خسارة', draw: 'تعادل' };
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)">
+        <span style="font-size:20px">${icons[m.result]||'❓'}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:${colors[m.result]||'var(--ink)'}">${labels[m.result]||m.result}</div>
+          <div style="font-size:11px;color:var(--ink3)">${m.opp ? 'ضد: ' + m.opp : ''} • ${dateStr}</div>
+        </div>
+        <div style="text-align:left;font-size:12px;color:var(--ink3)">
+          ${m.coinDelta > 0 ? `<span style="color:var(--gold)">+${m.coinDelta}🪙</span>` : ''}
+          ${m.levelDelta !== 0 ? `<span style="color:${m.levelDelta > 0 ? 'var(--green)' : 'var(--red)'};margin-right:4px">${m.levelDelta > 0 ? '+' : ''}${m.levelDelta}⭐</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // جوائز المتجر
+  const storeRaw = localStorage.getItem('genius_store_' + currentUser.id);
+  const storeData = storeRaw ? JSON.parse(storeRaw) : {};
+  const prizes = [];
+  if ((storeData.exclusion || 0) > 0) prizes.push({ icon: '🚫', name: 'بطاقة استبعاد', count: storeData.exclusion });
+  if ((storeData.replace || 0) > 0) prizes.push({ icon: '🔄', name: 'بطاقة استبدال', count: storeData.replace });
+  if ((storeData.flip || 0) > 0) prizes.push({ icon: '🔀', name: 'بطاقة قلب', count: storeData.flip });
+  if ((storeData.friend || 0) > 0) prizes.push({ icon: '📞', name: 'اتصل بصديق', count: storeData.friend });
+
+  const prizesHtml = prizes.length === 0 ? `
+    <div style="text-align:center;color:var(--ink3);padding:16px;font-size:13px">
+      <i class="fa-solid fa-store" style="font-size:20px;display:block;margin-bottom:6px;opacity:0.4"></i>
+      لم تشترِ أي جوائز من المتجر بعد
+    </div>
+  ` : prizes.map(p => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2)">
+      <span style="font-size:24px">${p.icon}</span>
+      <div style="flex:1;font-size:14px;font-weight:600;color:var(--ink)">${p.name}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue)">×${p.count}</div>
+    </div>
+  `).join('');
+
   document.getElementById('profile-info').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
       <div class="profile-avatar-wrap" onclick="document.getElementById('avatar-file-input').click()" title="تغيير الصورة الشخصية">
@@ -1561,14 +1643,56 @@ function loadProfile() {
       <div>
         <div style="font-size:20px;font-weight:700;color:var(--ink)">${currentUser.name}</div>
         <div style="color:var(--ink3);font-size:14px">${currentUser.email}</div>
-        <div style="color:var(--blue);margin-top:4px;font-size:14px">${currentUser.country||''}</div>
         <div style="color:var(--ink3);font-size:12px;margin-top:4px"><i class="fa-solid fa-camera" style="margin-left:4px"></i>انقر على الصورة لتغييرها</div>
       </div>
     </div>
     <div id="avatar-upload-msg"></div>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${currentUser.level||0}</div><div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div></div>
-      <div class="stat-card"><div class="num" id="profile-rank">#-</div><div class="lbl"><i class="fa-solid fa-trophy" style="font-size:10px;color:var(--gold);margin-left:3px"></i> ترتيبك في الصدارة</div></div>
+
+    <!-- إحصائيات -->
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+      <div class="stat-card">
+        <div class="num">${currentUser.level||0}</div>
+        <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="profile-rank">#-</div>
+        <div class="lbl"><i class="fa-solid fa-trophy" style="font-size:10px;color:var(--gold);margin-left:3px"></i> ترتيبك</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <img src="coin.png" style="width:22px;height:22px;object-fit:contain" onerror="this.outerHTML='🪙'">
+          ${coins}
+        </div>
+        <div class="lbl">عملتي</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">${currentUser.country || '🌍'}</div>
+        <div class="lbl">البلد</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">${winRate}%</div>
+        <div class="lbl">نسبة الفوز</div>
+      </div>
+    </div>
+
+    <!-- رف الجوائز -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px">
+        <i class="fa-solid fa-trophy" style="color:var(--gold)"></i> رف الجوائز
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 16px;">
+        ${prizesHtml}
+      </div>
+    </div>
+
+    <!-- المباريات الأخيرة -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px">
+        <i class="fa-solid fa-gamepad" style="color:var(--blue)"></i> المباريات الأخيرة
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 16px;max-height:${5 * 62}px;overflow-y:auto;">
+        ${historyHtml}
+      </div>
     </div>
   `;
   loadProfileRank();
@@ -2842,4 +2966,372 @@ if (typeof pollForOpponentAnswer === 'function') {
     return __poa.apply(this, args);
   };
 }
+
+
+// ==================== MATCH HISTORY (LocalStorage) ====================
+function saveMatchHistory(result, myPts, oppPts, coinDelta, levelDelta) {
+  if (!currentUser) return;
+  const key = 'genius_match_history_' + currentUser.id;
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+  const entry = {
+    date: new Date().toISOString(),
+    result,
+    myPts,
+    oppPts,
+    coinDelta,
+    levelDelta,
+    opp: opponent ? opponent.name : ''
+  };
+  history.unshift(entry);
+  // احتفظ بآخر 50 مباراة
+  if (history.length > 50) history = history.slice(0, 50);
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+function getMatchHistory() {
+  if (!currentUser) return [];
+  const key = 'genius_match_history_' + currentUser.id;
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+}
+
+function getWinRate() {
+  const history = getMatchHistory();
+  if (!history.length) return 0;
+  const wins = history.filter(m => m.result === 'win').length;
+  return Math.round((wins / history.length) * 100);
+}
+
+// ==================== COIN SYSTEM ====================
+function getUserCoins() {
+  if (!currentUser) return 0;
+  return currentUser.coin || 0;
+}
+
+async function addCoins(amount) {
+  if (!currentUser) return;
+  const newCoin = Math.max(0, (currentUser.coin || 0) + amount);
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ coin: newCoin })
+  });
+  currentUser.coin = newCoin;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  // تحديث عرض العملة في الهيدر
+  const navCoinEl = document.getElementById('nav-coin-count');
+  if (navCoinEl) navCoinEl.textContent = newCoin;
+  return newCoin;
+}
+
+// ==================== DAILY TASKS ====================
+function getDailyTasksKey() {
+  const today = new Date().toISOString().split('T')[0];
+  return 'genius_daily_' + (currentUser ? currentUser.id : 'guest') + '_' + today;
+}
+
+function getDailyTasks() {
+  try { return JSON.parse(localStorage.getItem(getDailyTasksKey()) || '{}'); } catch(e) { return {}; }
+}
+
+function saveDailyTasks(tasks) {
+  localStorage.setItem(getDailyTasksKey(), JSON.stringify(tasks));
+}
+
+function markTaskDone(taskKey) {
+  const tasks = getDailyTasks();
+  tasks[taskKey] = true;
+  saveDailyTasks(tasks);
+  renderDailyTasks();
+  checkAllTasksDone();
+}
+
+function isAllTasksDone() {
+  const tasks = getDailyTasks();
+  return tasks.task1 && tasks.task2 && tasks.task3;
+}
+
+function isDailyRewardClaimed() {
+  const tasks = getDailyTasks();
+  return !!tasks.rewardClaimed;
+}
+
+function checkAllTasksDone() {
+  const allDone = isAllTasksDone();
+  const giftBtn = document.getElementById('daily-gift-btn');
+  if (!giftBtn) return;
+  if (allDone && !isDailyRewardClaimed()) {
+    giftBtn.classList.add('active');
+    giftBtn.title = 'اضغط لاستلام جائزتك!';
+  } else if (isDailyRewardClaimed()) {
+    giftBtn.classList.add('active');
+    giftBtn.classList.add('claimed');
+    giftBtn.title = 'تم استلام الجائزة اليوم ✓';
+  } else {
+    giftBtn.classList.remove('active');
+    giftBtn.title = 'أكمل جميع المهام أولاً';
+  }
+}
+
+function renderDailyTasks() {
+  const container = document.getElementById('daily-tasks-container');
+  if (!container) return;
+  const tasks = getDailyTasks();
+
+  container.innerHTML = `
+    <div class="daily-task ${tasks.task1 ? 'done' : ''}" onclick="handleTask1()">
+      <div class="task-icon"><i class="fa-solid fa-circle-question"></i></div>
+      <div class="task-body">
+        <div class="task-title">حل سؤال اليوم</div>
+        <div class="task-sub">سؤال عشوائي من بنك الأسئلة</div>
+      </div>
+      <div class="task-status">${tasks.task1 ? '<i class="fa-solid fa-check-circle" style="color:var(--green)"></i>' : '<i class="fa-regular fa-circle"></i>'}</div>
+    </div>
+    <div class="daily-task ${tasks.task2 ? 'done' : ''}" onclick="handleTask2()">
+      <div class="task-icon"><i class="fa-brands fa-playstation"></i></div>
+      <div class="task-body">
+        <div class="task-title">العب مباراة واحدة</div>
+        <div class="task-sub">تحدّ لاعباً حقيقياً</div>
+      </div>
+      <div class="task-status">${tasks.task2 ? '<i class="fa-solid fa-check-circle" style="color:var(--green)"></i>' : '<i class="fa-regular fa-circle"></i>'}</div>
+    </div>
+    <div class="daily-task ${tasks.task3 ? 'done' : ''}" onclick="handleTask3()">
+      <div class="task-icon"><i class="fa-solid fa-tv"></i></div>
+      <div class="task-body">
+        <div class="task-title">شاهد إعلاناً</div>
+        <div class="task-sub">ادعم الموقع وأكسب المكافأة</div>
+      </div>
+      <div class="task-status">${tasks.task3 ? '<i class="fa-solid fa-check-circle" style="color:var(--green)"></i>' : '<i class="fa-regular fa-circle"></i>'}</div>
+    </div>
+  `;
+  checkAllTasksDone();
+}
+
+// ── معالجة المهام ──
+let dailyQuestionModal = null;
+
+function handleTask1() {
+  const tasks = getDailyTasks();
+  if (tasks.task1) return;
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
+  // فتح مودال سؤال عشوائي
+  openDailyQuestionModal();
+}
+
+function handleTask2() {
+  const tasks = getDailyTasks();
+  if (tasks.task2) return;
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
+  // ابدأ البحث عن مباراة
+  startSearch();
+  markTaskDone('task2');
+}
+
+function handleTask3() {
+  const tasks = getDailyTasks();
+  if (tasks.task3) return;
+  if (!currentUser) { alert('يجب تسجيل الدخول أولاً'); return; }
+  // مودال الإعلان
+  openDailyAdModal();
+}
+
+function openDailyAdModal() {
+  // إنشاء مودال مؤقت
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'daily-ad-modal';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-close" onclick="document.getElementById('daily-ad-modal').remove()"><i class="fa-solid fa-xmark"></i></div>
+      <div class="modal-icon"><i class="fa-solid fa-tv"></i></div>
+      <div class="modal-title" id="daily-ad-title">جاري تحميل الإعلان...</div>
+      <div class="modal-body" id="daily-ad-body"></div>
+      <button class="btn-watch-ad" id="daily-ad-btn" style="display:none" onclick="completeDailyAd()">
+        <i class="fa-solid fa-check"></i> تم مشاهدة الإعلان
+      </button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
+
+  // محاكاة الإعلان
+  setTimeout(() => {
+    const titleEl = document.getElementById('daily-ad-title');
+    const bodyEl = document.getElementById('daily-ad-body');
+    const btnEl = document.getElementById('daily-ad-btn');
+    if (titleEl) titleEl.textContent = 'لا توجد إعلانات متاحة الآن';
+    if (bodyEl) bodyEl.textContent = 'سيتم وضع الإعلان لاحقاً — شكراً لدعمك!';
+    if (btnEl) btnEl.style.display = '';
+  }, 1500);
+}
+
+function completeDailyAd() {
+  document.getElementById('daily-ad-modal')?.remove();
+  markTaskDone('task3');
+  showToast('تم مشاهدة الإعلان ✓', 'success');
+}
+
+function openDailyQuestionModal() {
+  if (!window.QUESTIONS || !QUESTIONS.length) return;
+  const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  const labels = ['أ', 'ب', 'ج', 'د'];
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'daily-q-modal';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-close" onclick="document.getElementById('daily-q-modal').remove()"><i class="fa-solid fa-xmark"></i></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div class="modal-icon" style="margin-bottom:0;font-size:28px"><i class="fa-solid fa-circle-question"></i></div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink)">سؤال اليوم</div>
+      </div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:18px;line-height:1.6">${q.q}</div>
+      <div id="daily-q-options" style="display:grid;gap:10px">
+        ${q.opts.map((opt, i) => `
+          <button class="option-btn" onclick="answerDailyQ(${i}, ${q.a}, this)" style="text-align:right;padding:12px 16px">
+            <span class="option-label">${labels[i]}</span>${opt}
+          </button>
+        `).join('')}
+      </div>
+      <div id="daily-q-result" style="margin-top:14px;text-align:center;font-size:15px;font-weight:600;min-height:24px"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
+}
+
+function answerDailyQ(idx, correctIdx, btn) {
+  const allBtns = document.querySelectorAll('#daily-q-options .option-btn');
+  allBtns.forEach(b => b.disabled = true);
+  const resultEl = document.getElementById('daily-q-result');
+  if (idx === correctIdx) {
+    btn.classList.add('correct');
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green)">✓ إجابة صحيحة! أحسنت!</span>';
+  } else {
+    btn.classList.add('wrong');
+    allBtns[correctIdx]?.classList.add('correct');
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--red)">✗ إجابة خاطئة!</span>';
+  }
+  setTimeout(() => {
+    document.getElementById('daily-q-modal')?.remove();
+    markTaskDone('task1');
+    showToast('تم إنجاز سؤال اليوم ✓', 'success');
+  }, 1800);
+}
+
+// ── نافذة جائزة المهام اليومية ──
+let giftSpinInterval = null;
+let giftCurrentNum = 1;
+
+function openDailyGiftModal() {
+  if (!isAllTasksDone()) {
+    showToast('أكمل جميع المهام أولاً!', 'error');
+    return;
+  }
+  if (isDailyRewardClaimed()) {
+    showToast('لقد استلمت جائزتك اليوم بالفعل!', 'warn');
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'gift-spin-modal';
+  overlay.innerHTML = `
+    <div class="modal-box" style="text-align:center;max-width:360px">
+      <div class="modal-close" onclick="closeGiftModal()"><i class="fa-solid fa-xmark"></i></div>
+      <div style="font-size:36px;margin-bottom:10px">🎁</div>
+      <div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px">جائزتك اليومية</div>
+      <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">اضغط "إيقاف" للحصول على عدد عملاتك!</div>
+      <div id="gift-spin-card" style="
+        background:linear-gradient(135deg,#0071e3,#005bbf);
+        color:#fff;border-radius:20px;
+        padding:28px 0;margin-bottom:20px;
+        box-shadow:0 8px 32px rgba(0,113,227,0.4);
+        position:relative;overflow:hidden;
+      ">
+        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none"></div>
+        <div style="font-size:12px;font-weight:600;opacity:0.8;margin-bottom:4px;letter-spacing:1px">🪙 عملة</div>
+        <div id="gift-spin-num" style="font-size:72px;font-weight:900;letter-spacing:-2px;line-height:1">1</div>
+      </div>
+      <button id="gift-stop-btn" onclick="stopGiftSpin()" style="
+        background:var(--blue);color:#fff;border:none;border-radius:50px;
+        padding:14px 48px;font-family:'El Messiri',sans-serif;
+        font-size:17px;font-weight:700;cursor:pointer;
+        box-shadow:0 4px 18px rgba(0,113,227,0.4);
+        transition:all 0.15s;width:100%;
+      ">⏸ إيقاف</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // بدء الدوران بسرعة عالية جداً
+  giftCurrentNum = 1;
+  giftSpinInterval = setInterval(() => {
+    giftCurrentNum = (giftCurrentNum % 50) + 1;
+    const el = document.getElementById('gift-spin-num');
+    if (el) el.textContent = giftCurrentNum;
+  }, 30); // سرعة عالية جداً
+}
+
+async function stopGiftSpin() {
+  if (giftSpinInterval) {
+    clearInterval(giftSpinInterval);
+    giftSpinInterval = null;
+  }
+  const won = giftCurrentNum;
+  const numEl = document.getElementById('gift-spin-num');
+  if (numEl) numEl.textContent = won;
+
+  const btn = document.getElementById('gift-stop-btn');
+  if (btn) {
+    btn.textContent = `🎉 حصلت على ${won} عملة!`;
+    btn.disabled = true;
+    btn.style.background = 'var(--green)';
+  }
+
+  // إضافة العملات
+  await addCoins(won);
+
+  // حفظ أن الجائزة اليومية استُلمت
+  const tasks = getDailyTasks();
+  tasks.rewardClaimed = true;
+  saveDailyTasks(tasks);
+  checkAllTasksDone();
+
+  setTimeout(() => closeGiftModal(), 2500);
+}
+
+function closeGiftModal() {
+  if (giftSpinInterval) { clearInterval(giftSpinInterval); giftSpinInterval = null; }
+  document.getElementById('gift-spin-modal')?.remove();
+}
+
+// ── Toast notification ──
+function showToast(msg, type='info') {
+  const colors = { success:'var(--green)', error:'var(--red)', info:'var(--blue)', warn:'var(--gold)' };
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;top:70px;left:50%;transform:translateX(-50%);
+    background:${colors[type]||colors.info};color:#fff;
+    padding:10px 24px;border-radius:28px;font-family:'El Messiri',sans-serif;
+    font-size:14px;font-weight:700;z-index:9999;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    animation:slideDown 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    white-space:nowrap;
+  `;
+  toast.textContent = msg;
+  if (!document.getElementById('opp-call-style')) {
+    const s = document.createElement('style');
+    s.id = 'opp-call-style';
+    s.textContent = `@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`;
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// تهيئة المهام اليومية عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+  // لاحظ: renderDailyTasks سيُستدعى من showDashboard بعد تسجيل الدخول
+});
 
