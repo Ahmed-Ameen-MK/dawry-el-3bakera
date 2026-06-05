@@ -363,7 +363,52 @@
     border-radius: var(--radius); padding: 20px 24px;
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 16px; gap: 12px;
+    position: relative; overflow: hidden;
   }
+
+  /* ── لوحة النتيجة: خلفية متحركة وميض ── */
+  .vs-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(0,113,227,0.18) 0%,
+      transparent 40%,
+      rgba(181,136,46,0.12) 70%,
+      transparent 100%
+    );
+    animation: scoreBoardShimmer 3s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .vs-header::after {
+    content: '';
+    position: absolute;
+    top: -40%; left: -20%;
+    width: 60%; height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    animation: scoreBoardSweep 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .vs-header > * { position: relative; z-index: 1; }
+
+  @keyframes scoreBoardShimmer {
+    0%   { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+  @keyframes scoreBoardSweep {
+    0%   { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateX(300%) skewX(-15deg); opacity: 0; }
+  }
+
+  /* نقاط تومض عند التغيير */
+  .p-pts { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+  .p-pts.bump { transform: scale(1.35); }
+
   .player-side { text-align: center; flex: 1; }
   .player-side .p-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); }
   .player-side .p-pts { font-size: 36px; font-weight: 700; color: #fff; letter-spacing: -1px; }
@@ -830,10 +875,113 @@
   .price-row input { flex: 1; }
   .price-row select { width: 130px; flex-shrink: 0; }
 
+  /* ── NAV LEADERBOARD LINK (styled like nav button) ── */
+  .nav-lb-link {
+    background: none; border: none;
+    color: var(--ink3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 14px; font-weight: 500;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    text-decoration: none;
+  }
+  .nav-lb-link:hover { background: var(--bg2); color: var(--ink); }
+  .nav-lb-link i { font-size: 13px; }
+  @media (max-width: 520px) {
+    .nav-lb-link .nav-text { display: none; }
+    .nav-lb-link { padding: 6px 10px; }
+  }
+
+  /* ── VS-HEADER: WIDE SCREEN LAYOUT ── */
+  @media (min-width: 700px) {
+    .vs-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+    }
+    /* My side (right in RTL): wifi | pts | avatar+name+country */
+    .player-side.my-side {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .player-side.my-side .wifi-side {
+      order: -2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .player-side.my-side .p-pts {
+      font-size: 44px;
+      order: -1;
+    }
+    .player-side.my-side .player-info-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .player-side.my-side .match-avatar {
+      order: 0;
+    }
+    /* Opp side (left in RTL): avatar+name+country | pts | wifi */
+    .player-side.opp-side {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-start;
+    }
+    .player-side.opp-side .p-pts {
+      font-size: 44px;
+    }
+    .player-side.opp-side .wifi-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .player-side.opp-side .player-info-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .player-side.opp-side .match-avatar {
+      order: -1;
+    }
+    .vs-mid { padding: 0 20px; }
+  }
+
+
+  /* Mobile vs-header: keep original layout */
+  @media (max-width: 699px) {
+    .player-side { text-align: center; }
+    .player-side .wifi-side { display: inline-flex; flex-direction: column; align-items: center; }
+    .player-side .player-info-col { display: contents; }
+  }
+
+  /* Wifi indicator pill */
+  .wifi-indicator-pill {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    cursor: default;
+    min-width: 36px;
+  }
+
   @media (max-width: 520px) {
     nav button .nav-text { display: none; }
     nav button { padding: 6px 10px; }
     nav button img { width: 22px; height: 22px; }
+    .nav-lb-link .nav-text { display: none !important; }
+    .nav-lb-link { padding: 6px 10px !important; }
   }
 
   /* ── MOBILE CHAT INPUT: أضيق في العرض ── */
@@ -1324,9 +1472,7 @@
       <button onclick="safeShowPage('home')" class="active" id="nav-home">
         <i class="fa-solid fa-house"></i> <span class="nav-text">الرئيسية</span>
       </button>
-      <a href="leaderboard.html" id="nav-lb" style="background:none;border:none;color:var(--ink3);padding:6px 14px;border-radius:20px;cursor:pointer;font-family:'El Messiri',sans-serif;font-size:14px;font-weight:500;transition:all 0.15s;display:flex;align-items:center;gap:6px;text-decoration:none"
-        onmouseover="this.style.background='var(--bg2)';this.style.color='var(--ink)'"
-        onmouseout="this.style.background='';this.style.color=''">
+      <a href="leaderboard.html" id="nav-lb" class="nav-lb-link">
         <i class="fa-solid fa-ranking-star"></i> <span class="nav-text">المتصدرون</span>
       </a>
       <button onclick="window.location.href='store.html'" id="nav-store">
@@ -1613,13 +1759,19 @@
     <div class="section" style="padding-top:20px">
 
       <div class="vs-header">
-        <div class="player-side">
-          <div id="my-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 6px;overflow:hidden;"></div>
-          <div class="p-name" id="my-name-m"></div>
+        <!-- MY SIDE -->
+        <div class="player-side my-side">
+          <div class="wifi-side">
+            <div id="my-wifi-indicator" class="wifi-indicator-pill"></div>
+          </div>
           <div class="p-pts" id="my-pts-m">0</div>
-          <div class="p-country" id="my-country-m"></div>
-          <div id="my-wifi-indicator" style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;margin-top:3px;cursor:default"></div>
+          <div class="player-info-col">
+            <div id="my-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;overflow:hidden;"></div>
+            <div class="p-name" id="my-name-m"></div>
+            <div class="p-country" id="my-country-m"></div>
+          </div>
         </div>
+        <!-- VS MID -->
         <div class="vs-mid">
           <div class="vs-badge">VS</div>
           <div class="match-timer-wrap">
@@ -1627,12 +1779,17 @@
             <span id="match-timer-display">00:00:00</span>
           </div>
         </div>
-        <div class="player-side">
-          <div id="opp-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 6px;overflow:hidden;"></div>
-          <div class="p-name" id="opp-name-m"></div>
+        <!-- OPP SIDE -->
+        <div class="player-side opp-side">
+          <div class="player-info-col">
+            <div id="opp-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;overflow:hidden;"></div>
+            <div class="p-name" id="opp-name-m"></div>
+            <div class="p-country" id="opp-country-m"></div>
+          </div>
           <div class="p-pts" id="opp-pts-m">0</div>
-          <div class="p-country" id="opp-country-m"></div>
-          <div id="opp-wifi-indicator" style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;margin-top:3px;cursor:default"></div>
+          <div class="wifi-side">
+            <div id="opp-wifi-indicator" class="wifi-indicator-pill"></div>
+          </div>
         </div>
       </div>
 

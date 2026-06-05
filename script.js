@@ -493,9 +493,10 @@ async function startSearch() {
   document.getElementById('cancel-btn').style.display = '';
   document.getElementById('search-msg').innerHTML = '';
 
+  // ── إعادة ضبط نقاط المباراة (points) إلى 0 عند بدء البحث ──
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ match: 'searching' })
+    body: JSON.stringify({ match: 'searching', points: 0 })
   });
 
   // ── Realtime: استمع لتغيير حقل match في صفي ──
@@ -936,6 +937,7 @@ function setStatus(text, cls='') {
 
 function startQTimer() {
   clearInterval(qTimerInterval);
+  _timeWarnPlayed = false;
   let t = 60;
   document.getElementById('q-timer-text').textContent = t;
   document.getElementById('q-timer-bar').style.width = '100%';
@@ -945,6 +947,7 @@ function startQTimer() {
     document.getElementById('q-timer-text').textContent = t;
     document.getElementById('q-timer-bar').style.width = (t / 60 * 100) + '%';
     if (t <= 15) document.getElementById('q-timer-bar').style.background = 'var(--red)';
+    if (t === 10 && !_timeWarnPlayed) { _timeWarnPlayed = true; playTimeWarningSound(); }
     if (t <= 0) {
       clearInterval(qTimerInterval);
       setStatus('⏱ انتهى وقت السؤال!', 'warn');
@@ -964,49 +967,33 @@ function startQTimer() {
   }, 1000);
 }
 
-// ==================== SOUND EFFECTS ====================
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new AudioCtx();
-  return audioCtx;
+// ==================== SOUND EFFECTS (mp3 files) ====================
+function playSound(file) {
+  try {
+    const audio = new Audio('voices/' + file);
+    audio.volume = 0.85;
+    audio.play().catch(() => {});
+  } catch(e) {}
 }
 
 function playCorrectSound() {
-  try {
-    const ctx = getAudioCtx();
-    // نغمتان صاعدتان = إحساس الفوز
-    [[520, 0, 0.15], [660, 0.15, 0.15], [880, 0.30, 0.25]].forEach(([freq, start, dur]) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      gain.gain.setValueAtTime(0.28, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur);
-    });
-  } catch(e) {}
+  const options = ['correct1.mp3', 'correct2.mp3', 'correct3.mp3'];
+  playSound(options[Math.floor(Math.random() * options.length)]);
 }
 
 function playWrongSound() {
-  try {
-    const ctx = getAudioCtx();
-    // نغمتان هابطتان = إحساس الخطأ
-    [[300, 0, 0.18], [220, 0.18, 0.22]].forEach(([freq, start, dur]) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur);
-    });
-  } catch(e) {}
+  const options = ['incorrect1.mp3', 'incorrect2.mp3', 'incorrect3.mp3'];
+  playSound(options[Math.floor(Math.random() * options.length)]);
 }
+
+function playDisconnectSound() { playSound('disconnect.mp3'); }
+function playFlipSound()       { playSound('flip.mp3'); }
+function playTimeWarningSound() { playSound('time.mp3'); }
+function playHijackSound()     { playSound('hijack.mp3'); }
+
+// تشغيل صوت "وقت ينفد" عند 10 ثوانٍ - نتتبع لتجنب التكرار
+let _timeWarnPlayed = false;
+
 
 // حالة إجابة الخصم للسؤال الحالي (نحتاجها لتحديد متى ننتقل)
 let oppAnsweredIdx = null; // index الإجابة التي اختارها الخصم أو null
@@ -1023,7 +1010,8 @@ async function answerQ(idx, btn) {
   if (correct) {
     playCorrectSound();
     myMatchPts += 10;
-    document.getElementById('my-pts-m').textContent = myMatchPts;
+    const myPtsEl = document.getElementById('my-pts-m');
+    if (myPtsEl) { myPtsEl.textContent = myMatchPts; myPtsEl.classList.remove('bump'); void myPtsEl.offsetWidth; myPtsEl.classList.add('bump'); setTimeout(()=>myPtsEl.classList.remove('bump'),300); }
     setStatus('إجابة صحيحة! +10 نقاط ✓', 'good');
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
       method: 'PATCH', body: JSON.stringify({ answer: 'correct', points: (currentUser.points || 0) + 10 })
@@ -1036,7 +1024,8 @@ async function answerQ(idx, btn) {
   } else {
     playWrongSound();
     myMatchPts = Math.max(0, myMatchPts - 5);
-    document.getElementById('my-pts-m').textContent = myMatchPts;
+    const myPtsEl2 = document.getElementById('my-pts-m');
+    if (myPtsEl2) { myPtsEl2.textContent = myMatchPts; }
     // أظهر الإجابة الصحيحة والخيار الذي اخترته
     const btns = document.querySelectorAll('.option-btn');
     if (btns[currentQ.a]) btns[currentQ.a].classList.add('correct');
@@ -1079,7 +1068,8 @@ function pollForOpponentAnswer() {
 
     // تحديث نقاط الخصم
     oppMatchPts = opp[0].points || 0;
-    document.getElementById('opp-pts-m').textContent = oppMatchPts;
+    const oppPtsEl = document.getElementById('opp-pts-m');
+    if (oppPtsEl) { oppPtsEl.textContent = oppMatchPts; oppPtsEl.classList.remove('bump'); void oppPtsEl.offsetWidth; oppPtsEl.classList.add('bump'); setTimeout(()=>oppPtsEl.classList.remove('bump'),300); }
 
     // تحقق من فوز الخصم بنقاط المباراة (100+)
     if (oppMatchPts >= 100) {
@@ -1091,6 +1081,7 @@ function pollForOpponentAnswer() {
     if (oppCorrect) {
       if (!answered) {
         // خصمي أجاب صح وأنا لم أجب → خطف السؤال
+        playHijackSound();
         setStatus('⚡ خصمك خطف السؤال!', 'warn');
         disableOptions();
         answered = true;
@@ -2583,6 +2574,7 @@ function continueQTimer() {
     document.getElementById('q-timer-text').textContent = _remainingTimerSecs;
     document.getElementById('q-timer-bar').style.width = (_remainingTimerSecs / 60 * 100) + '%';
     if (_remainingTimerSecs <= 15) document.getElementById('q-timer-bar').style.background = 'var(--red)';
+    if (_remainingTimerSecs === 10 && !_timeWarnPlayed) { _timeWarnPlayed = true; playTimeWarningSound(); }
     if (_remainingTimerSecs <= 0) {
       clearInterval(qTimerInterval);
       setStatus('⏱ انتهى وقت السؤال!', 'warn');
@@ -2606,6 +2598,7 @@ if (typeof startQTimer === 'function') {
   const __sqt = startQTimer;
   window.startQTimer = function(...args) {
     _remainingTimerSecs = 60;
+    _timeWarnPlayed = false;
     replaceUsedThisQuestion = false;
     return __sqt.apply(this, args);
   };
@@ -2667,6 +2660,7 @@ function startFlipListener() {
   _myFlipSubscribed = true;
   rtSubscribe('my-flip', `id=eq.${currentUser.id}`, (record) => {
     if (record && record.flip === 'on') {
+      playFlipSound();
       applyFlipToQuestion();
     }
   });
@@ -2799,6 +2793,8 @@ function startOppInternetWatcher() {
       if (elapsed >= 3000 && !disconnectHandled) {
         disconnectHandled = true;
         _oppDisconnected = true;
+
+        playDisconnectSound();
 
         // +3 نقاط للاعب الحالي
         myMatchPts += 3;
