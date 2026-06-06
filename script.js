@@ -506,6 +506,9 @@ async function startSearch() {
   document.getElementById('cancel-btn').style.display = '';
   document.getElementById('search-msg').innerHTML = '';
 
+  // ── صوت بدء البحث (مشابه FC Mobile) ──
+  playSearchSound();
+
   // ── إعادة ضبط نقاط المباراة (points) إلى 0 عند بدء البحث ──
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
@@ -803,6 +806,179 @@ function startMatch(opp) {
   isInMatch = true;
   history.pushState(null, '', window.location.href); // لاعتراض زر الرجوع
 
+  // ── شاشة البرق قبل بدء المباراة ──
+  showMatchIntroScreen(opp, () => {
+    _actuallyStartMatch(opp);
+  });
+}
+
+function showMatchIntroScreen(opp, onDone) {
+  // إنشاء overlay شاشة البداية
+  const intro = document.createElement('div');
+  intro.id = 'match-intro-overlay';
+  intro.style.cssText = `
+    position:fixed;inset:0;z-index:10000;
+    background:#0a0a0f;overflow:hidden;
+    display:flex;flex-direction:column;
+  `;
+
+  const myAvSrc = currentUser && currentUser.avatar_url ? currentUser.avatar_url : '';
+  const myInitial = currentUser && currentUser.name ? currentUser.name[0].toUpperCase() : '?';
+  const oppAvSrc = opp && opp.avatar_url ? opp.avatar_url : '';
+  const oppInitial = opp && opp.name ? opp.name[0].toUpperCase() : '?';
+
+  intro.innerHTML = `
+    <style>
+      @keyframes introFadeIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+      @keyframes introSlideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes lightningDraw {
+        0%   { stroke-dashoffset: 800; opacity: 0; }
+        10%  { opacity: 1; }
+        60%  { stroke-dashoffset: 0; opacity: 1; }
+        80%  { opacity: 0.6; }
+        100% { stroke-dashoffset: 0; opacity: 0; }
+      }
+      @keyframes glowPulse {
+        0%, 100% { filter: drop-shadow(0 0 8px #f0c040) drop-shadow(0 0 24px #f0c040); }
+        50% { filter: drop-shadow(0 0 24px #fff) drop-shadow(0 0 60px #f0c040); }
+      }
+      @keyframes introExit {
+        from { opacity:1; transform:scale(1); }
+        to   { opacity:0; transform:scale(1.06); }
+      }
+    </style>
+
+    <!-- النصف العلوي: اللاعب الأول (أنا) -->
+    <div id="intro-top" style="
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#0d1b2a 0%,#0a1520 100%);
+      position:relative;padding:24px;
+      animation:introFadeIn 0.5s ease both;
+    ">
+      <div style="
+        width:clamp(72px,18vw,100px);height:clamp(72px,18vw,100px);border-radius:50%;
+        overflow:hidden;border:3px solid rgba(0,113,227,0.6);
+        box-shadow:0 0 32px rgba(0,113,227,0.5);
+        background:rgba(255,255,255,0.08);
+        display:flex;align-items:center;justify-content:center;
+        font-size:clamp(28px,8vw,44px);font-weight:700;color:#fff;
+        font-family:'El Messiri',sans-serif;
+        animation:introFadeIn 0.6s 0.1s ease both;
+        flex-shrink:0;
+      ">
+        ${myAvSrc
+          ? `<img src="${myAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${myInitial}'">`
+          : myInitial}
+      </div>
+      <div style="
+        margin-top:14px;font-family:'El Messiri',sans-serif;font-size:clamp(16px,4vw,22px);
+        font-weight:700;color:#fff;letter-spacing:-0.5px;
+        animation:introSlideUp 0.5s 0.2s ease both;
+      ">${currentUser ? currentUser.name : 'أنا'}</div>
+      <div style="
+        font-size:12px;color:rgba(0,113,227,0.8);margin-top:4px;
+        animation:introSlideUp 0.5s 0.3s ease both;
+        font-family:'El Messiri',sans-serif;
+      ">${currentUser && currentUser.country ? currentUser.country : ''}</div>
+    </div>
+
+    <!-- البرق الفاصل -->
+    <div id="intro-lightning-wrap" style="
+      position:absolute;top:0;left:0;width:100%;height:100%;
+      pointer-events:none;z-index:2;
+    ">
+      <svg id="intro-svg" width="100%" height="100%" viewBox="0 0 400 700"
+        preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+        <!-- البرق الرئيسي من الركن الأيمن العلوي للأيسر السفلي -->
+        <polyline id="bolt1"
+          points="400,0 320,120 360,140 240,280 300,300 180,420 240,440 80,580 160,600 0,700"
+          fill="none" stroke="#f0c040" stroke-width="4"
+          stroke-dasharray="800" stroke-dashoffset="800"
+          style="animation:lightningDraw 0.7s 0.4s ease forwards, glowPulse 0.4s 0.4s ease infinite"/>
+        <!-- نسخة أرفع وضاحكة للمؤثر -->
+        <polyline id="bolt2"
+          points="400,0 325,110 365,135 245,270 305,295 182,415 244,438 82,578 162,598 0,700"
+          fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"
+          stroke-dasharray="800" stroke-dashoffset="800"
+          style="animation:lightningDraw 0.7s 0.42s ease forwards"/>
+      </svg>
+    </div>
+
+    <!-- النصف السفلي: الخصم -->
+    <div id="intro-bot" style="
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:linear-gradient(0deg,#1a0a0a 0%,#150808 100%);
+      position:relative;padding:24px;
+      animation:introFadeIn 0.5s 0.15s ease both;
+    ">
+      <div style="
+        width:clamp(72px,18vw,100px);height:clamp(72px,18vw,100px);border-radius:50%;
+        overflow:hidden;border:3px solid rgba(192,57,43,0.6);
+        box-shadow:0 0 32px rgba(192,57,43,0.5);
+        background:rgba(255,255,255,0.08);
+        display:flex;align-items:center;justify-content:center;
+        font-size:clamp(28px,8vw,44px);font-weight:700;color:#fff;
+        font-family:'El Messiri',sans-serif;
+        animation:introFadeIn 0.6s 0.25s ease both;
+        flex-shrink:0;
+      ">
+        ${oppAvSrc
+          ? `<img src="${oppAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${oppInitial}'">`
+          : oppInitial}
+      </div>
+      <div style="
+        margin-top:14px;font-family:'El Messiri',sans-serif;font-size:clamp(16px,4vw,22px);
+        font-weight:700;color:#fff;letter-spacing:-0.5px;
+        animation:introSlideUp 0.5s 0.35s ease both;
+      ">${opp ? opp.name : 'الخصم'}</div>
+      <div style="
+        font-size:12px;color:rgba(192,57,43,0.8);margin-top:4px;
+        animation:introSlideUp 0.5s 0.45s ease both;
+        font-family:'El Messiri',sans-serif;
+      ">${opp && opp.country ? opp.country : ''}</div>
+    </div>
+
+    <!-- شريط منتصف: VS -->
+    <div style="
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      z-index:3;
+      background:#0a0a0f;border:2px solid rgba(240,192,64,0.5);
+      border-radius:50%;width:56px;height:56px;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'El Messiri',sans-serif;font-size:18px;font-weight:900;
+      color:#f0c040;
+      box-shadow:0 0 24px rgba(240,192,64,0.6);
+      animation:glowPulse 0.8s 0.5s ease infinite;
+    ">VS</div>
+  `;
+
+  document.body.appendChild(intro);
+
+  // صوت البرق
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, now + 0.4);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.8);
+    gain.gain.setValueAtTime(0, now + 0.4);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.42);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+    osc.start(now + 0.4); osc.stop(now + 1.0);
+  } catch(e) {}
+
+  // اختفاء الشاشة بعد 2.4 ثانية
+  setTimeout(() => {
+    intro.style.animation = 'introExit 0.4s ease forwards';
+    setTimeout(() => { intro.remove(); onDone(); }, 400);
+  }, 2400);
+}
+
+function _actuallyStartMatch(opp) {
+
   // ── إعادة ضبط نقاطي إلى 0 عند البداية ──
   if (currentUser) {
     sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=points`, { method: 'GET' }).then(res => {
@@ -1003,6 +1179,31 @@ function playDisconnectSound() { playSound('disconnect.mp3'); }
 function playFlipSound()       { playSound('flip.mp3'); }
 function playTimeWarningSound() { playSound('time.mp3'); }
 function playHijackSound()     { playSound('hijack.mp3'); }
+
+// صوت البحث عن خصم - يُولَّد بـ Web Audio API (مشابه FC Mobile)
+function playSearchSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq, startT, dur, vol=0.4) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startT);
+      gain.gain.setValueAtTime(0, startT);
+      gain.gain.linearRampToValueAtTime(vol, startT + 0.02);
+      gain.gain.linearRampToValueAtTime(0, startT + dur);
+      osc.start(startT); osc.stop(startT + dur + 0.05);
+    }
+    const now = ctx.currentTime;
+    // نغمة صاعدة ثم هبوطية مثل FC Mobile matchmaking
+    beep(440, now, 0.12, 0.35);
+    beep(550, now + 0.15, 0.12, 0.35);
+    beep(660, now + 0.30, 0.18, 0.45);
+    beep(550, now + 0.55, 0.10, 0.25);
+    beep(660, now + 0.70, 0.22, 0.50);
+  } catch(e) {}
+}
 
 // تشغيل صوت "وقت ينفد" عند 10 ثوانٍ - نتتبع لتجنب التكرار
 let _timeWarnPlayed = false;
@@ -1217,12 +1418,12 @@ function showMatchResult(result) {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'أنت الفائز! 🎉';
-    document.getElementById('win-sub').textContent = `أحسنت! +3 نقطة صدارة · +10 🪙 عملة`;
+    document.getElementById('win-sub').innerHTML = `أحسنت! +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة`;
   } else if (result === 'win-forfeit') {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'فزت! 🏆';
-    document.getElementById('win-sub').textContent = 'خصمك انسحب — +3 نقطة صدارة · +10 🪙 عملة';
+    document.getElementById('win-sub').innerHTML = 'خصمك انسحب — +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML=\'🪙\'"> عملة';
   } else if (result === 'lose') {
     icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
     icon.className = 'win-icon lose';
@@ -1232,7 +1433,7 @@ function showMatchResult(result) {
     icon.innerHTML = '<i class="fa-solid fa-handshake"></i>';
     icon.className = 'win-icon';
     document.getElementById('win-title').textContent = 'تعادل!';
-    document.getElementById('win-sub').textContent = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 🪙 عملة`;
+    document.getElementById('win-sub').innerHTML = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة`;
   }
 }
 
@@ -1604,7 +1805,7 @@ function loadProfile() {
           <div style="font-size:11px;color:var(--ink3)">${m.opp ? 'ضد: ' + m.opp : ''} • ${dateStr}</div>
         </div>
         <div style="text-align:left;font-size:12px;color:var(--ink3)">
-          ${m.coinDelta > 0 ? `<span style="color:var(--gold)">+${m.coinDelta}🪙</span>` : ''}
+          ${m.coinDelta > 0 ? `<span style="color:var(--gold)">+${m.coinDelta}<img src="coin.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;margin-right:1px" onerror="this.outerHTML='🪙'"></span>` : ''}
           ${m.levelDelta !== 0 ? `<span style="color:${m.levelDelta > 0 ? 'var(--green)' : 'var(--red)'};margin-right:4px">${m.levelDelta > 0 ? '+' : ''}${m.levelDelta}⭐</span>` : ''}
         </div>
       </div>
@@ -2845,18 +3046,15 @@ let _lastBytesVal = 0;
 
 async function measureConnection() {
   try {
-    // قياس دقيق بـ KB/s عبر fetch صغير مع حساب الحجم الفعلي
+    // قياس زمن الاستجابة بـ ms مثل FC Mobile
     const start = performance.now();
-    const resp = await fetch(SB_URL + '/rest/v1/', {
+    await fetch(SB_URL + '/rest/v1/', {
       method: 'GET',
       headers: { 'apikey': SB_KEY },
       cache: 'no-store'
     });
-    const buffer = await resp.arrayBuffer();
-    const elapsed = (performance.now() - start) / 1000; // seconds
-    const bytes = buffer.byteLength || 512;
-    const kbps = Math.round(bytes / elapsed / 1024 * 10) / 10; // KB/s
-    return Math.max(0.1, kbps);
+    const ms = Math.round(performance.now() - start);
+    return Math.max(1, ms);
   } catch { return 0; }
 }
 
@@ -2881,18 +3079,18 @@ function updateWifiIcon(elId, speed) {
   let color, label;
   if (speed === null || speed === undefined || speed <= 0) {
     color = '#aaa'; label = 'منقطع';
-  } else if (speed < 5) {
-    color = '#e74c3c'; label = speed + ' KB/s';
-  } else if (speed < 50) {
-    color = '#e67e22'; label = speed + ' KB/s';
+  } else if (speed > 200) {
+    color = '#e74c3c'; label = speed + ' ms';
+  } else if (speed > 80) {
+    color = '#e67e22'; label = speed + ' ms';
   } else {
-    color = '#27ae60'; label = speed + ' KB/s';
+    color = '#27ae60'; label = speed + ' ms';
   }
   el.innerHTML = `
     <i class="fa-solid fa-wifi" style="color:${color};font-size:11px"></i>
     <span style="font-size:9px;color:${color};display:block;line-height:1">${label}</span>
   `;
-  el.title = speed <= 0 ? 'لا يوجد اتصال' : `السرعة: ${speed} KB/s`;
+  el.title = speed <= 0 ? 'لا يوجد اتصال' : `زمن الاستجابة: ${speed} ms`;
 }
 
 function startOppInternetWatcher() {
@@ -2908,7 +3106,7 @@ function startOppInternetWatcher() {
     const speed = res[0].internet;
     updateWifiIcon('opp-wifi-indicator', speed);
 
-    const isOffline = (speed === null || speed === undefined || speed === 0 || speed === '');
+    const isOffline = (speed === null || speed === undefined || speed === 0 || speed === '' || speed > 5000);
 
     if (isOffline) {
       if (!offlineSince) offlineSince = Date.now();
@@ -3171,7 +3369,10 @@ function completeDailyAd() {
 }
 
 function openDailyQuestionModal() {
-  if (!window.QUESTIONS || !QUESTIONS.length) return;
+  if (!window.QUESTIONS || !QUESTIONS.length) {
+    showToast('جاري تحميل الأسئلة... حاول مرة أخرى', 'warn');
+    return;
+  }
   const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
   const labels = ['أ', 'ب', 'ج', 'د'];
 
@@ -3250,7 +3451,7 @@ function openDailyGiftModal() {
         position:relative;overflow:hidden;
       ">
         <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none"></div>
-        <div style="font-size:12px;font-weight:600;opacity:0.8;margin-bottom:4px;letter-spacing:1px">🪙 عملة</div>
+        <div style="font-size:12px;font-weight:600;opacity:0.8;margin-bottom:4px;letter-spacing:1px"><img src="coin.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة</div>
         <div id="gift-spin-num" style="font-size:72px;font-weight:900;letter-spacing:-2px;line-height:1">1</div>
       </div>
       <button id="gift-stop-btn" onclick="stopGiftSpin()" style="

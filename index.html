@@ -387,10 +387,11 @@
   /* ── MATCH ── */
   .vs-header {
     background: var(--ink); color: #fff;
-    border-radius: var(--radius); padding: 20px 24px;
+    border-radius: var(--radius); padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px; gap: 12px;
+    margin-bottom: 16px;
     position: relative; overflow: hidden;
+    gap: 0;
   }
 
   /* ── لوحة النتيجة: خلفية متحركة وميض ── */
@@ -436,11 +437,45 @@
   .p-pts { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
   .p-pts.bump { transform: scale(1.35); }
 
-  .player-side { text-align: center; flex: 1; }
-  .player-side .p-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); }
-  .player-side .p-pts { font-size: 36px; font-weight: 700; color: #fff; letter-spacing: -1px; }
-  .player-side .p-country { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-  .vs-mid { text-align: center; }
+  /* ── لوحة النتيجة الجديدة ── */
+  /* الكولومز: wifi | space | pic+name+country | space | pts | VS | pts | space | pic+name+country | space | wifi */
+  .vs-col-wifi {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto; min-width: 44px;
+  }
+  .vs-col-player {
+    display: flex; flex-direction: column; align-items: center;
+    flex: 1 1 0; min-width: 0;
+  }
+  .vs-col-pts {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto; min-width: 48px;
+  }
+  .vs-col-mid {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto; padding: 0 10px;
+  }
+  .vs-spacer { flex: 1 1 0; }
+
+  .vs-player-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #fff;
+    overflow: hidden; flex-shrink: 0; margin-bottom: 5px;
+  }
+  .vs-player-name {
+    font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85);
+    text-align: center; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 90px;
+  }
+  .vs-player-country {
+    font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; text-align: center;
+  }
+  .vs-pts-num {
+    font-size: 36px; font-weight: 700; color: #fff; letter-spacing: -2px; line-height: 1;
+  }
   .vs-badge {
     background: rgba(255,255,255,0.12); color: #fff;
     border: 1px solid rgba(255,255,255,0.15);
@@ -449,11 +484,28 @@
     letter-spacing: 1px;
   }
   .match-timer-wrap {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 11px; color: rgba(255,255,255,0.4);
     display: flex; align-items: center; gap: 4px; justify-content: center;
   }
   .match-timer-wrap i { font-size: 10px; }
+  .wifi-indicator-pill {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 36px;
+  }
+
+  /* Responsive: شاشات ضيقة */
+  @media (max-width: 480px) {
+    .vs-header { padding: 12px 10px; }
+    .vs-player-avatar { width: 34px; height: 34px; font-size: 14px; margin-bottom: 4px; }
+    .vs-player-name { font-size: 10px; max-width: 65px; }
+    .vs-player-country { font-size: 9px; }
+    .vs-pts-num { font-size: 28px; letter-spacing: -1px; }
+    .vs-col-mid { padding: 0 6px; }
+    .vs-col-wifi { min-width: 32px; }
+    .vs-badge { padding: 4px 10px; font-size: 12px; }
+    .vs-col-pts { min-width: 38px; }
+  }
 
   /* Q-timer */
   .timer-bar-wrap { margin-bottom: 16px; }
@@ -1859,37 +1911,47 @@
     <div class="section" style="padding-top:20px">
 
       <div class="vs-header">
-        <!-- MY SIDE -->
-        <div class="player-side my-side">
-          <div class="wifi-side">
-            <div id="my-wifi-indicator" class="wifi-indicator-pill"></div>
-          </div>
-          <div class="p-pts" id="my-pts-m">0</div>
-          <div class="player-info-col">
-            <div id="my-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;overflow:hidden;"></div>
-            <div class="p-name" id="my-name-m"></div>
-            <div class="p-country" id="my-country-m"></div>
-          </div>
+        <!-- wifi اليسار (أنا) -->
+        <div class="vs-col-wifi">
+          <div id="my-wifi-indicator" class="wifi-indicator-pill"></div>
         </div>
-        <!-- VS MID -->
-        <div class="vs-mid">
+
+        <!-- صورة + اسم + بلد (أنا) -->
+        <div class="vs-col-player">
+          <div id="my-avatar-m" class="vs-player-avatar"></div>
+          <div class="vs-player-name" id="my-name-m"></div>
+          <div class="vs-player-country" id="my-country-m"></div>
+        </div>
+
+        <!-- نقاطي -->
+        <div class="vs-col-pts">
+          <div class="vs-pts-num p-pts" id="my-pts-m">0</div>
+        </div>
+
+        <!-- VS + مؤقت -->
+        <div class="vs-col-mid">
           <div class="vs-badge">VS</div>
           <div class="match-timer-wrap">
             <i class="fa-regular fa-clock"></i>
             <span id="match-timer-display">00:00:00</span>
           </div>
         </div>
-        <!-- OPP SIDE -->
-        <div class="player-side opp-side">
-          <div class="player-info-col">
-            <div id="opp-avatar-m" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;overflow:hidden;"></div>
-            <div class="p-name" id="opp-name-m"></div>
-            <div class="p-country" id="opp-country-m"></div>
-          </div>
-          <div class="p-pts" id="opp-pts-m">0</div>
-          <div class="wifi-side">
-            <div id="opp-wifi-indicator" class="wifi-indicator-pill"></div>
-          </div>
+
+        <!-- نقاط الخصم -->
+        <div class="vs-col-pts">
+          <div class="vs-pts-num p-pts" id="opp-pts-m">0</div>
+        </div>
+
+        <!-- صورة + اسم + بلد (الخصم) -->
+        <div class="vs-col-player">
+          <div id="opp-avatar-m" class="vs-player-avatar"></div>
+          <div class="vs-player-name" id="opp-name-m"></div>
+          <div class="vs-player-country" id="opp-country-m"></div>
+        </div>
+
+        <!-- wifi اليمين (الخصم) -->
+        <div class="vs-col-wifi">
+          <div id="opp-wifi-indicator" class="wifi-indicator-pill"></div>
         </div>
       </div>
 
