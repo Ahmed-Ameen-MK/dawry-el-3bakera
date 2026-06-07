@@ -312,6 +312,8 @@ function showDashboard() {
   loadMiniLeaderboard();
   // تهيئة المهام اليومية
   setTimeout(() => renderDailyTasks(), 100);
+  // بدء heartbeat للوقت
+  startTimeHeartbeat();
 }
 
 function updateNavAvatar() {
@@ -341,6 +343,7 @@ async function loadRank() {
 
 function doLogout() {
   cancelSearch();
+  stopTimeHeartbeat();
   currentUser = null;
   localStorage.removeItem('genius_user');
   localStorage.removeItem('genius_sb_token');
@@ -1054,6 +1057,7 @@ function _actuallyStartMatch(opp) {
   startOpponentCallFriendListener();
   startInternetMonitoring();
   startOppInternetWatcher();
+  startOppTimeWatcher(); // كشف انقطاع اتصال الخصم عبر عمود time
   _myFlipSubscribed = false;
   _oppDisconnected = false;
   startFlipListener();
@@ -1346,6 +1350,7 @@ async function endMatch(reason) {
   clearInterval(oppResultPollInterval);
   clearInterval(_internetInterval);
   clearInterval(_oppInternetInterval);
+  stopOppTimeWatcher(); // إيقاف مراقبة وقت الخصم
   rtUnsubscribe('chat-listen');
   rtUnsubscribe('opp-call-friend');
   rtUnsubscribe('my-flip');
@@ -3028,6 +3033,100 @@ if (typeof nextQuestion === 'function') {
   };
 }
 
+// ==================== TIME HEARTBEAT SYSTEM ====================
+// كل لاعب مسجّل الدخول يرسل الوقت الحالي (Unix seconds) إلى عمود time في جدول system
+// هذا يتيح كشف انقطاع اتصال الخصم بدقة خلال 5 ثوانٍ
+
+let _timeHeartbeatInterval = null;
+
+function startTimeHeartbeat() {
+  if (!currentUser) return;
+  stopTimeHeartbeat();
+  // أرسل الوقت فوراً
+  _sendTimeHeartbeat();
+  // ثم كل ثانية
+  _timeHeartbeatInterval = setInterval(_sendTimeHeartbeat, 1000);
+}
+
+async function _sendTimeHeartbeat() {
+  if (!currentUser) { stopTimeHeartbeat(); return; }
+  const nowSecs = Math.floor(Date.now() / 1000);
+  try {
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ time: nowSecs })
+    });
+  } catch(e) {}
+}
+
+function stopTimeHeartbeat() {
+  if (_timeHeartbeatInterval) {
+    clearInterval(_timeHeartbeatInterval);
+    _timeHeartbeatInterval = null;
+  }
+}
+
+// ==================== OPPONENT TIME-BASED DISCONNECT WATCHER ====================
+// يتحقق من عمود time للخصم: إذا توقف عن التحديث لـ 5 ثوانٍ → انقطع اتصاله
+
+let _oppTimeWatchInterval = null;
+
+function startOppTimeWatcher() {
+  if (_oppTimeWatchInterval) clearInterval(_oppTimeWatchInterval);
+  if (!opponent || opponent.id === 'cpu') return;
+
+  let _oppDisconnectedByTime = false;
+
+  _oppTimeWatchInterval = setInterval(async () => {
+    if (!isInMatch || !opponent || opponent.id === 'cpu') {
+      clearInterval(_oppTimeWatchInterval);
+      return;
+    }
+    try {
+      const res = await sbFetch(`/rest/v1/system?id=eq.${opponent.id}&select=time`, { method: 'GET' });
+      if (!res || !res[0]) return;
+      const oppTime = res[0].time;
+      if (!oppTime) return;
+      const nowSecs = Math.floor(Date.now() / 1000);
+      const diff = nowSecs - Number(oppTime);
+
+      if (diff >= 5 && !_oppDisconnectedByTime && !_oppDisconnected) {
+        _oppDisconnectedByTime = true;
+        _oppDisconnected = true;
+        playDisconnectSound();
+
+        // +3 نقاط للاعب الحالي
+        myMatchPts += 3;
+        const myPtsEl = document.getElementById('my-pts-m');
+        if (myPtsEl) { myPtsEl.textContent = myMatchPts; myPtsEl.classList.add('bump'); setTimeout(() => myPtsEl.classList.remove('bump'), 300); }
+
+        // -1 نقطة من الخصم
+        oppMatchPts = Math.max(0, oppMatchPts - 1);
+        const oppPtsEl = document.getElementById('opp-pts-m');
+        if (oppPtsEl) oppPtsEl.textContent = oppMatchPts;
+
+        // أيقونة wifi منقطعة
+        updateWifiIcon('opp-wifi-indicator', 0);
+        setStatus('📡 انقطع اتصال خصمك (واي فاي)! حصلت على +3 نقاط 🎉', 'good');
+
+        setTimeout(() => {
+          if (isInMatch) endMatch('disconnect-win');
+        }, 2500);
+      } else if (diff < 5) {
+        _oppDisconnectedByTime = false;
+        if (_oppDisconnected && !_oppDisconnectedByTime) _oppDisconnected = false;
+      }
+    } catch(e) {}
+  }, 1000);
+}
+
+function stopOppTimeWatcher() {
+  if (_oppTimeWatchInterval) {
+    clearInterval(_oppTimeWatchInterval);
+    _oppTimeWatchInterval = null;
+  }
+}
+
 // ==================== INTERNET / WIFI MONITORING ====================
 let _internetInterval = null;
 let _oppInternetInterval = null;
@@ -3364,7 +3463,17 @@ let _dailyQCurrent = null;
 
 function openDailyQuestionModal() {
   if (!window.QUESTIONS || !QUESTIONS.length) {
-    showToast('جاري تحميل الأسئلة... حاول مرة أخرى', 'warn');
+    // حاول مرة أخرى بعد ثانية واحدة تلقائياً
+    showToast('جاري تحميل الأسئلة...', 'info');
+    setTimeout(() => {
+      if (window.QUESTIONS && QUESTIONS.length) {
+        _dailyQAttempts = 0;
+        _dailyQCurrent = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+        _renderDailyQModal();
+      } else {
+        showToast('تعذّر تحميل الأسئلة، تحقق من الاتصال وأعد المحاولة', 'error');
+      }
+    }, 1200);
     return;
   }
   _dailyQAttempts = 0;
