@@ -299,10 +299,10 @@ function showDashboard() {
   document.getElementById('dash-points').textContent = u.level || 0;
   document.getElementById('stat-pts').textContent = u.level || 0;
   document.getElementById('stat-country').textContent = u.country || '';
-  // تحديث عملة الهيدر
+  // تحديث coin الهيدر
   const navCoinEl = document.getElementById('nav-coin-count');
   if (navCoinEl) navCoinEl.textContent = u.coin || 0;
-  // تحديث عملة الداشبورد
+  // تحديث coin الداشبورد
   const dashCoinsEl = document.getElementById('dash-coins');
   if (dashCoinsEl) dashCoinsEl.textContent = u.coin || 0;
   loadRank();
@@ -324,7 +324,7 @@ function updateNavAvatar() {
   } else {
     navBtn.innerHTML = `<i class="fa-solid fa-user"></i> <span class="nav-text">حسابي</span>`;
   }
-  // إظهار عملة الهيدر
+  // إظهار coin الهيدر
   const coinPill = document.getElementById('nav-coin-pill');
   const coinCount = document.getElementById('nav-coin-count');
   if (coinPill) coinPill.style.display = 'flex';
@@ -1127,12 +1127,14 @@ function setStatus(text, cls='') {
 function startQTimer() {
   clearInterval(qTimerInterval);
   _timeWarnPlayed = false;
+  _remainingTimerSecs = 60; // إعادة ضبط الوقت فقط هنا (عند سؤال جديد حقيقي)
   let t = 60;
   document.getElementById('q-timer-text').textContent = t;
   document.getElementById('q-timer-bar').style.width = '100%';
   document.getElementById('q-timer-bar').style.background = 'var(--blue)';
   qTimerInterval = setInterval(() => {
     t--;
+    _remainingTimerSecs = t; // نحفظ الوقت المتبقي دائماً
     document.getElementById('q-timer-text').textContent = t;
     document.getElementById('q-timer-bar').style.width = (t / 60 * 100) + '%';
     if (t <= 15) document.getElementById('q-timer-bar').style.background = 'var(--red)';
@@ -1141,10 +1143,8 @@ function startQTimer() {
       clearInterval(qTimerInterval);
       setStatus('⏱ انتهى وقت السؤال!', 'warn');
       disableOptions();
-      // أظهر الإجابة الصحيحة
       const btns2 = document.querySelectorAll('.option-btn');
       if (btns2[currentQ.a]) btns2[currentQ.a].classList.add('correct');
-      // إذا لم يُجب اللاعب بعد → سجّل answer = 'timeout' في DB
       if (!answered) {
         answered = true;
         sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
@@ -1418,12 +1418,12 @@ function showMatchResult(result) {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'أنت الفائز! 🎉';
-    document.getElementById('win-sub').innerHTML = `أحسنت! +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة`;
+    document.getElementById('win-sub').innerHTML = `أحسنت! +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> coin`;
   } else if (result === 'win-forfeit') {
     icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
     icon.className = 'win-icon trophy';
     document.getElementById('win-title').textContent = 'فزت! 🏆';
-    document.getElementById('win-sub').innerHTML = 'خصمك انسحب — +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML=\'🪙\'"> عملة';
+    document.getElementById('win-sub').innerHTML = 'خصمك انسحب — +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML=\'🪙\'"> coin';
   } else if (result === 'lose') {
     icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
     icon.className = 'win-icon lose';
@@ -1433,7 +1433,7 @@ function showMatchResult(result) {
     icon.innerHTML = '<i class="fa-solid fa-handshake"></i>';
     icon.className = 'win-icon';
     document.getElementById('win-title').textContent = 'تعادل!';
-    document.getElementById('win-sub').innerHTML = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة`;
+    document.getElementById('win-sub').innerHTML = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> coin`;
   }
 }
 
@@ -2917,17 +2917,8 @@ function continueQTimer() {
   }, 1000);
 }
 
-// نعيد ضبط المتغير عند كل سؤال جديد - بحيث نحفظ الوقت من بداية السؤال
-const _origStartQTimer = window.startQTimer;
-if (typeof startQTimer === 'function') {
-  const __sqt = startQTimer;
-  window.startQTimer = function(...args) {
-    _remainingTimerSecs = 60;
-    _timeWarnPlayed = false;
-    replaceUsedThisQuestion = false;
-    return __sqt.apply(this, args);
-  };
-}
+// ملاحظة: startQTimer يحفظ _remainingTimerSecs تلقائياً أثناء العمل
+// بحيث لو استُبدل السؤال يكمل continueQTimer من الوقت المتبقي
 
 // ==================== FLIP QUESTION SYSTEM ====================
 function updateFlipBtn() {
@@ -3215,7 +3206,7 @@ async function addCoins(amount) {
   });
   currentUser.coin = newCoin;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
-  // تحديث عرض العملة في الهيدر
+  // تحديث عرض الcoin في الهيدر
   const navCoinEl = document.getElementById('nav-coin-count');
   if (navCoinEl) navCoinEl.textContent = newCoin;
   return newCoin;
@@ -3368,56 +3359,89 @@ function completeDailyAd() {
   showToast('تم مشاهدة الإعلان ✓', 'success');
 }
 
+let _dailyQAttempts = 0;
+let _dailyQCurrent = null;
+
 function openDailyQuestionModal() {
   if (!window.QUESTIONS || !QUESTIONS.length) {
     showToast('جاري تحميل الأسئلة... حاول مرة أخرى', 'warn');
     return;
   }
-  const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  _dailyQAttempts = 0;
+  _dailyQCurrent = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  _renderDailyQModal();
+}
+
+function _renderDailyQModal() {
+  document.getElementById('daily-q-modal')?.remove();
+  const q = _dailyQCurrent;
   const labels = ['أ', 'ب', 'ج', 'د'];
+  const attemptsLeft = 3 - _dailyQAttempts;
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay show';
   overlay.id = 'daily-q-modal';
   overlay.innerHTML = `
-    <div class="modal-box" style="max-width:480px">
-      <div class="modal-close" onclick="document.getElementById('daily-q-modal').remove()"><i class="fa-solid fa-xmark"></i></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-        <div class="modal-icon" style="margin-bottom:0;font-size:28px"><i class="fa-solid fa-circle-question"></i></div>
-        <div style="font-size:16px;font-weight:700;color:var(--ink)">سؤال اليوم</div>
+    <div class="modal-box" style="max-width:480px;width:92vw">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px;color:var(--blue)"><i class="fa-solid fa-circle-question"></i></div>
+          <div style="font-size:16px;font-weight:800;color:var(--ink)">سؤال اليوم</div>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);font-weight:600;background:var(--bg2);border:1px solid var(--line);padding:3px 10px;border-radius:20px">
+          ${attemptsLeft === 3 ? '3 محاولات' : attemptsLeft === 2 ? 'محاولتان' : 'محاولة أخيرة'}
+        </div>
       </div>
-      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:18px;line-height:1.6">${q.q}</div>
-      <div id="daily-q-options" style="display:grid;gap:10px">
+      <div style="display:flex;gap:5px;margin-bottom:14px">
+        ${[0,1,2].map(i => `<div style="height:4px;flex:1;border-radius:4px;background:${i < _dailyQAttempts ? 'var(--red)' : 'var(--line)'}"></div>`).join('')}
+      </div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:18px;line-height:1.7">${q.q}</div>
+      <div id="daily-q-options" style="display:grid;gap:9px">
         ${q.opts.map((opt, i) => `
-          <button class="option-btn" onclick="answerDailyQ(${i}, ${q.a}, this)" style="text-align:right;padding:12px 16px">
+          <button class="option-btn" onclick="answerDailyQ(${i})" style="text-align:right;padding:12px 16px">
             <span class="option-label">${labels[i]}</span>${opt}
           </button>
         `).join('')}
       </div>
-      <div id="daily-q-result" style="margin-top:14px;text-align:center;font-size:15px;font-weight:600;min-height:24px"></div>
+      <div id="daily-q-result" style="margin-top:14px;text-align:center;font-size:15px;font-weight:700;min-height:28px"></div>
     </div>
   `;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', function(e) { if (e.target === this) this.remove(); });
 }
 
-function answerDailyQ(idx, correctIdx, btn) {
+function answerDailyQ(idx) {
+  const q = _dailyQCurrent;
+  if (!q) return;
   const allBtns = document.querySelectorAll('#daily-q-options .option-btn');
   allBtns.forEach(b => b.disabled = true);
   const resultEl = document.getElementById('daily-q-result');
+  const correctIdx = q.a;
+
   if (idx === correctIdx) {
-    btn.classList.add('correct');
-    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green)">✓ إجابة صحيحة! أحسنت!</span>';
+    allBtns[idx]?.classList.add('correct');
+    if (resultEl) resultEl.innerHTML = '<span style="color:var(--green)">✅ إجابة صحيحة! أحسنت!</span>';
+    setTimeout(() => {
+      document.getElementById('daily-q-modal')?.remove();
+      markTaskDone('task1');
+      showToast('أحسنت! تم إنجاز سؤال اليوم ✓', 'success');
+    }, 1600);
   } else {
-    btn.classList.add('wrong');
-    allBtns[correctIdx]?.classList.add('correct');
-    if (resultEl) resultEl.innerHTML = '<span style="color:var(--red)">✗ إجابة خاطئة!</span>';
+    _dailyQAttempts++;
+    allBtns[idx]?.classList.add('wrong');
+    if (_dailyQAttempts >= 3) {
+      // آخر محاولة - أظهر الإجابة الصحيحة
+      allBtns[correctIdx]?.classList.add('correct');
+      if (resultEl) resultEl.innerHTML = '<span style="color:var(--red)">❌ نفدت المحاولات! جرب غداً</span>';
+      setTimeout(() => {
+        document.getElementById('daily-q-modal')?.remove();
+      }, 2500);
+    } else {
+      const remaining = 3 - _dailyQAttempts;
+      const msg = remaining === 2 ? 'محاولتان متبقيتان' : 'محاولة أخيرة!';
+      if (resultEl) resultEl.innerHTML = `<span style="color:var(--gold)">❌ خطأ! ${msg}</span>`;
+      setTimeout(() => _renderDailyQModal(), 1600);
+    }
   }
-  setTimeout(() => {
-    document.getElementById('daily-q-modal')?.remove();
-    markTaskDone('task1');
-    showToast('تم إنجاز سؤال اليوم ✓', 'success');
-  }, 1800);
 }
 
 // ── نافذة جائزة المهام اليومية ──
@@ -3442,7 +3466,7 @@ function openDailyGiftModal() {
       <div class="modal-close" onclick="closeGiftModal()"><i class="fa-solid fa-xmark"></i></div>
       <div style="font-size:36px;margin-bottom:10px">🎁</div>
       <div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px">جائزتك اليومية</div>
-      <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">اضغط "إيقاف" للحصول على عدد عملاتك!</div>
+      <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">اضغط "إيقاف" للحصول على عدد coins!</div>
       <div id="gift-spin-card" style="
         background:linear-gradient(135deg,#0071e3,#005bbf);
         color:#fff;border-radius:20px;
@@ -3451,7 +3475,7 @@ function openDailyGiftModal() {
         position:relative;overflow:hidden;
       ">
         <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none"></div>
-        <div style="font-size:12px;font-weight:600;opacity:0.8;margin-bottom:4px;letter-spacing:1px"><img src="coin.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> عملة</div>
+        <div style="font-size:12px;font-weight:600;opacity:0.8;margin-bottom:4px;letter-spacing:1px"><img src="coin.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> coin</div>
         <div id="gift-spin-num" style="font-size:72px;font-weight:900;letter-spacing:-2px;line-height:1">1</div>
       </div>
       <button id="gift-stop-btn" onclick="stopGiftSpin()" style="
@@ -3485,7 +3509,7 @@ async function stopGiftSpin() {
 
   const btn = document.getElementById('gift-stop-btn');
   if (btn) {
-    btn.textContent = `🎉 حصلت على ${won} عملة!`;
+    btn.textContent = `🎉 حصلت على ${won} coin!`;
     btn.disabled = true;
     btn.style.background = 'var(--green)';
   }

@@ -437,26 +437,24 @@
   .p-pts { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
   .p-pts.bump { transform: scale(1.35); }
 
-  /* ── لوحة النتيجة الجديدة ── */
-  /* الكولومز: wifi | space | pic+name+country | space | pts | VS | pts | space | pic+name+country | space | wifi */
+  /* ── لوحة النتيجة: layout محكم بدون فراغات ── */
   .vs-col-wifi {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    flex: 0 0 auto; min-width: 44px;
+    flex: 0 0 38px; width: 38px;
   }
   .vs-col-player {
     display: flex; flex-direction: column; align-items: center;
-    flex: 1 1 0; min-width: 0;
+    flex: 0 1 auto; min-width: 0; max-width: 100px;
   }
   .vs-col-pts {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    flex: 0 0 auto; min-width: 48px;
+    flex: 0 0 auto; padding: 0 4px;
   }
   .vs-col-mid {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    flex: 0 0 auto; padding: 0 10px;
+    flex: 0 0 auto; padding: 0 8px;
   }
-  .vs-spacer { flex: 1 1 0; }
-
+  .vs-spacer { display: none; }
   .vs-player-avatar {
     width: 44px; height: 44px; border-radius: 50%;
     background: rgba(255,255,255,0.15);
@@ -802,27 +800,56 @@
   .offline-game-btn {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px 12px;
+    align-items: flex-start;
+    justify-content: flex-end;
+    min-height: 120px;
+    padding: 0;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    border: none;
+    background: var(--bg2);
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: all 0.22s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
     text-decoration: none;
-    color: var(--ink);
+    color: #fff;
     font-family: 'El Messiri', sans-serif;
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+  }
+  .offline-game-kanji {
+    background-image: url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&q=80');
+  }
+  .offline-game-sudoku {
+    background-image: url('https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400&q=80');
+  }
+  .offline-game-xo {
+    background-image: url('https://images.unsplash.com/photo-1609220136736-443140cffec6?w=600&q=80');
+    min-height: 110px;
   }
   .offline-game-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
-    border-color: var(--blue);
-    background: rgba(0,113,227,0.04);
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 10px 32px rgba(0,0,0,0.22);
+  }
+  .offline-game-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
+    z-index: 1;
+    transition: background 0.2s;
+  }
+  .offline-game-btn:hover .offline-game-overlay {
+    background: linear-gradient(to top, rgba(0,71,163,0.75) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  }
+  .offline-game-content {
+    position: relative;
+    z-index: 2;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
   }
   .offline-game-icon {
     font-size: 28px;
@@ -830,12 +857,14 @@
   }
   .offline-game-title {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.2px;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
   }
   .offline-game-sub {
     font-size: 11px;
-    color: var(--ink3);
+    color: rgba(255,255,255,0.75);
     font-weight: 400;
   }
   .offline-badge {
@@ -849,6 +878,12 @@
     border: 1px solid var(--line);
     border-radius: 20px;
     padding: 2px 8px;
+  }
+  .offline-badge-white {
+    color: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.3);
+    margin-top: 4px;
   }
 
   /* ── APPLE GLASS CARD upgrade ── */
@@ -1632,11 +1667,6 @@
       دوري العباقرة
     </div>
     <nav id="main-nav">
-      <!-- عملة اللاعب في الشاشات العريضة -->
-      <div class="nav-coin-pill" id="nav-coin-pill" style="display:none">
-        <img src="coin.png" onerror="this.outerHTML='🪙'">
-        <span id="nav-coin-count">0</span>
-      </div>
       <button onclick="safeShowPage('home')" class="active" id="nav-home">
         <i class="fa-solid fa-house"></i> <span class="nav-text">الرئيسية</span>
       </button>
@@ -1765,7 +1795,7 @@
                 </div>
                 <div class="coin-chip" id="dash-coin-chip">
                   <img src="coin.png" onerror="this.outerHTML='🪙'">
-                  <span id="dash-coins">0</span> عملة
+                  <span id="dash-coins">0</span> coin
                 </div>
               </div>
             </div>
@@ -1837,23 +1867,29 @@
 
               <!-- Offline Games -->
               <div class="offline-games-grid">
-                <a href="kanji-memory.html" class="offline-game-btn glass-card">
-                  <div class="offline-game-icon"><i class="fa-solid fa-brain" style="font-size:28px;color:var(--blue)"></i></div>
-                  <div class="offline-game-title">ذاكرة الكانجي</div>
-                  <div class="offline-game-sub">تحدّ الذاكرة</div>
-                  <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                <a href="kanji-memory.html" class="offline-game-btn offline-game-kanji">
+                  <div class="offline-game-overlay"></div>
+                  <div class="offline-game-content">
+                    <div class="offline-game-title">ذاكرة الكانجي</div>
+                    <div class="offline-game-sub">تحدّ الذاكرة</div>
+                    <span class="offline-badge offline-badge-white"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                  </div>
                 </a>
-                <a href="sudoku.html" class="offline-game-btn glass-card">
-                  <div class="offline-game-icon"><i class="fa-solid fa-table-cells" style="font-size:28px;color:var(--blue)"></i></div>
-                  <div class="offline-game-title">السودوكو</div>
-                  <div class="offline-game-sub">ألعاب العباقرة</div>
-                  <span class="offline-badge"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                <a href="sudoku.html" class="offline-game-btn offline-game-sudoku">
+                  <div class="offline-game-overlay"></div>
+                  <div class="offline-game-content">
+                    <div class="offline-game-title">السودوكو</div>
+                    <div class="offline-game-sub">ألعاب العباقرة</div>
+                    <span class="offline-badge offline-badge-white"><i class="fa-solid fa-wifi-slash" style="font-size:9px"></i> بدون إنترنت</span>
+                  </div>
                 </a>
-                <a href="xo.html" class="offline-game-btn glass-card" style="grid-column: 1 / -1;">
-                  <div class="offline-game-icon">❌⭕</div>
-                  <div class="offline-game-title">العب اكس-أوو مع العباقرة الآخرين</div>
-                  <div class="offline-game-sub">تحدّ أصدقاءك في لعبة X O</div>
-                  <span class="offline-badge"><i class="fa-solid fa-users" style="font-size:9px"></i> متعدد اللاعبين</span>
+                <a href="xo.html" class="offline-game-btn offline-game-xo" style="grid-column: 1 / -1;">
+                  <div class="offline-game-overlay"></div>
+                  <div class="offline-game-content">
+                    <div class="offline-game-title">اكس-أوو XO</div>
+                    <div class="offline-game-sub">تحدّ أصدقاءك في لعبة X O</div>
+                    <span class="offline-badge offline-badge-white"><i class="fa-solid fa-users" style="font-size:9px"></i> متعدد اللاعبين</span>
+                  </div>
                 </a>
               </div>
 
