@@ -3462,22 +3462,27 @@ let _dailyQAttempts = 0;
 let _dailyQCurrent = null;
 
 function openDailyQuestionModal() {
-  if (!window.QUESTIONS || !QUESTIONS.length) {
-    // حاول مرة أخرى بعد ثانية واحدة تلقائياً
+  const qs = (typeof QUESTIONS !== 'undefined' && QUESTIONS && QUESTIONS.length) ? QUESTIONS
+           : (typeof window.QUESTIONS !== 'undefined' && window.QUESTIONS && window.QUESTIONS.length) ? window.QUESTIONS
+           : null;
+  if (!qs) {
     showToast('جاري تحميل الأسئلة...', 'info');
     setTimeout(() => {
-      if (window.QUESTIONS && QUESTIONS.length) {
+      const qs2 = (typeof QUESTIONS !== 'undefined' && QUESTIONS && QUESTIONS.length) ? QUESTIONS
+                : (typeof window.QUESTIONS !== 'undefined' && window.QUESTIONS && window.QUESTIONS.length) ? window.QUESTIONS
+                : null;
+      if (qs2) {
         _dailyQAttempts = 0;
-        _dailyQCurrent = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+        _dailyQCurrent = qs2[Math.floor(Math.random() * qs2.length)];
         _renderDailyQModal();
       } else {
-        showToast('تعذّر تحميل الأسئلة، تحقق من الاتصال وأعد المحاولة', 'error');
+        showToast('تعذّر تحميل الأسئلة، أعد تحميل الصفحة', 'error');
       }
-    }, 1200);
+    }, 1500);
     return;
   }
   _dailyQAttempts = 0;
-  _dailyQCurrent = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  _dailyQCurrent = qs[Math.floor(Math.random() * qs.length)];
   _renderDailyQModal();
 }
 
