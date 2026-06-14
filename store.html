@@ -158,12 +158,56 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
 .skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+/* ── STORE PRELOADER ── */
+#store-preloader {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px;
+  transition: opacity 0.4s ease;
+}
+#store-preloader.hidden { opacity: 0; pointer-events: none; }
+.preloader-ring {
+  width: 90px; height: 90px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.preloader-ring::before {
+  content: '';
+  position: absolute; inset: 0;
+  border: 3.5px solid var(--line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: preloaderSpin 0.85s linear infinite;
+}
+@keyframes preloaderSpin { to { transform: rotate(360deg); } }
+.preloader-icon {
+  font-size: 34px; color: var(--gold);
+  animation: preloaderPulse 1.4s ease-in-out infinite;
+}
+@keyframes preloaderPulse {
+  0%,100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+.preloader-text {
+  font-size: 14px; color: var(--ink3); font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
 /* ── DIVIDER ── */
 .store-divider{max-width:960px;margin:0 auto 32px;padding:0 24px}
 .store-divider hr{border:none;border-top:1px solid var(--line2)}
 </style>
 </head>
 <body>
+
+<div id="store-preloader">
+  <div class="preloader-ring">
+    <i class="fa-solid fa-store preloader-icon"></i>
+  </div>
+  <div class="preloader-text">جاري تحميل المتجر...</div>
+</div>
 
 <header>
   <div class="header-inner">
@@ -203,7 +247,7 @@ header{border-bottom:1px solid var(--line);padding:0 24px;position:sticky;top:0;
   <div class="icon-wrap" style="color:#e74c3c;background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.2)"><i class="fa-solid fa-ban"></i></div>
   <h2>أدوات المباراة</h2>
 </div>
-<div class="prizes-grid" id="exclusion-grid" style="grid-template-columns:repeat(2,1fr);max-width:780px;margin-bottom:32px">
+<div class="prizes-grid" id="exclusion-grid" style="grid-template-columns:repeat(3,1fr);max-width:960px;margin-bottom:32px">
   <div class="item-card"><div class="item-img-wrap skeleton" style="height:120px"></div><div class="item-body"><div class="skeleton" style="height:16px;border-radius:6px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;border-radius:10px"></div></div></div>
 </div>
 
@@ -298,7 +342,7 @@ const EXCLUSION_ITEM = {
   name: 'بطاقة الاستبعاد',
   section: 'أدوات المباراة',
   desc: 'استبعد اختياراً خاطئاً من بين الأربعة خيارات! يمنحك ×٣ استخدامات، ويمكن استخدامها ٣ مرات في السؤال الواحد.',
-  price: 1,
+  price: 5,
   img: '/store/exclusion.png',
   badge: 'مميز',
   badgeClass: 'badge-char',
@@ -311,7 +355,7 @@ const REPLACE_ITEM = {
   name: 'بطاقة استبدال السؤال',
   section: 'أدوات المباراة',
   desc: 'استبدل السؤال الحالي بسؤال جديد من قائمة الأسئلة. الوقت لا يُعاد! السؤال الجديد يُرى فقط من طرفك.',
-  price: 1,
+  price: 4,
   img: '/store/replace.png',
   badge: 'استبدال',
   badgeClass: 'badge-char',
@@ -324,7 +368,7 @@ const FLIP_ITEM = {
   name: 'بطاقة قلب السؤال',
   section: 'أدوات المباراة',
   desc: 'اقلب نص السؤال عند خصمك! تظهر الحروف معكوسة لديه فقط. تُزال تلقائياً بعد انتهاء السؤال.',
-  price: 2,
+  price: 3,
   img: '/store/flip.png',
   badge: 'فوضى',
   badgeClass: 'badge-legendary',
@@ -335,17 +379,17 @@ const TOOL_ITEMS = [EXCLUSION_ITEM, REPLACE_ITEM, FLIP_ITEM];
 
 // ── الجوائز الأربع ──
 const PRIZES = [
-  { key:'p1', name:'المخ الفضي', section:'جوائز الصدارة', desc:'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون 70 نقطة صدارة.', price:70, img:'/store/p1.png', badge:'نادر', badgeClass:'badge-rare' },
-  { key:'p2', name:'المخ الذهبي', section:'جوائز الصدارة', desc:'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.', price:300, img:'/store/p2.png', badge:'ذهبي', badgeClass:'badge-rare' },
-  { key:'p3', name:'كأس العباقرة', section:'ألقاب أسطورية', desc:'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.', price:990, img:'/store/p3.png', badge:'أسطوري', badgeClass:'badge-legendary' },
-  { key:'p4', name:'إمبراطور العباقرة', section:'ألقاب أسطورية', desc:'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.', price:1500, img:'/store/p4.png', badge:'إمبراطور', badgeClass:'badge-legendary' }
+  { key:'p1', name:'المخ الفضي', section:'جوائز الصدارة', desc:'جائزة نادرة تُكلِّل العباقرة الذين يتجاوزون المستوى الفضي.', price:150, img:'/store/p1.png', badge:'نادر', badgeClass:'badge-rare' },
+  { key:'p2', name:'المخ الذهبي', section:'جوائز الصدارة', desc:'لقب ذهبي يُعلِن تفوقك على أغلب المنافسين في الدوري.', price:320, img:'/store/p2.png', badge:'ذهبي', badgeClass:'badge-rare' },
+  { key:'p3', name:'كأس العباقرة', section:'ألقاب أسطورية', desc:'الكأس الأسطورية التي تمنح حاملها مكانة مرموقة في لوحة الصدارة.', price:1500, img:'/store/p3.png', badge:'أسطوري', badgeClass:'badge-legendary' },
+  { key:'p4', name:'إمبراطور العباقرة', section:'ألقاب أسطورية', desc:'اللقب الأعلى. للعباقرة الحقيقيين الذين يسودون الدوري بلا منازع.', price:2000, img:'/store/p4.png', badge:'إمبراطور', badgeClass:'badge-legendary' }
 ];
 
 // ── الشخصيات الست ──
 const CHARS = [
   {
     key:'cody', name:'كودي', nameEn:'Cody', img:'/store/cody.png',
-    price:5, priceType:'normal',
+    price:3, priceType:'normal',
     badge:'مبرمج', badgeClass:'badge-char',
     props:['البرمجة','السرعة'],
     desc:'عبقري البرمجة. سريع في التفكير ومتخصص في الأسئلة التقنية.',
@@ -358,7 +402,7 @@ const CHARS = [
   },
   {
     key:'conan', name:'كونان', nameEn:'Conan', img:'/store/conan.png',
-    price:11, priceType:'normal',
+    price:4, priceType:'normal',
     badge:'محقق', badgeClass:'badge-char',
     props:['الإجابة الصحيحة','البطء'],
     desc:'المحقق الذكي. يستغرق وقتاً أطول لكنه يصل للحل الصحيح.',
@@ -370,7 +414,7 @@ const CHARS = [
   },
   {
     key:'gakusei', name:'غاكوسي', nameEn:'Gakusei', img:'/store/gakusei.png',
-    price:5, priceType:'upgrade',
+    price:4, priceType:'upgrade',
     badge:'طالب', badgeClass:'badge-char',
     props:['الإجابة الصحيحة'],
     desc:'الطالب المجتهد. متوازن في جميع المجالات.',
@@ -382,7 +426,7 @@ const CHARS = [
   },
   {
     key:'sakura', name:'ساكورا', nameEn:'Sakura', img:'/store/sakura.png',
-    price:5, priceType:'normal',
+    price:3, priceType:'normal',
     badge:'سريعة', badgeClass:'badge-char',
     props:['السرعة'],
     desc:'الأسرع في الإجابة. تُقلّل الوقت المستهلك بشكل كبير.',
@@ -394,7 +438,7 @@ const CHARS = [
   },
   {
     key:'duo', name:'دوو', nameEn:'Duo', img:'/store/duo.png',
-    price:8, priceType:'upgrade',
+    price:3, priceType:'upgrade',
     badge:'لغات', badgeClass:'badge-char',
     props:['اللغات','السرعة'],
     desc:'خبير اللغات. يبرع في الأسئلة التي تحتوي كلمات غير عربية.',
@@ -407,7 +451,7 @@ const CHARS = [
   },
   {
     key:'einstein', name:'أينشتاين', nameEn:'Einstein', img:'/store/einstein.png',
-    price:15, priceType:'normal',
+    price:7, priceType:'normal',
     badge:'عبقري', badgeClass:'badge-legendary',
     props:['الإجابة الصحيحة','البطء'],
     desc:'أذكى الجميع. نسبة إجابة عالية جداً لكنه يحتاج وقتاً للتفكير.',
@@ -437,15 +481,15 @@ function renderBalance() {
     el.innerHTML = `<div class="not-logged"><i class="fa-solid fa-circle-info" style="margin-left:6px;color:var(--blue)"></i> يجب <a href="/">تسجيل الدخول</a> لتتمكن من الشراء</div>`;
     return;
   }
-  const pts = currentUser.level || 0;
+  const coins = currentUser.coins || 0;
   el.innerHTML = `
     <div class="balance-card">
       <div>
-        <div class="lbl">رصيدك من نقاط الصدارة</div>
-        <div class="pts"><i class="fa-solid fa-star"></i> ${pts.toLocaleString('ar-EG')}</div>
+        <div class="lbl">رصيدك من العملات</div>
+        <div class="pts"><i class="fa-solid fa-coins"></i> ${coins.toLocaleString('ar-EG')}</div>
         <div class="user-name">${currentUser.name || ''}</div>
       </div>
-      <i class="fa-solid fa-wallet" style="font-size:32px;color:rgba(255,255,255,0.2)"></i>
+      <i class="fa-solid fa-coins" style="font-size:32px;color:rgba(255,255,255,0.2)"></i>
     </div>`;
 }
 
@@ -459,10 +503,10 @@ async function loadStoreData() {
 // ── رسم أدوات المباراة (استبعاد + استبدال + قلب) ──
 function renderExclusion() {
   const grid = document.getElementById('exclusion-grid');
-  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const coins = currentUser ? (currentUser.coins || 0) : 0;
   grid.innerHTML = TOOL_ITEMS.map(item => {
     const count = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
-    const canAfford = pts >= item.price;
+    const canAfford = coins >= item.price;
     const ownedSection = count > 0 ? `<div class="item-owned-count"><i class="fa-solid fa-circle-check"></i> لديك ${count} استخدام</div>` : '';
     let btnHtml = '';
     if (!currentUser) {
@@ -485,7 +529,7 @@ function renderExclusion() {
         <div class="item-name"><i class="fa-solid ${icon}" style="color:${iconColor};font-size:13px"></i> ${item.name}</div>
         <div class="item-desc">${item.desc}</div>
         ${ownedSection}
-        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price}</span> نقطة</div>
+        <div class="item-price"><i class="fa-solid fa-coins"></i> <span class="price-num">${item.price}</span> coin</div>
         ${btnHtml}
       </div>
     </div>`;
@@ -495,10 +539,10 @@ function renderExclusion() {
 
 function renderPrizes() {
   const grid = document.getElementById('prizes-grid');
-  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const coins = currentUser ? (currentUser.coins || 0) : 0;
   grid.innerHTML = PRIZES.map(item => {
     const owned = storeData && storeData[item.key] == 1;
-    const canAfford = pts >= item.price;
+    const canAfford = coins >= item.price;
     let btnHtml = '';
     if (owned) {
       btnHtml = `<button class="buy-btn already-owned"><i class="fa-solid fa-check-circle"></i> تمتلكها بالفعل</button>`;
@@ -519,7 +563,7 @@ function renderPrizes() {
       <div class="item-body">
         <div class="item-name">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
-        <div class="item-price"><i class="fa-solid fa-star"></i> <span class="price-num">${item.price.toLocaleString('ar-EG')}</span> نقطة</div>
+        <div class="item-price"><i class="fa-solid fa-coins"></i> <span class="price-num">${item.price.toLocaleString('ar-EG')}</span> coin</div>
         ${btnHtml}
       </div>
     </div>`;
@@ -529,10 +573,10 @@ function renderPrizes() {
 // ── رسم الشخصيات ──
 function renderChars() {
   const grid = document.getElementById('chars-grid');
-  const pts = currentUser ? (currentUser.level || 0) : 0;
+  const coins = currentUser ? (currentUser.coins || 0) : 0;
   grid.innerHTML = CHARS.map(ch => {
     const count = storeData ? (parseInt(storeData[ch.key]) || 0) : 0;
-    const canAfford = pts >= ch.price;
+    const canAfford = coins >= ch.price;
     const priceLabel = ch.priceType === 'upgrade'
       ? `<span style="font-size:11px;color:var(--blue);background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.2);border-radius:12px;padding:1px 7px;margin-right:4px">ترقية</span>`
       : '';
@@ -562,7 +606,7 @@ function renderChars() {
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${propsHtml}</div>
         <div class="item-desc">${ch.desc}</div>
         ${ownedSection}
-        <div class="item-price">${priceLabel}<i class="fa-solid fa-star"></i> <span class="price-num">${ch.price.toLocaleString('ar-EG')}</span> نقطة</div>
+        <div class="item-price">${priceLabel}<i class="fa-solid fa-coins"></i> <span class="price-num">${ch.price.toLocaleString('ar-EG')}</span> coin</div>
         ${btnHtml}
       </div>
     </div>`;
@@ -624,15 +668,15 @@ function openConfirm(key, isChar, type) {
   }
   if (!item) return;
   pendingItem = item;
-  const pts = currentUser.level || 0;
+  const coins = currentUser.coins || 0;
   document.getElementById('modal-item-img').src = item.img;
   document.getElementById('modal-item-name').textContent = item.name;
   document.getElementById('modal-item-sub').textContent = (isChar || pendingType === 'exclusion')
     ? 'سيتم إضافة 3 استخدامات لهذه البطاقة.'
     : 'هل أنت متأكد من شراء هذه الجائزة؟';
-  document.getElementById('modal-before').textContent = `${pts.toLocaleString('ar-EG')} ☆`;
-  document.getElementById('modal-after').textContent = `${(pts - item.price).toLocaleString('ar-EG')} ☆`;
-  document.getElementById('modal-cost').textContent = `${item.price.toLocaleString('ar-EG')} ☆`;
+  document.getElementById('modal-before').textContent = `${coins.toLocaleString('ar-EG')} 🪙`;
+  document.getElementById('modal-after').textContent = `${(coins - item.price).toLocaleString('ar-EG')} 🪙`;
+  document.getElementById('modal-cost').textContent = `${item.price.toLocaleString('ar-EG')} 🪙`;
   document.getElementById('modal-confirm').classList.add('show');
 }
 
@@ -646,19 +690,19 @@ async function confirmPurchase() {
   if (!currentUser || !pendingItem) return;
   const item = pendingItem;
   const isChar = pendingIsChar;
-  const pts = currentUser.level || 0;
-  if (pts < item.price) { showToast('نقاط غير كافية!', true); closeModal(); return; }
+  const coins = currentUser.coins || 0;
+  if (coins < item.price) { showToast('عملات غير كافية!', true); closeModal(); return; }
 
   const btn = document.getElementById('modal-confirm-btn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الشراء...';
 
-  const newLevel = pts - item.price;
+  const newCoins = coins - item.price;
 
-  // 1) خصم النقاط من جدول system
+  // 1) خصم العملات من جدول system
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ level: newLevel })
+    body: JSON.stringify({ coins: newCoins })
   });
 
   // 2) حساب القيمة الجديدة للعمود
@@ -680,7 +724,7 @@ async function confirmPurchase() {
   if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
 
   // 4) تحديث الحالة المحلية (مرة واحدة فقط)
-  currentUser.level = newLevel;
+  currentUser.coins = newCoins;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
 
   if (isChar || pendingType === 'exclusion' || pendingType === 'tool') {
@@ -719,13 +763,38 @@ document.getElementById('modal-confirm').addEventListener('click', function(e) {
 document.getElementById('modal-char-info').addEventListener('click', function(e) { if (e.target===this) closeCharInfo(); });
 
 async function init() {
+  // جمع كل روابط الصور في المتجر لتحميلها مسبقاً
+  const allImgs = [
+    ...PRIZES.map(p => p.img),
+    ...CHARS.map(c => c.img),
+    ...TOOL_ITEMS.map(t => t.img)
+  ];
+
+  // بدء التحميل المسبق
+  const preloadPromises = allImgs.map(src => new Promise(resolve => {
+    const img = new Image();
+    img.onload = img.onerror = resolve;
+    img.src = src;
+  }));
+
+  // تحميل بيانات المستخدم والمتجر بالتوازي مع الصور
   loadUser();
   renderBalance();
-  await loadStoreData();
+  const [storeResult] = await Promise.all([
+    loadStoreData(),
+    Promise.all(preloadPromises)
+  ]);
+
+  // رسم المحتوى
   renderExclusion();
   renderPrizes();
   renderChars();
   renderMyFriends();
+
+  // إخفاء شاشة التحميل بعد كل شيء
+  const preloader = document.getElementById('store-preloader');
+  preloader.classList.add('hidden');
+  setTimeout(() => preloader.remove(), 450);
 }
 init();
 
