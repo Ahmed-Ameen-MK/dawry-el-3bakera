@@ -481,7 +481,7 @@ function renderBalance() {
     el.innerHTML = `<div class="not-logged"><i class="fa-solid fa-circle-info" style="margin-left:6px;color:var(--blue)"></i> يجب <a href="/">تسجيل الدخول</a> لتتمكن من الشراء</div>`;
     return;
   }
-  const coins = currentUser.coins || 0;
+  const coins = currentUser.coin || 0;
   el.innerHTML = `
     <div class="balance-card">
       <div>
@@ -503,7 +503,7 @@ async function loadStoreData() {
 // ── رسم أدوات المباراة (استبعاد + استبدال + قلب) ──
 function renderExclusion() {
   const grid = document.getElementById('exclusion-grid');
-  const coins = currentUser ? (currentUser.coins || 0) : 0;
+  const coins = currentUser ? (currentUser.coin || 0) : 0;
   grid.innerHTML = TOOL_ITEMS.map(item => {
     const count = storeData ? (parseInt(storeData[item.key]) || 0) : 0;
     const canAfford = coins >= item.price;
@@ -539,7 +539,7 @@ function renderExclusion() {
 
 function renderPrizes() {
   const grid = document.getElementById('prizes-grid');
-  const coins = currentUser ? (currentUser.coins || 0) : 0;
+  const coins = currentUser ? (currentUser.coin || 0) : 0;
   grid.innerHTML = PRIZES.map(item => {
     const owned = storeData && storeData[item.key] == 1;
     const canAfford = coins >= item.price;
@@ -573,7 +573,7 @@ function renderPrizes() {
 // ── رسم الشخصيات ──
 function renderChars() {
   const grid = document.getElementById('chars-grid');
-  const coins = currentUser ? (currentUser.coins || 0) : 0;
+  const coins = currentUser ? (currentUser.coin || 0) : 0;
   grid.innerHTML = CHARS.map(ch => {
     const count = storeData ? (parseInt(storeData[ch.key]) || 0) : 0;
     const canAfford = coins >= ch.price;
@@ -668,7 +668,7 @@ function openConfirm(key, isChar, type) {
   }
   if (!item) return;
   pendingItem = item;
-  const coins = currentUser.coins || 0;
+  const coins = currentUser.coin || 0;
   document.getElementById('modal-item-img').src = item.img;
   document.getElementById('modal-item-name').textContent = item.name;
   document.getElementById('modal-item-sub').textContent = (isChar || pendingType === 'exclusion')
@@ -690,7 +690,7 @@ async function confirmPurchase() {
   if (!currentUser || !pendingItem) return;
   const item = pendingItem;
   const isChar = pendingIsChar;
-  const coins = currentUser.coins || 0;
+  const coins = currentUser.coin || 0;
   if (coins < item.price) { showToast('عملات غير كافية!', true); closeModal(); return; }
 
   const btn = document.getElementById('modal-confirm-btn');
@@ -702,7 +702,7 @@ async function confirmPurchase() {
   // 1) خصم العملات من جدول system
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ coins: newCoins })
+    body: JSON.stringify({ coin: newCoins })
   });
 
   // 2) حساب القيمة الجديدة للعمود
@@ -724,7 +724,7 @@ async function confirmPurchase() {
   if (!storeData) storeData = { id: currentUser.id, name: currentUser.name };
 
   // 4) تحديث الحالة المحلية (مرة واحدة فقط)
-  currentUser.coins = newCoins;
+  currentUser.coin = newCoins;
   localStorage.setItem('genius_user', JSON.stringify(currentUser));
 
   if (isChar || pendingType === 'exclusion' || pendingType === 'tool') {
