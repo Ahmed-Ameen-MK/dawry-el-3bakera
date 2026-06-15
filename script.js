@@ -813,168 +813,147 @@ function startMatch(opp) {
 }
 
 function showMatchIntroScreen(opp, onDone) {
-  // إنشاء overlay شاشة البداية
+  const myAvSrc   = currentUser?.avatar_url || '';
+  const myInitial = (currentUser?.name || '?')[0].toUpperCase();
+  const oppAvSrc  = opp?.avatar_url || '';
+  const oppInitial= (opp?.name || '?')[0].toUpperCase();
+  const myName    = currentUser?.name  || 'أنا';
+  const oppName   = opp?.name          || 'الخصم';
+
   const intro = document.createElement('div');
   intro.id = 'match-intro-overlay';
-  intro.style.cssText = `
-    position:fixed;inset:0;z-index:10000;
-    background:#0a0a0f;overflow:hidden;
-    display:flex;flex-direction:column;
-  `;
-
-  const myAvSrc = currentUser && currentUser.avatar_url ? currentUser.avatar_url : '';
-  const myInitial = currentUser && currentUser.name ? currentUser.name[0].toUpperCase() : '?';
-  const oppAvSrc = opp && opp.avatar_url ? opp.avatar_url : '';
-  const oppInitial = opp && opp.name ? opp.name[0].toUpperCase() : '?';
+  intro.style.cssText = 'position:fixed;inset:0;z-index:10000;overflow:hidden;font-family:"El Messiri",sans-serif;';
 
   intro.innerHTML = `
     <style>
-      @keyframes introFadeIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
-      @keyframes introSlideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
-      @keyframes lightningDraw {
-        0%   { stroke-dashoffset: 800; opacity: 0; }
-        10%  { opacity: 1; }
-        60%  { stroke-dashoffset: 0; opacity: 1; }
-        80%  { opacity: 0.6; }
-        100% { stroke-dashoffset: 0; opacity: 0; }
-      }
-      @keyframes glowPulse {
-        0%, 100% { filter: drop-shadow(0 0 8px #f0c040) drop-shadow(0 0 24px #f0c040); }
-        50% { filter: drop-shadow(0 0 24px #fff) drop-shadow(0 0 60px #f0c040); }
-      }
-      @keyframes introExit {
-        from { opacity:1; transform:scale(1); }
-        to   { opacity:0; transform:scale(1.06); }
+      @keyframes miPlayerIn { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes miFooterIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes miExit { from{opacity:1} to{opacity:0} }
+      @keyframes miRingFill {
+        from { stroke-dashoffset: 282; }
+        to   { stroke-dashoffset: 0; }
       }
     </style>
 
-    <!-- النصف العلوي: اللاعب الأول (أنا) -->
-    <div id="intro-top" style="
-      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      background:linear-gradient(180deg,#0d1b2a 0%,#0a1520 100%);
-      position:relative;padding:24px;
-      animation:introFadeIn 0.5s ease both;
-    ">
-      <div style="
-        width:clamp(72px,18vw,100px);height:clamp(72px,18vw,100px);border-radius:50%;
-        overflow:hidden;border:3px solid rgba(0,113,227,0.6);
-        box-shadow:0 0 32px rgba(0,113,227,0.5);
-        background:rgba(255,255,255,0.08);
-        display:flex;align-items:center;justify-content:center;
-        font-size:clamp(28px,8vw,44px);font-weight:700;color:#fff;
-        font-family:'El Messiri',sans-serif;
-        animation:introFadeIn 0.6s 0.1s ease both;
-        flex-shrink:0;
-      ">
-        ${myAvSrc
-          ? `<img src="${myAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${myInitial}'">`
-          : myInitial}
-      </div>
-      <div style="
-        margin-top:14px;font-family:'El Messiri',sans-serif;font-size:clamp(16px,4vw,22px);
-        font-weight:700;color:#fff;letter-spacing:-0.5px;
-        animation:introSlideUp 0.5s 0.2s ease both;
-      ">${currentUser ? currentUser.name : 'أنا'}</div>
-      <div style="
-        font-size:12px;color:rgba(0,113,227,0.8);margin-top:4px;
-        animation:introSlideUp 0.5s 0.3s ease both;
-        font-family:'El Messiri',sans-serif;
-      ">${currentUser && currentUser.country ? currentUser.country : ''}</div>
-    </div>
+    <!-- خلفية الصورة -->
+    <div style="position:absolute;inset:0;background:url('/backgrounds/bg1.png') center/cover no-repeat;z-index:0"></div>
+    <!-- طبقة تعتيم فوق الخلفية -->
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);z-index:1"></div>
 
-    <!-- البرق الفاصل -->
-    <div id="intro-lightning-wrap" style="
-      position:absolute;top:0;left:0;width:100%;height:100%;
-      pointer-events:none;z-index:2;
-    ">
-      <svg id="intro-svg" width="100%" height="100%" viewBox="0 0 400 700"
-        preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
-        <!-- البرق الرئيسي من الركن الأيمن العلوي للأيسر السفلي -->
-        <polyline id="bolt1"
-          points="400,0 320,120 360,140 240,280 300,300 180,420 240,440 80,580 160,600 0,700"
-          fill="none" stroke="#f0c040" stroke-width="4"
-          stroke-dasharray="800" stroke-dashoffset="800"
-          style="animation:lightningDraw 0.7s 0.4s ease forwards, glowPulse 0.4s 0.4s ease infinite"/>
-        <!-- نسخة أرفع وضاحكة للمؤثر -->
-        <polyline id="bolt2"
-          points="400,0 325,110 365,135 245,270 305,295 182,415 244,438 82,578 162,598 0,700"
-          fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"
-          stroke-dasharray="800" stroke-dashoffset="800"
-          style="animation:lightningDraw 0.7s 0.42s ease forwards"/>
-      </svg>
-    </div>
-
-    <!-- النصف السفلي: الخصم -->
-    <div id="intro-bot" style="
-      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      background:linear-gradient(0deg,#1a0a0a 0%,#150808 100%);
-      position:relative;padding:24px;
-      animation:introFadeIn 0.5s 0.15s ease both;
-    ">
-      <div style="
-        width:clamp(72px,18vw,100px);height:clamp(72px,18vw,100px);border-radius:50%;
-        overflow:hidden;border:3px solid rgba(192,57,43,0.6);
-        box-shadow:0 0 32px rgba(192,57,43,0.5);
-        background:rgba(255,255,255,0.08);
-        display:flex;align-items:center;justify-content:center;
-        font-size:clamp(28px,8vw,44px);font-weight:700;color:#fff;
-        font-family:'El Messiri',sans-serif;
-        animation:introFadeIn 0.6s 0.25s ease both;
-        flex-shrink:0;
-      ">
-        ${oppAvSrc
-          ? `<img src="${oppAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${oppInitial}'">`
-          : oppInitial}
-      </div>
-      <div style="
-        margin-top:14px;font-family:'El Messiri',sans-serif;font-size:clamp(16px,4vw,22px);
-        font-weight:700;color:#fff;letter-spacing:-0.5px;
-        animation:introSlideUp 0.5s 0.35s ease both;
-      ">${opp ? opp.name : 'الخصم'}</div>
-      <div style="
-        font-size:12px;color:rgba(192,57,43,0.8);margin-top:4px;
-        animation:introSlideUp 0.5s 0.45s ease both;
-        font-family:'El Messiri',sans-serif;
-      ">${opp && opp.country ? opp.country : ''}</div>
-    </div>
-
-    <!-- شريط منتصف: VS -->
+    <!-- أسماء اللاعبين + vs في الأعلى -->
     <div style="
-      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      z-index:3;
-      background:#0a0a0f;border:2px solid rgba(240,192,64,0.5);
-      border-radius:50%;width:56px;height:56px;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'El Messiri',sans-serif;font-size:18px;font-weight:900;
-      color:#f0c040;
-      box-shadow:0 0 24px rgba(240,192,64,0.6);
-      animation:glowPulse 0.8s 0.5s ease infinite;
-    ">VS</div>
+      position:absolute;top:0;left:0;right:0;
+      display:flex;align-items:center;justify-content:center;gap:14px;
+      padding:clamp(16px,4vh,32px) 20px 0;
+      z-index:2;
+      animation:miPlayerIn 0.5s 0.1s ease both;
+    ">
+      <!-- أنا -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">
+        <div style="
+          width:clamp(40px,10vw,54px);height:clamp(40px,10vw,54px);
+          border-radius:50%;overflow:hidden;
+          border:2px solid rgba(255,255,255,0.35);
+          background:rgba(255,255,255,0.12);
+          display:flex;align-items:center;justify-content:center;
+          font-size:clamp(16px,4vw,22px);font-weight:700;color:#fff;
+          flex-shrink:0;
+        ">
+          ${myAvSrc ? `<img src="${myAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${myInitial}'">` : myInitial}
+        </div>
+        <div style="font-size:clamp(11px,2.5vw,14px);font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;text-align:center;letter-spacing:0.2px">${myName}</div>
+      </div>
+
+      <!-- VS badge -->
+      <div style="
+        background:rgba(255,255,255,0.12);
+        border:1.5px solid rgba(255,255,255,0.3);
+        border-radius:8px;
+        padding:4px 12px;
+        font-size:clamp(12px,3vw,16px);font-weight:900;
+        color:#fff;letter-spacing:2px;
+        flex-shrink:0;
+      ">VS</div>
+
+      <!-- الخصم -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">
+        <div style="
+          width:clamp(40px,10vw,54px);height:clamp(40px,10vw,54px);
+          border-radius:50%;overflow:hidden;
+          border:2px solid rgba(255,255,255,0.35);
+          background:rgba(255,255,255,0.12);
+          display:flex;align-items:center;justify-content:center;
+          font-size:clamp(16px,4vw,22px);font-weight:700;color:#fff;
+          flex-shrink:0;
+        ">
+          ${oppAvSrc ? `<img src="${oppAvSrc}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${oppInitial}'">` : oppInitial}
+        </div>
+        <div style="font-size:clamp(11px,2.5vw,14px);font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;text-align:center;letter-spacing:0.2px">${oppName}</div>
+      </div>
+    </div>
+
+    <!-- Footer: دائرة تحميل + عد تنازلي -->
+    <div id="mi-footer" style="
+      position:absolute;bottom:0;left:0;right:0;
+      background:rgba(0,0,0,0.55);
+      backdrop-filter:blur(8px);
+      padding:clamp(12px,3vh,22px) 28px clamp(16px,4vh,28px);
+      display:flex;align-items:center;gap:16px;
+      z-index:2;
+      animation:miFooterIn 0.4s 0.2s ease both;
+      border-top:1px solid rgba(255,255,255,0.1);
+    ">
+      <!-- دائرة SVG تتملأ من 0 إلى 10 -->
+      <div style="position:relative;width:46px;height:46px;flex-shrink:0">
+        <svg width="46" height="46" viewBox="0 0 46 46" style="transform:rotate(-90deg)">
+          <circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+          <circle id="mi-ring" cx="23" cy="23" r="19" fill="none" stroke="#fff" stroke-width="3"
+            stroke-linecap="round"
+            stroke-dasharray="119.4"
+            stroke-dashoffset="119.4"
+            style="transition:stroke-dashoffset 0.9s linear;"/>
+        </svg>
+        <!-- الرقم في وسط الدائرة -->
+        <div id="mi-count" style="
+          position:absolute;inset:0;
+          display:flex;align-items:center;justify-content:center;
+          font-size:17px;font-weight:900;color:#fff;
+          font-family:'El Messiri',sans-serif;
+        ">10</div>
+      </div>
+
+      <!-- نص -->
+      <div style="flex:1;min-width:0">
+        <div style="font-size:clamp(13px,3vw,15px);font-weight:700;color:#fff;margin-bottom:2px">جاري تحميل بيئة اللعب...</div>
+        <div style="font-size:clamp(10px,2.5vw,12px);color:rgba(255,255,255,0.5)">تبدأ المباراة خلال ثوانٍ</div>
+      </div>
+    </div>
   `;
 
   document.body.appendChild(intro);
 
-  // صوت البرق
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(80, now + 0.4);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.8);
-    gain.gain.setValueAtTime(0, now + 0.4);
-    gain.gain.linearRampToValueAtTime(0.3, now + 0.42);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-    osc.start(now + 0.4); osc.stop(now + 1.0);
-  } catch(e) {}
+  // عد تنازلي من 10 إلى 0 — كل ثانية
+  const ring   = intro.querySelector('#mi-ring');
+  const count  = intro.querySelector('#mi-count');
+  const total  = 10;
+  const circum = 119.4;
+  let remaining = total;
 
-  // اختفاء الشاشة بعد 2.4 ثانية
-  setTimeout(() => {
-    intro.style.animation = 'introExit 0.4s ease forwards';
-    setTimeout(() => { intro.remove(); onDone(); }, 400);
-  }, 2400);
+  // تحرك أول مباشرة
+  ring.style.strokeDashoffset = circum * (remaining / total);
+
+  const tick = setInterval(() => {
+    remaining--;
+    count.textContent = remaining;
+    ring.style.strokeDashoffset = circum * (remaining / total);
+
+    if (remaining <= 0) {
+      clearInterval(tick);
+      // اختفاء ناعم ثم تشغيل المباراة
+      intro.style.animation = 'miExit 0.35s ease forwards';
+      setTimeout(() => { intro.remove(); onDone(); }, 350);
+    }
+  }, 1000);
 }
 
 function _actuallyStartMatch(opp) {

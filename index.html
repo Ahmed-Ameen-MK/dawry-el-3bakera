@@ -384,142 +384,6 @@
   }
   .btn-stop-search:hover { background: var(--red-bg); border-color: rgba(192,57,43,0.25); }
 
-  /* ── MATCH SCOREBOARD - Single flex row, never wraps ── */
-  .vs-header {
-    background: linear-gradient(135deg, #0a0f1e 0%, #111827 50%, #0a0f1e 100%);
-    color: #fff;
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-    min-height: 100px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
-  }
-
-  .vs-header::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,113,227,0.15) 0%, transparent 40%, rgba(181,136,46,0.1) 70%, transparent 100%);
-    animation: scoreBoardShimmer 3s ease-in-out infinite alternate;
-    pointer-events: none; z-index: 0;
-  }
-  .vs-header::after {
-    content: '';
-    position: absolute; top: -40%; left: -20%;
-    width: 60%; height: 200%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    animation: scoreBoardSweep 4s ease-in-out infinite;
-    pointer-events: none; z-index: 0;
-  }
-  .vs-header > * { position: relative; z-index: 1; }
-
-  @keyframes scoreBoardShimmer { 0%{opacity:0.7} 100%{opacity:1} }
-  @keyframes scoreBoardSweep {
-    0%{transform:translateX(-100%) skewX(-15deg);opacity:0}
-    20%{opacity:1} 80%{opacity:1}
-    100%{transform:translateX(300%) skewX(-15deg);opacity:0}
-  }
-
-  .p-pts { transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
-  .p-pts.bump { transform: scale(1.35); }
-
-  /* wifi col */
-  .vs-col-wifi {
-    flex: 0 0 34px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 3px; padding: 8px 0;
-    background: rgba(0,0,0,0.15);
-  }
-
-  /* player col: avatar + name under it */
-  .vs-col-player {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 12px 6px; gap: 5px;
-  }
-
-  /* pts + country col */
-  .vs-col-pts {
-    flex: 0 0 auto;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 8px 10px; gap: 2px;
-  }
-
-  /* VS + timer col */
-  .vs-col-mid {
-    flex: 0 0 auto;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 8px 12px; gap: 6px;
-    border-left: 1px solid rgba(255,255,255,0.07);
-    border-right: 1px solid rgba(255,255,255,0.07);
-  }
-
-  .vs-spacer { display: none; }
-
-  .vs-player-avatar {
-    width: 46px; height: 46px; border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    border: 2px solid rgba(255,255,255,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; color: #fff;
-    overflow: hidden; flex-shrink: 0;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.3);
-  }
-  .vs-player-name {
-    font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.88);
-    text-align: center; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
-    max-width: 90px; line-height: 1.2;
-  }
-  .vs-player-country {
-    font-size: 10px; color: rgba(255,255,255,0.4);
-    text-align: center; white-space: nowrap;
-  }
-  .vs-pts-num {
-    font-size: 38px; font-weight: 900; color: #fff;
-    letter-spacing: -2px; line-height: 1;
-    white-space: nowrap;
-  }
-  .vs-badge {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #fff; font-weight: 800;
-    padding: 5px 14px; border-radius: 8px;
-    font-size: 14px; letter-spacing: 2px;
-    white-space: nowrap;
-  }
-  .match-timer-wrap {
-    font-size: 10px; color: rgba(255,255,255,0.35);
-    display: flex; align-items: center; gap: 3px;
-    white-space: nowrap;
-  }
-  .match-timer-wrap i { font-size: 9px; }
-  .wifi-indicator-pill {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 2px;
-  }
-
-  /* Narrow screens */
-  @media (max-width: 480px) {
-    .vs-header { min-height: 84px; }
-    .vs-col-wifi { flex: 0 0 28px; }
-    .vs-player-avatar { width: 36px; height: 36px; font-size: 14px; }
-    .vs-player-name { font-size: 9px; max-width: 68px; }
-    .vs-col-pts { padding: 6px 6px; }
-    .vs-pts-num { font-size: 28px; }
-    .vs-col-mid { padding: 6px 8px; }
-    .vs-badge { font-size: 12px; padding: 4px 10px; letter-spacing: 1px; }
-  }
 
   /* Q-timer */
   .timer-bar-wrap { margin-bottom: 16px; }
@@ -1025,22 +889,141 @@
     .nav-lb-link { padding: 6px 10px; }
   }
 
-  /* ── VS-HEADER: always a single flex row, no wrapping ── */
+  /* ── MATCH SCOREBOARD — FC Mobile style ── */
   .vs-header {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    align-items: center !important;
+    align-items: stretch !important;
+    background: linear-gradient(135deg, #0d1b2a 0%, #101c2c 50%, #0d1b2a 100%);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    min-height: 76px;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35);
   }
 
-  /* Wifi indicator pill */
-  .wifi-indicator-pill {
-    display: inline-flex;
-    flex-direction: column;
+  /* خط ضوئي علوي كخط ملعب */
+  .vs-header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.25) 70%, transparent 100%);
+    z-index: 1;
+  }
+
+  /* جميع الأعمدة */
+  .vs-header > * { position: relative; z-index: 2; }
+
+  /* عمود wifi */
+  .vs-col-wifi {
+    flex: 0 0 30px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 6px 0;
+    background: rgba(0,0,0,0.2);
+    border-left: 1px solid rgba(255,255,255,0.05);
+  }
+  .vs-col-wifi:first-child { border-left: none; border-right: 1px solid rgba(255,255,255,0.05); }
+
+  /* عمود اللاعب: صورة + اسم أسفلها */
+  .vs-col-player {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: row;
     align-items: center;
+    padding: 10px 8px;
+    gap: 7px;
+  }
+  /* اللاعب الأيمن (أنا) يكون من اليمين للداخل */
+  .vs-col-player:first-of-type {
+    flex-direction: row;
+  }
+  /* اللاعب الأيسر (الخصم) معكوس */
+  .vs-col-player:last-of-type {
+    flex-direction: row-reverse;
+  }
+
+  .vs-player-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .vs-player-name {
+    font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.9);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 72px;
+  }
+  .vs-player-country {
+    font-size: 9px; color: rgba(255,255,255,0.4);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 72px;
+  }
+
+  /* عمود النقاط + البلد أسفلها */
+  .vs-col-pts {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 8px 8px;
     gap: 1px;
-    cursor: default;
-    min-width: 36px;
+  }
+  .vs-pts-num {
+    font-size: 34px; font-weight: 900; color: #fff;
+    letter-spacing: -2px; line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .vs-pts-num.bump { transform: scale(1.35); }
+
+  /* عمود VS + وقت المباراة وسط */
+  .vs-col-mid {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 6px 10px;
+    gap: 4px;
+    border-left: 1px solid rgba(255,255,255,0.07);
+    border-right: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.15);
+  }
+  .vs-badge {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7); font-weight: 900;
+    padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  .match-timer-wrap {
+    font-size: 10px; color: rgba(255,255,255,0.3);
+    display: flex; align-items: center; gap: 3px;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .match-timer-wrap i { font-size: 9px; }
+
+  .vs-spacer { display: none; }
+
+  .wifi-indicator-pill {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+  }
+
+  @media (max-width: 420px) {
+    .vs-header { min-height: 66px; }
+    .vs-col-wifi { flex: 0 0 24px; }
+    .vs-player-avatar { width: 32px; height: 32px; font-size: 12px; }
+    .vs-player-name { font-size: 9px; max-width: 56px; }
+    .vs-col-pts { padding: 6px 5px; }
+    .vs-pts-num { font-size: 26px; }
+    .vs-col-mid { padding: 5px 7px; }
+    .vs-badge { font-size: 9px; padding: 2px 7px; }
+    .vs-col-player { padding: 8px 5px; gap: 5px; }
   }
 
   @media (max-width: 520px) {
@@ -1915,48 +1898,54 @@
     <div class="section" style="padding-top:20px">
 
       <div class="vs-header">
-        <!-- wifi أنا -->
+
+        <!-- wifi أنا (يمين) -->
         <div class="vs-col-wifi">
           <div id="my-wifi-indicator" class="wifi-indicator-pill"></div>
         </div>
 
-        <!-- صورة + اسم (أنا) -->
+        <!-- أنا: صورة + اسم + بلد -->
         <div class="vs-col-player">
           <div id="my-avatar-m" class="vs-player-avatar"></div>
-          <div class="vs-player-name" id="my-name-m"></div>
+          <div style="min-width:0;overflow:hidden">
+            <div class="vs-player-name" id="my-name-m"></div>
+            <div class="vs-player-country" id="my-country-m"></div>
+          </div>
         </div>
 
-        <!-- نقاطي + بلدي -->
+        <!-- نقاطي -->
         <div class="vs-col-pts">
           <div class="vs-pts-num p-pts" id="my-pts-m">0</div>
-          <div class="vs-player-country" id="my-country-m"></div>
         </div>
 
-        <!-- VS + مؤقت -->
+        <!-- VS + وقت المباراة -->
         <div class="vs-col-mid">
           <div class="vs-badge">VS</div>
           <div class="match-timer-wrap">
             <i class="fa-regular fa-clock"></i>
-            <span id="match-timer-display">00:00:00</span>
+            <span id="match-timer-display">00:00</span>
           </div>
         </div>
 
-        <!-- نقاط الخصم + بلده -->
+        <!-- نقاط الخصم -->
         <div class="vs-col-pts">
           <div class="vs-pts-num p-pts" id="opp-pts-m">0</div>
-          <div class="vs-player-country" id="opp-country-m"></div>
         </div>
 
-        <!-- صورة + اسم (الخصم) -->
+        <!-- الخصم: اسم + صورة (معكوس) -->
         <div class="vs-col-player">
           <div id="opp-avatar-m" class="vs-player-avatar"></div>
-          <div class="vs-player-name" id="opp-name-m"></div>
+          <div style="min-width:0;overflow:hidden;text-align:right">
+            <div class="vs-player-name" id="opp-name-m"></div>
+            <div class="vs-player-country" id="opp-country-m"></div>
+          </div>
         </div>
 
-        <!-- wifi الخصم -->
+        <!-- wifi الخصم (يسار) -->
         <div class="vs-col-wifi">
           <div id="opp-wifi-indicator" class="wifi-indicator-pill"></div>
         </div>
+
       </div>
 
       <div class="timer-bar-wrap">
