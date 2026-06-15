@@ -509,9 +509,6 @@ async function startSearch() {
   document.getElementById('cancel-btn').style.display = '';
   document.getElementById('search-msg').innerHTML = '';
 
-  // ── صوت بدء البحث (مشابه FC Mobile) ──
-  playSearchSound();
-
   // ── إعادة ضبط نقاط المباراة (points) إلى 0 عند بدء البحث ──
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
     method: 'PATCH',
