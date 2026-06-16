@@ -1372,89 +1372,85 @@ async function endMatch(reason) {
 }
 
 function showMatchResult(result) {
-  const screen = document.getElementById('result-screen');
-  const bg     = document.getElementById('rs-bg');
-  const burst  = document.getElementById('rs-bg-burst');
-  const title  = document.getElementById('rs-title');
+  const screen  = document.getElementById('result-screen');
+  const header  = document.getElementById('rs-header');
+  const title   = document.getElementById('rs-title');
 
-  // إزالة كلاسات سابقة
-  bg.className    = 'rs-bg';
-  title.className = 'rs-title';
+  // إزالة كلاسات النتائج السابقة
+  header.classList.remove('rs-win','rs-lose','rs-draw');
 
-  // تهيئة بحسب النتيجة
   if (result === 'win' || result === 'win-forfeit') {
-    bg.classList.add('rs-bg-win');
+    header.classList.add('rs-win');
     title.textContent = 'النصر';
   } else if (result === 'lose') {
-    bg.classList.add('rs-bg-lose');
+    header.classList.add('rs-lose');
     title.textContent = 'هزيمة';
   } else {
-    bg.classList.add('rs-bg-draw');
+    header.classList.add('rs-draw');
     title.textContent = 'تعادل';
   }
 
-  // أُعد تشغيل الانيميشن بالنسخ/لصق العنصر
+  // إعادة تشغيل أنيميشن البورست
+  const burst = document.getElementById('rs-header-burst');
   const newBurst = burst.cloneNode(true);
   burst.parentNode.replaceChild(newBurst, burst);
 
   screen.classList.add('show');
 
-  // القيم الحالية قبل الإضافة
+  // القيم الحالية (قبل إضافة الدلتا)
   const oldCoin  = Math.max(0, (currentUser.coin  || 0));
   const oldLevel = Math.max(0, (currentUser.level || 0));
 
-  // الدلتا بحسب النتيجة
-  let coinDeltaDisplay  = 0;
-  let levelDeltaDisplay = 0;
-  if (result === 'win' || result === 'win-forfeit') { coinDeltaDisplay = 10; levelDeltaDisplay = 3; }
-  else if (result === 'draw')                        { coinDeltaDisplay = 5;  levelDeltaDisplay = 2; }
-  else                                               { coinDeltaDisplay = 0;  levelDeltaDisplay = -1; }
+  // الدلتا
+  let coinD = 0, levelD = 0;
+  if      (result === 'win' || result === 'win-forfeit') { coinD = 10; levelD = 3; }
+  else if (result === 'draw')                             { coinD = 5;  levelD = 2; }
+  else                                                    { coinD = 0;  levelD = -1; }
 
-  const coinArrow  = document.getElementById('rs-coin-arrow');
-  const levelArrow = document.getElementById('rs-level-arrow');
-  const coinVal    = document.getElementById('rs-coin-val');
-  const levelVal   = document.getElementById('rs-level-val');
+  const coinArr  = document.getElementById('rs-coin-arr');
+  const levelArr = document.getElementById('rs-level-arr');
+  const coinVal  = document.getElementById('rs-coin-val');
+  const levelVal = document.getElementById('rs-level-val');
 
-  // سهم العملة
-  if (coinDeltaDisplay > 0) {
-    coinArrow.className  = 'fa-solid fa-arrow-up rs-arrow-up';
+  // السهم — عملات
+  if (coinD > 0) {
+    coinArr.className = 'fa-solid fa-arrow-up rs-arr-up';
   } else {
-    coinArrow.className  = 'rs-arrow-hidden';
+    coinArr.className = 'rs-arr-hide';
   }
 
-  // سهم الصدارة
-  if (levelDeltaDisplay > 0) {
-    levelArrow.className = 'fa-solid fa-arrow-up rs-arrow-up';
-  } else if (levelDeltaDisplay < 0) {
-    levelArrow.className = 'fa-solid fa-arrow-down rs-arrow-down';
-  } else {
-    levelArrow.className = 'rs-arrow-hidden';
-  }
+  // السهم — نقاط الصدارة
+  if (levelD > 0)      levelArr.className = 'fa-solid fa-arrow-up rs-arr-up';
+  else if (levelD < 0) levelArr.className = 'fa-solid fa-arrow-down rs-arr-down';
+  else                 levelArr.className = 'rs-arr-hide';
 
-  // العداد المتحرك للعملات
+  // القيم الأولية
   coinVal.textContent  = oldCoin;
   levelVal.textContent = oldLevel;
 
-  if (coinDeltaDisplay !== 0) {
-    _animateCounter(coinVal, oldCoin, oldCoin + coinDeltaDisplay, 900, () => {
-      coinArrow.className = 'rs-arrow-hidden';
-    });
-  }
-  if (levelDeltaDisplay !== 0) {
-    _animateCounter(levelVal, oldLevel, oldLevel + levelDeltaDisplay, 900, () => {
-      if (levelDeltaDisplay > 0) levelArrow.className = 'rs-arrow-hidden';
+  // عداد العملات
+  if (coinD !== 0) {
+    _animateCounter(coinVal, oldCoin, oldCoin + coinD, 800, () => {
+      coinArr.className = 'rs-arr-hide';
     });
   }
 
-  // تحميل mini leaderboard
-  _loadResultLeaderboard(result, levelDeltaDisplay);
+  // عداد نقاط الصدارة
+  if (levelD !== 0) {
+    _animateCounter(levelVal, oldLevel, oldLevel + levelD, 800, () => {
+      if (levelD > 0) levelArr.className = 'rs-arr-hide';
+    });
+  }
+
+  // لوحة الصدارة
+  _loadResultLeaderboard(result, levelD);
 }
 
 function _animateCounter(el, from, to, duration, onDone) {
   const start = performance.now();
   const range = to - from;
   function step(now) {
-    const t = Math.min((now - start) / duration, 1);
+    const t    = Math.min((now - start) / duration, 1);
     const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
     el.textContent = Math.round(from + range * ease);
     if (t < 1) requestAnimationFrame(step);
@@ -1466,15 +1462,18 @@ function _animateCounter(el, from, to, duration, onDone) {
 async function _loadResultLeaderboard(result, levelDelta) {
   const lbEl = document.getElementById('rs-lb-content');
   try {
-    const rows = await sbFetch('/rest/v1/system?select=id,name,avatar_url,level&order=level.desc&limit=20', { method: 'GET' });
-    if (!rows || !rows.length) { lbEl.innerHTML = '<div style="text-align:center;padding:12px;font-size:11px;color:rgba(255,255,255,0.4)">—</div>'; return; }
-
-    const myId = currentUser.id;
-    // ابحث عن ترتيبي في اللوحة
+    const rows = await sbFetch(
+      '/rest/v1/system?select=id,name,avatar_url,level&order=level.desc&limit=20',
+      { method: 'GET' }
+    );
+    if (!rows || !rows.length) {
+      lbEl.innerHTML = '<div style="text-align:center;padding:14px;font-size:11px;color:rgba(255,255,255,0.35)">—</div>';
+      return;
+    }
+    const myId  = currentUser.id;
     const myIdx = rows.findIndex(r => r.id === myId);
-    const myRank = myIdx + 1; // 1-based
 
-    // أظهر 3 صفوف بجوار اسمي
+    // 4 صفوف مركزها اللاعب
     let start = Math.max(0, myIdx - 1);
     let end   = Math.min(rows.length, start + 4);
     start = Math.max(0, end - 4);
@@ -1490,25 +1489,34 @@ async function _loadResultLeaderboard(result, levelDelta) {
       return `
         <div class="rs-lb-row${isMe ? ' me-row' : ''}">
           <div class="rs-lb-rank">${rank}</div>
-          <div class="rs-lb-avatar">${av}</div>
+          <div class="rs-lb-av">${av}</div>
           <div class="rs-lb-name">${r.name || '—'}</div>
-          <div class="rs-lb-pts">${(r.level || 0)} <i class="fa-solid fa-star" style="font-size:9px;opacity:0.6"></i></div>
+          <div class="rs-lb-pts">${r.level || 0} <i class="fa-solid fa-star" style="font-size:9px;opacity:0.5"></i></div>
         </div>`;
     }).join('');
 
-    // حركة تقدم اللاعب في القائمة عند الفوز
+    // حركة صعود عند الفوز
     if (levelDelta > 0 && myIdx > 0) {
       setTimeout(() => {
-        const meRow = lbEl.querySelector('.me-row');
-        if (meRow) {
-          meRow.style.transition = 'transform 0.6s cubic-bezier(0.34,1.56,0.64,1), background 0.4s';
-          meRow.style.transform = 'translateY(-4px) scale(1.02)';
-          setTimeout(() => { meRow.style.transform = ''; }, 700);
+        const me = lbEl.querySelector('.me-row');
+        if (me) {
+          me.style.transform = 'translateY(-5px) scale(1.03)';
+          setTimeout(() => { me.style.transform = ''; }, 700);
         }
-      }, 1100);
+      }, 950);
+    }
+    // حركة نزول عند الخسارة
+    if (levelDelta < 0) {
+      setTimeout(() => {
+        const me = lbEl.querySelector('.me-row');
+        if (me) {
+          me.style.transform = 'translateY(5px)';
+          setTimeout(() => { me.style.transform = ''; }, 700);
+        }
+      }, 950);
     }
   } catch(e) {
-    lbEl.innerHTML = '<div style="text-align:center;padding:12px;font-size:11px;color:rgba(255,255,255,0.4)">—</div>';
+    lbEl.innerHTML = '<div style="text-align:center;padding:14px;font-size:11px;color:rgba(255,255,255,0.35)">—</div>';
   }
 }
 
