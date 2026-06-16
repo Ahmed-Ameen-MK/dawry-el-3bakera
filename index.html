@@ -701,6 +701,29 @@
     .rs-body { padding: 36px 80px 0; gap: 28px; }
     .rs-footer { padding: 24px 80px; }
   }
+  /* شاشات ضيقة: عمودية */
+  @media (max-width: 600px) {
+    .rs-body {
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 12px 14px 0;
+      gap: 10px;
+    }
+    .rs-card {
+      flex: none;
+      width: 100%;
+      padding: 14px 16px;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 14px;
+    }
+    .rs-card-label { font-size: 12px; text-align: right; }
+    .rs-card-value { font-size: clamp(22px,7vw,30px); }
+    /* لوحة الصدارة تبقى عمودية */
+    .rs-card:last-child { flex-direction: column; align-items: stretch; }
+    .rs-card:last-child .rs-card-label { text-align: center; margin-bottom: 6px; }
+  }
 
   @media (max-width: 520px) {
     .options-grid { grid-template-columns: 1fr; }

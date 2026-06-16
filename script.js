@@ -1424,23 +1424,23 @@ function showMatchResult(result) {
   else if (levelD < 0) levelArr.className = 'fa-solid fa-arrow-down rs-arr-down';
   else                 levelArr.className = 'rs-arr-hide';
 
-  // القيم الأولية
+  // القيم الأولية — تظهر فوراً
   coinVal.textContent  = oldCoin;
   levelVal.textContent = oldLevel;
 
-  // عداد العملات
-  if (coinD !== 0) {
-    _animateCounter(coinVal, oldCoin, oldCoin + coinD, 800, () => {
-      coinArr.className = 'rs-arr-hide';
-    });
-  }
-
-  // عداد نقاط الصدارة
-  if (levelD !== 0) {
-    _animateCounter(levelVal, oldLevel, oldLevel + levelD, 800, () => {
-      if (levelD > 0) levelArr.className = 'rs-arr-hide';
-    });
-  }
+  // العداد يبدأ بعد ٢ ثانية من ظهور الشاشة
+  setTimeout(() => {
+    if (coinD !== 0) {
+      _animateCounter(coinVal, oldCoin, oldCoin + coinD, 800, () => {
+        coinArr.className = 'rs-arr-hide';
+      });
+    }
+    if (levelD !== 0) {
+      _animateCounter(levelVal, oldLevel, oldLevel + levelD, 800, () => {
+        if (levelD > 0) levelArr.className = 'rs-arr-hide';
+      });
+    }
+  }, 2000);
 
   // لوحة الصدارة
   _loadResultLeaderboard(result, levelD);
@@ -3205,7 +3205,23 @@ function stopOppTimeWatcher() {
   }
 }
 
-// ==================== INTERNET / WIFI MONITORING ====================
+// ==================== FULLSCREEN ON LOAD ====================
+// محاولة فتح الموقع بكامل الشاشة (تخفي شريط الرابط)
+function tryFullscreen() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (req) {
+    req.call(el).catch(() => {}); // تجاهل الرفض (يحتاج إيماءة المستخدم)
+  }
+}
+// نحاول عند أول تفاعل من المستخدم (click أو touch)
+function _onFirstInteraction() {
+  tryFullscreen();
+  document.removeEventListener('click', _onFirstInteraction);
+  document.removeEventListener('touchstart', _onFirstInteraction);
+}
+document.addEventListener('click', _onFirstInteraction, { once: true });
+document.addEventListener('touchstart', _onFirstInteraction, { once: true, passive: true });
 let _internetInterval = null;
 let _oppInternetInterval = null;
 
