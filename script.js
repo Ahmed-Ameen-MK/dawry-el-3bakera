@@ -772,26 +772,7 @@ async function endOfflineMatch(reason) {
   }
 
   // اعرض نتيجة مخصصة للوضع الفردي
-  const overlay = document.getElementById('win-overlay');
-  overlay.classList.add('show');
-  const icon = document.getElementById('win-icon');
-
-  if (matchResult === 'win') {
-    icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-    icon.className = 'win-icon trophy';
-    document.getElementById('win-title').textContent = 'أحسنت! 🎉';
-    document.getElementById('win-sub').textContent = `وصلت لـ 100 نقطة في الوضع الفردي! حصلت على +1 نقطة في لوحة الصدارة`;
-  } else if (matchResult === 'draw') {
-    icon.innerHTML = '<i class="fa-solid fa-star"></i>';
-    icon.className = 'win-icon';
-    document.getElementById('win-title').textContent = 'أداء جيد!';
-    document.getElementById('win-sub').textContent = `حصلت على ${myMatchPts} نقطة في الوضع الفردي. +1 نقطة صدارة`;
-  } else {
-    icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
-    icon.className = 'win-icon lose';
-    document.getElementById('win-title').textContent = 'حاول مرة أخرى!';
-    document.getElementById('win-sub').textContent = `حصلت على ${myMatchPts} نقطة في الوضع الفردي. استمر في التدرب!`;
-  }
+  showMatchResult(matchResult);
 }
 
 
@@ -1391,35 +1372,148 @@ async function endMatch(reason) {
 }
 
 function showMatchResult(result) {
-  const overlay = document.getElementById('win-overlay');
-  overlay.classList.add('show');
-  const icon = document.getElementById('win-icon');
+  const screen = document.getElementById('result-screen');
+  const bg     = document.getElementById('rs-bg');
+  const burst  = document.getElementById('rs-bg-burst');
+  const title  = document.getElementById('rs-title');
 
-  if (result === 'win') {
-    icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-    icon.className = 'win-icon trophy';
-    document.getElementById('win-title').textContent = 'أنت الفائز! 🎉';
-    document.getElementById('win-sub').innerHTML = `أحسنت! +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> coin`;
-  } else if (result === 'win-forfeit') {
-    icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-    icon.className = 'win-icon trophy';
-    document.getElementById('win-title').textContent = 'فزت! 🏆';
-    document.getElementById('win-sub').innerHTML = 'خصمك انسحب — +3 نقطة صدارة · +10 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML=\'🪙\'"> coin';
+  // إزالة كلاسات سابقة
+  bg.className    = 'rs-bg';
+  title.className = 'rs-title';
+
+  // تهيئة بحسب النتيجة
+  if (result === 'win' || result === 'win-forfeit') {
+    bg.classList.add('rs-bg-win');
+    title.textContent = 'النصر';
   } else if (result === 'lose') {
-    icon.innerHTML = '<i class="fa-regular fa-face-sad-tear"></i>';
-    icon.className = 'win-icon lose';
-    document.getElementById('win-title').textContent = 'خسرت المباراة 😔';
-    document.getElementById('win-sub').textContent = 'لا تستسلم! -1 نقطة صدارة. حاول مرة أخرى!';
+    bg.classList.add('rs-bg-lose');
+    title.textContent = 'هزيمة';
   } else {
-    icon.innerHTML = '<i class="fa-solid fa-handshake"></i>';
-    icon.className = 'win-icon';
-    document.getElementById('win-title').textContent = 'تعادل!';
-    document.getElementById('win-sub').innerHTML = `نقاطك: ${myMatchPts} | خصمك: ${oppMatchPts} — +2 نقطة صدارة · +5 <img src="coin.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> coin`;
+    bg.classList.add('rs-bg-draw');
+    title.textContent = 'تعادل';
+  }
+
+  // أُعد تشغيل الانيميشن بالنسخ/لصق العنصر
+  const newBurst = burst.cloneNode(true);
+  burst.parentNode.replaceChild(newBurst, burst);
+
+  screen.classList.add('show');
+
+  // القيم الحالية قبل الإضافة
+  const oldCoin  = Math.max(0, (currentUser.coin  || 0));
+  const oldLevel = Math.max(0, (currentUser.level || 0));
+
+  // الدلتا بحسب النتيجة
+  let coinDeltaDisplay  = 0;
+  let levelDeltaDisplay = 0;
+  if (result === 'win' || result === 'win-forfeit') { coinDeltaDisplay = 10; levelDeltaDisplay = 3; }
+  else if (result === 'draw')                        { coinDeltaDisplay = 5;  levelDeltaDisplay = 2; }
+  else                                               { coinDeltaDisplay = 0;  levelDeltaDisplay = -1; }
+
+  const coinArrow  = document.getElementById('rs-coin-arrow');
+  const levelArrow = document.getElementById('rs-level-arrow');
+  const coinVal    = document.getElementById('rs-coin-val');
+  const levelVal   = document.getElementById('rs-level-val');
+
+  // سهم العملة
+  if (coinDeltaDisplay > 0) {
+    coinArrow.className  = 'fa-solid fa-arrow-up rs-arrow-up';
+  } else {
+    coinArrow.className  = 'rs-arrow-hidden';
+  }
+
+  // سهم الصدارة
+  if (levelDeltaDisplay > 0) {
+    levelArrow.className = 'fa-solid fa-arrow-up rs-arrow-up';
+  } else if (levelDeltaDisplay < 0) {
+    levelArrow.className = 'fa-solid fa-arrow-down rs-arrow-down';
+  } else {
+    levelArrow.className = 'rs-arrow-hidden';
+  }
+
+  // العداد المتحرك للعملات
+  coinVal.textContent  = oldCoin;
+  levelVal.textContent = oldLevel;
+
+  if (coinDeltaDisplay !== 0) {
+    _animateCounter(coinVal, oldCoin, oldCoin + coinDeltaDisplay, 900, () => {
+      coinArrow.className = 'rs-arrow-hidden';
+    });
+  }
+  if (levelDeltaDisplay !== 0) {
+    _animateCounter(levelVal, oldLevel, oldLevel + levelDeltaDisplay, 900, () => {
+      if (levelDeltaDisplay > 0) levelArrow.className = 'rs-arrow-hidden';
+    });
+  }
+
+  // تحميل mini leaderboard
+  _loadResultLeaderboard(result, levelDeltaDisplay);
+}
+
+function _animateCounter(el, from, to, duration, onDone) {
+  const start = performance.now();
+  const range = to - from;
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    el.textContent = Math.round(from + range * ease);
+    if (t < 1) requestAnimationFrame(step);
+    else { el.textContent = to; if (onDone) onDone(); }
+  }
+  requestAnimationFrame(step);
+}
+
+async function _loadResultLeaderboard(result, levelDelta) {
+  const lbEl = document.getElementById('rs-lb-content');
+  try {
+    const rows = await sbFetch('/rest/v1/system?select=id,name,avatar_url,level&order=level.desc&limit=20', { method: 'GET' });
+    if (!rows || !rows.length) { lbEl.innerHTML = '<div style="text-align:center;padding:12px;font-size:11px;color:rgba(255,255,255,0.4)">—</div>'; return; }
+
+    const myId = currentUser.id;
+    // ابحث عن ترتيبي في اللوحة
+    const myIdx = rows.findIndex(r => r.id === myId);
+    const myRank = myIdx + 1; // 1-based
+
+    // أظهر 3 صفوف بجوار اسمي
+    let start = Math.max(0, myIdx - 1);
+    let end   = Math.min(rows.length, start + 4);
+    start = Math.max(0, end - 4);
+    const slice = rows.slice(start, end);
+
+    lbEl.innerHTML = slice.map((r, i) => {
+      const rank    = start + i + 1;
+      const isMe    = r.id === myId;
+      const initial = (r.name || '?')[0].toUpperCase();
+      const av      = r.avatar_url
+        ? `<img src="${r.avatar_url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.textContent='${initial}'">`
+        : initial;
+      return `
+        <div class="rs-lb-row${isMe ? ' me-row' : ''}">
+          <div class="rs-lb-rank">${rank}</div>
+          <div class="rs-lb-avatar">${av}</div>
+          <div class="rs-lb-name">${r.name || '—'}</div>
+          <div class="rs-lb-pts">${(r.level || 0)} <i class="fa-solid fa-star" style="font-size:9px;opacity:0.6"></i></div>
+        </div>`;
+    }).join('');
+
+    // حركة تقدم اللاعب في القائمة عند الفوز
+    if (levelDelta > 0 && myIdx > 0) {
+      setTimeout(() => {
+        const meRow = lbEl.querySelector('.me-row');
+        if (meRow) {
+          meRow.style.transition = 'transform 0.6s cubic-bezier(0.34,1.56,0.64,1), background 0.4s';
+          meRow.style.transform = 'translateY(-4px) scale(1.02)';
+          setTimeout(() => { meRow.style.transform = ''; }, 700);
+        }
+      }, 1100);
+    }
+  } catch(e) {
+    lbEl.innerHTML = '<div style="text-align:center;padding:12px;font-size:11px;color:rgba(255,255,255,0.4)">—</div>';
   }
 }
 
 function closeMatch() {
-  document.getElementById('win-overlay').classList.remove('show');
+  document.getElementById('result-screen').classList.remove('show');
   showPage('home');
   showDashboard();
 }
@@ -1472,7 +1566,7 @@ async function forfeitMatch() {
   }
 
   document.getElementById('match-chat').style.display = 'none';
-  document.getElementById('win-overlay').classList.remove('show');
+  document.getElementById('result-screen').classList.remove('show');
   showPage('home');
   showDashboard();
 }
