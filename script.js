@@ -638,6 +638,7 @@ function startOfflineMatch() {
 
   // ابدأ مباراة offline محلية
   isOfflineMatch = true;
+  _matchResultShown = false; // إعادة تعيين لمنع تكرار شاشة النتيجة
   opponent = { id: 'cpu', name: 'النمط الفردي', country: '🤖', level: 0, avatar_url: '' };
   myMatchPts = 0;
   oppMatchPts = 0;
@@ -785,6 +786,7 @@ function startMatch(opp) {
   matchStartTime = Date.now();
   lastChatTs = Date.now();
   isInMatch = true;
+  _matchResultShown = false; // إعادة تعيين لمنع تكرار شاشة النتيجة
   history.pushState(null, '', window.location.href); // لاعتراض زر الرجوع
 
   // ── شاشة البرق قبل بدء المباراة ──
@@ -1340,8 +1342,12 @@ async function endMatch(reason) {
     else { matchResult = 'lose'; levelDelta = -1; coinDelta = 0; }
   }
 
-  const newLevel = Math.max(0, (currentUser.level || 0) + levelDelta);
-  const newCoin = Math.max(0, (currentUser.coin || 0) + coinDelta);
+  // حفظ القيم القديمة قبل التحديث (لعرضها في شاشة النتيجة)
+  const oldLevel = Math.max(0, (currentUser.level || 0));
+  const oldCoin  = Math.max(0, (currentUser.coin  || 0));
+
+  const newLevel = Math.max(0, oldLevel + levelDelta);
+  const newCoin  = Math.max(0, oldCoin  + coinDelta);
 
   // إعادة ضبط النقاط (points) بعد المباراة + تحديث level + coin
   await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
@@ -1368,10 +1374,17 @@ async function endMatch(reason) {
     });
   }
 
-  showMatchResult(matchResult);
+  showMatchResult(matchResult, oldLevel, oldCoin);
 }
 
-function showMatchResult(result) {
+// متغير لمنع تكرار شاشة النتيجة
+let _matchResultShown = false;
+
+function showMatchResult(result, oldLevel, oldCoin) {
+  // منع عرض شاشة النتيجة أكثر من مرة
+  if (_matchResultShown) return;
+  _matchResultShown = true;
+
   const screen  = document.getElementById('result-screen');
   const header  = document.getElementById('rs-header');
   const title   = document.getElementById('rs-title');
@@ -1397,9 +1410,9 @@ function showMatchResult(result) {
 
   screen.classList.add('show');
 
-  // القيم الحالية (قبل إضافة الدلتا)
-  const oldCoin  = Math.max(0, (currentUser.coin  || 0));
-  const oldLevel = Math.max(0, (currentUser.level || 0));
+  // القيم قبل الدلتا — تُمرَّر كمعاملات (أو تُحسب من currentUser إذا لم تُمرَّر)
+  if (oldLevel === undefined) oldLevel = Math.max(0, (currentUser.level || 0));
+  if (oldCoin  === undefined) oldCoin  = Math.max(0, (currentUser.coin  || 0));
 
   // الدلتا
   let coinD = 0, levelD = 0;
@@ -1521,7 +1534,37 @@ async function _loadResultLeaderboard(result, levelDelta) {
 }
 
 function closeMatch() {
+  // إعادة تعيين علامة النتيجة لتجنب تكرارها في مباريات قادمة
+  _matchResultShown = false;
+
+  // إيقاف أي polling متبقٍّ
+  clearInterval(oppResultPollInterval);
+  clearInterval(matchTotalTimer);
+  clearInterval(qTimerInterval);
+  clearInterval(chatPollInterval);
+  clearInterval(searchPollInterval);
+  clearInterval(searchTimerInterval);
+  isInMatch = false;
+  isOfflineMatch = false;
+  opponent = null;
+
+  // إغلاق شاشة النتيجة
   document.getElementById('result-screen').classList.remove('show');
+
+  // إعادة ضبط واجهة البحث (منع بقاء الدائرة تدور)
+  const searchAnim = document.getElementById('searching-anim');
+  if (searchAnim) searchAnim.classList.remove('show');
+  const playBtn = document.getElementById('play-btn');
+  if (playBtn) playBtn.disabled = false;
+  const cancelBtn = document.getElementById('cancel-btn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+  const offlineBtn = document.getElementById('offline-mode-btn');
+  if (offlineBtn) offlineBtn.style.display = 'none';
+  const countdownNum = document.getElementById('search-countdown-num');
+  if (countdownNum) countdownNum.textContent = SEARCH_MAX;
+  const barFill = document.getElementById('search-bar-fill');
+  if (barFill) barFill.style.width = '100%';
+
   showPage('home');
   showDashboard();
 }
@@ -1646,7 +1689,27 @@ function startOpponentResultPolling() {
       });
       // win-forfeit = فاز لأن خصمه انسحب
       const displayResult = rawResult === 'win-forfeit' ? 'win-forfeit' : rawResult;
-      showMatchResult(displayResult);
+
+      // حساب الدلتا وتحديث level وcoin قبل عرض النتيجة
+      const _oldLevel = Math.max(0, (currentUser.level || 0));
+      const _oldCoin  = Math.max(0, (currentUser.coin  || 0));
+      let _levelD = 0, _coinD = 0;
+      if (displayResult === 'win' || displayResult === 'win-forfeit') { _levelD = 3; _coinD = 10; }
+      else if (displayResult === 'draw') { _levelD = 2; _coinD = 5; }
+      else { _levelD = -1; _coinD = 0; }
+      const _newLevel = Math.max(0, _oldLevel + _levelD);
+      const _newCoin  = Math.max(0, _oldCoin  + _coinD);
+      await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ match: 'off', points: 0, level: _newLevel, coin: _newCoin })
+      });
+      currentUser.points = 0;
+      currentUser.level = _newLevel;
+      currentUser.coin  = _newCoin;
+      localStorage.setItem('genius_user', JSON.stringify(currentUser));
+      saveMatchHistory(displayResult === 'win' || displayResult === 'win-forfeit' ? 'win' : displayResult, myMatchPts, oppMatchPts, _coinD, _levelD);
+
+      showMatchResult(displayResult, _oldLevel, _oldCoin);
     }
   }, 2000);
 }
