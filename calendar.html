@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقويم دوري العباقرة</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --bg:#0a0a1a;
+  --card-bg:rgba(255,255,255,0.05);
+  --card-border:rgba(255,255,255,0.08);
+  --ink:#fff;
+  --ink2:rgba(255,255,255,0.75);
+  --ink3:rgba(255,255,255,0.45);
+  --blue:#3b82f6;
+  --purple:#8b5cf6;
+  --pink:#ec4899;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --radius:16px;
+  --radius-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+body {
+  font-family:'El Messiri',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ── STARFIELD ── */
+.stars-layer {
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.star {
+  position:absolute;border-radius:50%;
+  animation:twinkle var(--d,3s) ease-in-out infinite;
+  animation-delay:var(--dl,0s);
+}
+@keyframes twinkle {
+  0%,100%{opacity:.15;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.4)}
+}
+/* aurora glow */
+.aurora {
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 40% at 20% 0%, rgba(139,92,246,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 35% at 80% 0%, rgba(59,130,246,0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(236,72,153,0.1) 0%, transparent 70%);
+  animation:auroraShift 12s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0%{filter:hue-rotate(0deg)}
+  100%{filter:hue-rotate(30deg)}
+}
+
+/* ── LAYOUT ── */
+.page-wrap {
+  position:relative;z-index:1;
+  display:flex;gap:20px;
+  max-width:1200px;margin:0 auto;
+  padding:20px 16px 60px;
+  align-items:flex-start;
+}
+@media(max-width:768px){
+  .page-wrap{flex-direction:column}
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:280px;flex-shrink:0;
+  display:flex;flex-direction:column;gap:14px;
+  position:sticky;top:20px;
+}
+@media(max-width:768px){
+  .sidebar{width:100%;position:static}
+}
+
+/* ── GLASS CARD ── */
+.glass-card {
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08);
+  overflow:hidden;
+}
+
+/* ── HEADER BAR ── */
+.page-header {
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,10,26,0.85);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  padding:0 20px;
+}
+.header-inner {
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  height:54px;
+}
+.brand {
+  font-size:16px;font-weight:700;color:#fff;
+  display:flex;align-items:center;gap:8px;text-decoration:none;
+}
+.brand i{color:var(--gold)}
+.back-btn {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:20px;padding:6px 16px;
+  font-family:'El Messiri',sans-serif;
+  font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);
+  text-decoration:none;cursor:pointer;transition:all 0.15s;
+}
+.back-btn:hover{background:rgba(255,255,255,0.14);color:#fff}
+
+/* ── GIFT BUTTON ── */
+.gift-section {
+  padding:20px;
+}
+.gift-title-row {
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);
+  text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;
+}
+.gift-title-row i{color:var(--gold);font-size:12px}
+
+.gift-btn {
+  width:100%;padding:16px 12px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444,#ec4899);
+  border:none;border-radius:14px;cursor:pointer;
+  font-family:'El Messiri',sans-serif;font-size:16px;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 6px 24px rgba(245,158,11,0.35);
+  transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.gift-btn::before {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+}
+.gift-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(245,158,11,0.45)}
+.gift-btn:active{transform:scale(0.97)}
+.gift-btn.claimed {
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.4);
+  cursor:not-allowed;box-shadow:none;
+}
+.gift-btn.claimed:hover{transform:none;box-shadow:none}
+.gift-icon-big{font-size:26px;animation:giftBounce 2s ease-in-out infinite}
+@keyframes giftBounce{
+  0%,100%{transform:translateY(0) rotate(-5deg)}
+  50%{transform:translateY(-5px) rotate(5deg)}
+}
+.gift-btn.claimed .gift-icon-big{animation:none;font-size:20px}
+
+/* ── STREAK SECTION ── */
+.streak-section {
+  padding:20px;border-top:1px solid rgba(255,255,255,0.07);
+}
+.streak-label {
+  font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;
+}
+.streak-value {
+  display:flex;align-items:center;gap:12px;
+}
+.streak-num {
+  font-size:48px;font-weight:900;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1;
+}
+.streak-info h4{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.streak-info p{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.5}
+.streak-fire {
+  font-size:32px;
+  animation:fireFlicker 1.5s ease-in-out infinite alternate;
+}
+@keyframes fireFlicker{
+  0%{transform:scale(1) rotate(-3deg);filter:brightness(1)}
+  100%{transform:scale(1.1) rotate(3deg);filter:brightness(1.3)}
+}
+.streak-bar {
+  margin-top:14px;height:6px;
+  background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;
+}
+.streak-bar-fill {
+  height:100%;border-radius:10px;
+  background:linear-gradient(90deg,#f59e0b,#ef4444);
+  transition:width 1.2s cubic-bezier(.25,.46,.45,.94);
+  box-shadow:0 0 10px rgba(245,158,11,0.5);
+}
+.streak-hint {
+  margin-top:10px;font-size:11px;color:rgba(255,255,255,0.35);
+  text-align:center;line-height:1.5;
+}
+
+/* ── MAIN CALENDAR ── */
+.calendar-main{flex:1;min-width:0}
+.cal-header {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.cal-month-title {
+  font-size:clamp(20px,4vw,28px);font-weight:800;
+  background:linear-gradient(135deg,#fff,rgba(255,255,255,0.7));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-0.5px;
+}
+.cal-stats {
+  display:flex;align-items:center;gap:12px;
+  font-size:13px;color:rgba(255,255,255,0.5);
+}
+.cal-stat-badge {
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;padding:4px 12px;
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:600;
+}
+.cal-stat-badge i{font-size:10px}
+
+/* ── DAY NAMES ROW ── */
+.day-names {
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:4px;margin-bottom:8px;
+}
+.day-name {
+  text-align:center;font-size:11px;font-weight:700;
+  color:rgba(255,255,255,0.35);padding:6px 0;letter-spacing:0.5px;
+}
+
+/* ── CALENDAR GRID ── */
+.cal-grid {
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:6px;
+}
+@media(max-width:500px){.cal-grid{gap:3px}}
+
+/* ── DAY CELL ── */
+.day-cell {
+  aspect-ratio:1;
+  border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;cursor:default;
+  transition:transform 0.2s,box-shadow 0.2s;
+  font-size:clamp(13px,2.5vw,18px);font-weight:700;
+}
+@media(max-width:500px){.day-cell{border-radius:8px;font-size:12px}}
+
+/* حالات اليوم */
+.day-cell.empty {
+  background:transparent;cursor:default;
+}
+.day-cell.future {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.2);
+}
+.day-cell.today-cell.not-visited {
+  background:rgba(255,255,255,0.04);
+  border:2px dashed rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.5);
+}
+.day-cell.visited {
+  border:none;
+  animation:cellPop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  animation-play-state:paused;
+}
+.day-cell.visited.animate-in {
+  animation-play-state:running;
+}
+@keyframes cellPop {
+  from{opacity:0;transform:scale(0.5)}
+  to{opacity:1;transform:scale(1)}
+}
+.day-cell.visited:hover {
+  transform:scale(1.1) translateY(-2px);
+  z-index:5;
+}
+.day-cell.visited .day-num {
+  text-shadow:0 2px 8px rgba(0,0,0,0.4);
+  font-size:clamp(14px,2.5vw,19px);font-weight:800;
+}
+.day-cell.today-cell.visited {
+  box-shadow:0 0 0 3px rgba(255,255,255,0.3),0 0 20px rgba(255,255,255,0.15) !important;
+}
+
+/* particle */
+.day-cell .sparkle {
+  position:absolute;font-size:10px;
+  pointer-events:none;opacity:0;
+  animation:sparklePop 2s ease-in-out infinite;
+  animation-play-state:paused;
+}
+.day-cell.visited .sparkle{animation-play-state:running}
+@keyframes sparklePop{
+  0%,100%{opacity:0;transform:scale(0.5) translateY(0)}
+  50%{opacity:1;transform:scale(1.2) translateY(-6px)}
+}
+.day-cell .sparkle.s1{top:2px;right:4px;animation-delay:0s}
+.day-cell .sparkle.s2{top:2px;left:4px;animation-delay:0.7s}
+.day-cell .sparkle.s3{bottom:4px;right:2px;animation-delay:1.4s}
+
+/* today badge */
+.today-badge {
+  position:absolute;bottom:-1px;
+  font-size:7px;font-weight:800;letter-spacing:0.5px;
+  background:rgba(255,255,255,0.9);
+  color:#000;border-radius:4px;padding:1px 4px;
+}
+
+/* ── COLOR PALETTE ── */
+/* نولّد الألوان بـ JS */
+
+/* ── LEGEND ── */
+.legend {
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin-top:16px;padding:12px 16px;
+  background:rgba(255,255,255,0.04);border-radius:10px;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.legend-item {
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:rgba(255,255,255,0.5);
+}
+.legend-dot {
+  width:12px;height:12px;border-radius:4px;flex-shrink:0;
+}
+
+/* ── GIFT BOX OVERLAY ── */
+.gift-overlay {
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn 0.25s ease;
+}
+.gift-overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.gift-modal {
+  position:relative;
+  max-width:380px;width:90%;
+  text-align:center;
+}
+.gift-close {
+  position:absolute;top:-16px;right:-16px;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  cursor:pointer;color:#fff;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;z-index:2;
+}
+.gift-close:hover{background:rgba(255,255,255,0.2)}
+
+/* شاشة الصندوق */
+.gift-box-screen,.gift-result-screen{
+  background:linear-gradient(160deg,rgba(20,10,50,0.95),rgba(10,5,30,0.98));
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:24px;
+  padding:32px 24px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.7),0 0 60px rgba(139,92,246,0.2);
+}
+.gift-result-screen{display:none}
+
+/* loot beams */
+.loot-beams {
+  position:absolute;inset:0;border-radius:24px;overflow:hidden;pointer-events:none;z-index:0;
+}
+.loot-beam {
+  position:absolute;bottom:0;
+  width:3px;height:100%;
+  background:linear-gradient(to top, rgba(139,92,246,0.6),transparent);
+  animation:beamRise 3s ease-in-out infinite;
+  transform-origin:bottom;
+}
+@keyframes beamRise{
+  0%,100%{opacity:0;transform:scaleY(0.1)}
+  50%{opacity:1;transform:scaleY(1)}
+}
+
+.gift-box-wrap {
+  position:relative;z-index:1;
+  display:inline-block;cursor:pointer;
+  margin:8px 0 20px;
+}
+.gift-box-img {
+  font-size:100px;line-height:1;
+  display:block;
+  filter:drop-shadow(0 0 30px rgba(245,158,11,0.6));
+  transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  animation:giftFloat 3s ease-in-out infinite;
+}
+@keyframes giftFloat{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%{transform:translateY(-10px) rotate(2deg)}
+}
+.gift-box-wrap:hover .gift-box-img{
+  transform:scale(1.1);
+  filter:drop-shadow(0 0 50px rgba(245,158,11,0.9));
+}
+.gift-glow-rings {
+  position:absolute;inset:-20px;pointer-events:none;
+}
+.gift-ring {
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(245,158,11,0.3);
+  animation:ringExpand 2s ease-out infinite;
+}
+.gift-ring:nth-child(2){animation-delay:0.7s;border-color:rgba(236,72,153,0.3)}
+.gift-ring:nth-child(3){animation-delay:1.4s;border-color:rgba(139,92,246,0.3)}
+@keyframes ringExpand{
+  0%{transform:scale(0.5);opacity:1}
+  100%{transform:scale(1.8);opacity:0}
+}
+.gift-hint {
+  font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:6px;
+}
+.gift-tap-hint {
+  font-size:15px;font-weight:700;color:#fff;
+  animation:tapPulse 1.5s ease-in-out infinite;
+}
+@keyframes tapPulse{
+  0%,100%{opacity:0.7;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.05)}
+}
+.gift-streak-bonus {
+  margin-top:12px;padding:8px 16px;
+  background:rgba(245,158,11,0.1);
+  border:1px solid rgba(245,158,11,0.25);
+  border-radius:20px;font-size:12px;color:rgba(255,255,255,0.7);
+}
+.gift-streak-bonus strong{color:var(--gold)}
+
+/* شاشة النتيجة */
+.result-icon{font-size:72px;margin-bottom:8px;display:block;animation:resultBounce 0.8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes resultBounce{
+  from{opacity:0;transform:scale(0.3) rotate(-15deg)}
+  to{opacity:1;transform:scale(1) rotate(0deg)}
+}
+.result-type {
+  font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,0.5);margin-bottom:6px;
+}
+.result-value {
+  font-size:clamp(32px,8vw,52px);font-weight:900;
+  background:linear-gradient(135deg,#f59e0b,#ef4444,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-2px;line-height:1;margin-bottom:6px;
+}
+.result-desc {
+  font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:24px;line-height:1.5;
+}
+.result-ok-btn {
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#8b5cf6,#3b82f6);
+  border:none;border-radius:14px;cursor:pointer;
+  font-family:'El Messiri',sans-serif;font-size:16px;font-weight:700;color:#fff;
+  transition:all 0.2s;box-shadow:0 6px 24px rgba(139,92,246,0.4);
+}
+.result-ok-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(139,92,246,0.5)}
+
+/* confetti */
+.confetti-piece {
+  position:fixed;
+  width:8px;height:8px;border-radius:2px;
+  pointer-events:none;z-index:99999;
+  animation:confettiFall var(--d,1.5s) ease-in forwards;
+  animation-delay:var(--dl,0s);
+}
+@keyframes confettiFall{
+  0%{transform:translateY(0) rotate(0deg);opacity:1}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0}
+}
+
+/* toast */
+.cal-toast {
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,0.12);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;padding:10px 24px;border-radius:28px;
+  font-size:14px;font-weight:700;z-index:9998;
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+  animation:slideDown 0.4s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity 0.3s;
+}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.cal-toast.show{opacity:1}
+
+/* not-logged state */
+.not-logged-banner {
+  padding:24px;text-align:center;
+}
+.not-logged-banner i{font-size:32px;color:rgba(255,255,255,0.25);margin-bottom:12px;display:block}
+.not-logged-banner p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6}
+.not-logged-banner a{color:var(--blue);text-decoration:none;font-weight:700}
+
+/* user info pill */
+.user-pill {
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  background:rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.user-avatar-small {
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;
+}
+.user-avatar-small img{width:100%;height:100%;object-fit:cover}
+.user-pill-name{font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);flex:1}
+.user-pill-coin{font-size:12px;font-weight:700;color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- STARS -->
+<div class="stars-layer" id="stars-layer"></div>
+<div class="aurora"></div>
+
+<!-- HEADER -->
+<header class="page-header">
+  <div class="header-inner">
+    <a href="/" class="brand"><i class="fa-solid fa-crown"></i> دوري العباقرة</a>
+    <a href="/" class="back-btn"><i class="fa-solid fa-arrow-right"></i> العودة</a>
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div class="page-wrap">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- User pill (if logged in) -->
+    <div class="glass-card" id="sidebar-user-card" style="display:none">
+      <div class="user-pill" id="user-pill">
+        <div class="user-avatar-small" id="sb-avatar"></div>
+        <span class="user-pill-name" id="sb-name">—</span>
+        <span class="user-pill-coin" id="sb-coin">0 🪙</span>
+      </div>
+
+      <!-- GIFT SECTION -->
+      <div class="gift-section">
+        <div class="gift-title-row"><i class="fa-solid fa-gift"></i> جائزة اليوم</div>
+        <button class="gift-btn" id="gift-open-btn" onclick="openGiftBox()">
+          <span class="gift-icon-big">🎁</span>
+          <span>افتح جائزة اليوم!</span>
+        </button>
+        <div id="gift-status-text" style="margin-top:10px;font-size:11px;text-align:center;color:rgba(255,255,255,0.4)"></div>
+      </div>
+
+      <!-- STREAK SECTION -->
+      <div class="streak-section">
+        <div class="streak-label">التتابع اليومي</div>
+        <div class="streak-value">
+          <span class="streak-fire">🔥</span>
+          <div>
+            <div class="streak-num" id="streak-num">0</div>
+          </div>
+          <div class="streak-info">
+            <h4>يوم متتالٍ</h4>
+            <p id="streak-desc">ابدأ سلسلتك اليوم!</p>
+          </div>
+        </div>
+        <div class="streak-bar">
+          <div class="streak-bar-fill" id="streak-bar" style="width:0%"></div>
+        </div>
+        <div class="streak-hint" id="streak-hint">
+          الأيام المتتالية تزيد من جودة جائزتك اليومية!
+        </div>
+      </div>
+    </div>
+
+    <!-- Not logged in -->
+    <div class="glass-card" id="sidebar-guest-card">
+      <div class="not-logged-banner">
+        <i class="fa-solid fa-calendar-days"></i>
+        <p>سجّل الدخول لتتبع أيام تسجيلك ومنح جوائزك اليومية</p>
+        <a href="/" style="display:inline-block;margin-top:12px;padding:8px 20px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:20px;color:#fff;font-weight:700;font-size:13px;text-decoration:none">
+          <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left:5px"></i> سجّل الدخول
+        </a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CALENDAR MAIN -->
+  <main class="calendar-main">
+    <div class="cal-header">
+      <div>
+        <div class="cal-month-title" id="cal-month-name">—</div>
+      </div>
+      <div class="cal-stats">
+        <div class="cal-stat-badge" style="color:var(--green);border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.08)">
+          <i class="fa-solid fa-check" style="color:var(--green)"></i>
+          <span id="visited-count">0</span> يوم سجّلت
+        </div>
+        <div class="cal-stat-badge">
+          <i class="fa-regular fa-calendar"></i>
+          <span id="total-days-badge">30</span> يوم
+        </div>
+      </div>
+    </div>
+
+    <!-- Day names -->
+    <div class="day-names">
+      <div class="day-name">أحد</div>
+      <div class="day-name">إث</div>
+      <div class="day-name">ثل</div>
+      <div class="day-name">أر</div>
+      <div class="day-name">خم</div>
+      <div class="day-name">جم</div>
+      <div class="day-name">سب</div>
+    </div>
+
+    <!-- Grid -->
+    <div class="glass-card" style="padding:16px">
+      <div class="cal-grid" id="cal-grid">
+        <!-- يُملأ بـ JS -->
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1)"></div>
+        <span>لم تسجّل</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:linear-gradient(135deg,#10b981,#3b82f6)"></div>
+        <span>سجّلت الدخول</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.2)"></div>
+        <span>اليوم</span>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- GIFT BOX OVERLAY -->
+<div class="gift-overlay hidden" id="gift-overlay">
+  <div class="gift-modal">
+    <div class="gift-close" onclick="closeGiftOverlay()"><i class="fa-solid fa-xmark"></i></div>
+
+    <!-- شاشة الصندوق -->
+    <div class="gift-box-screen" id="gift-box-screen">
+      <div class="loot-beams" id="loot-beams"></div>
+      <div style="position:relative;z-index:1">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🎁 جائزة اليوم</div>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">ماذا يخبّئ الصندوق؟</div>
+        <div class="gift-hint">اضغط على الصندوق لفتحه</div>
+
+        <div class="gift-box-wrap" onclick="openGiftBoxAnimation()">
+          <div class="gift-glow-rings">
+            <div class="gift-ring"></div>
+            <div class="gift-ring"></div>
+            <div class="gift-ring"></div>
+          </div>
+          <span class="gift-box-img">🎁</span>
+        </div>
+
+        <div class="gift-tap-hint">✨ انقر للفتح ✨</div>
+
+        <div class="gift-streak-bonus" id="gift-streak-bonus" style="display:none">
+          لديك <strong id="gift-streak-val">0</strong> أيام متتالية —
+          <strong style="color:var(--pink)">مكافأة إضافية محتملة!</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- شاشة النتيجة -->
+    <div class="gift-result-screen" id="gift-result-screen">
+      <div class="loot-beams" id="loot-beams2"></div>
+      <div style="position:relative;z-index:1">
+        <span class="result-icon" id="result-icon">🪙</span>
+        <div class="result-type" id="result-type">عملات</div>
+        <div class="result-value" id="result-value">+25</div>
+        <div class="result-desc" id="result-desc">تمت إضافتها لرصيدك!</div>
+        <button class="result-ok-btn" onclick="closeGiftOverlay()">
+          <i class="fa-solid fa-check" style="margin-left:6px"></i> رائع! شكراً
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="cal-toast" id="cal-toast"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, opts = {}) {
+  try {
+    const res = await fetch(SB_URL + path, {
+      ...opts, headers: { ...SB_HEADERS, ...(opts.headers||{}) }
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return null; }
+  } catch { return null; }
+}
+
+// أسماء الشخصيات للجوائز
+const CHARS_NAMES = ['كودي','كونان','غاكوسي','ساكورا','دوو','أينشتاين'];
+const CHARS_KEYS  = ['cody','conan','gakusei','sakura','duo','einstein'];
+const TOOL_KEYS   = ['exclusion','replace','flip'];
+const TOOL_NAMES  = {exclusion:'بطاقة الاستبعاد', replace:'بطاقة استبدال السؤال', flip:'بطاقة قلب السؤال'};
+
+// ألوان عشوائية جذابة لمربعات الأيام
+const DAY_COLORS = [
+  'linear-gradient(135deg,#10b981,#059669)',
+  'linear-gradient(135deg,#3b82f6,#6366f1)',
+  'linear-gradient(135deg,#8b5cf6,#a855f7)',
+  'linear-gradient(135deg,#ec4899,#ef4444)',
+  'linear-gradient(135deg,#f59e0b,#f97316)',
+  'linear-gradient(135deg,#06b6d4,#3b82f6)',
+  'linear-gradient(135deg,#84cc16,#22c55e)',
+  'linear-gradient(135deg,#f43f5e,#ec4899)',
+  'linear-gradient(135deg,#14b8a6,#06b6d4)',
+  'linear-gradient(135deg,#a855f7,#ec4899)',
+  'linear-gradient(135deg,#22d3ee,#6366f1)',
+  'linear-gradient(135deg,#fb923c,#f59e0b)',
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let visitedDays = []; // أرقام الأيام من قاعدة البيانات
+let calStreak = 0;
+let giftClaimedToday = false;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+  generateStars();
+  generateLootBeams();
+
+  // تحميل المستخدم من localStorage
+  try {
+    const saved = localStorage.getItem('genius_user');
+    if (saved) currentUser = JSON.parse(saved);
+  } catch {}
+
+  if (currentUser) {
+    // تحديث البيانات من Supabase
+    const fresh = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}&select=*`);
+    if (fresh && fresh[0]) {
+      currentUser = fresh[0];
+      localStorage.setItem('genius_user', JSON.stringify(currentUser));
+    }
+    // سجّل اليوم
+    await recordTodayLogin();
+    // تحميل التقويم
+    parseVisitedDays();
+    renderSidebar();
+    renderCalendar();
+    checkGiftClaimed();
+  } else {
+    renderCalendar(); // بدون بيانات
+  }
+});
+
+// ============================================================
+// STARS
+// ============================================================
+function generateStars() {
+  const layer = document.getElementById('stars-layer');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      background:rgba(255,255,255,${Math.random()*0.7+0.3});
+      --d:${(Math.random()*3+2).toFixed(1)}s;
+      --dl:${(Math.random()*4).toFixed(1)}s;
+    `;
+    layer.appendChild(s);
+  }
+}
+
+function generateLootBeams() {
+  ['loot-beams','loot-beams2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    for (let i = 0; i < 8; i++) {
+      const b = document.createElement('div');
+      b.className = 'loot-beam';
+      b.style.cssText = `
+        left:${10+i*11}%;
+        animation-delay:${(i*0.4).toFixed(1)}s;
+        animation-duration:${(2.5+Math.random()).toFixed(1)}s;
+        opacity:0.6;
+      `;
+      el.appendChild(b);
+    }
+  });
+}
+
+// ============================================================
+// RECORD TODAY LOGIN
+// ============================================================
+async function recordTodayLogin() {
+  if (!currentUser) return;
+  const today = new Date().getDate(); // رقم اليوم فقط
+  const raw = (currentUser.calendar || '').trim();
+  const days = raw ? raw.split(',').map(d => parseInt(d.trim())).filter(n => !isNaN(n)) : [];
+
+  if (!days.includes(today)) {
+    days.push(today);
+    days.sort((a,b)=>a-b);
+    const newVal = days.join(',');
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ calendar: newVal })
+    });
+    currentUser.calendar = newVal;
+    localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  }
+}
+
+// ============================================================
+// PARSE VISITED DAYS
+// ============================================================
+function parseVisitedDays() {
+  const raw = (currentUser.calendar || '').trim();
+  visitedDays = raw ? raw.split(',').map(d => parseInt(d.trim())).filter(n => !isNaN(n)) : [];
+}
+
+// ============================================================
+// CALCULATE STREAK (أيام متتالية حتى اليوم)
+// ============================================================
+function calcStreak() {
+  const today = new Date().getDate();
+  let streak = 0;
+  for (let d = today; d >= 1; d--) {
+    if (visitedDays.includes(d)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+function renderSidebar() {
+  if (!currentUser) return;
+
+  document.getElementById('sidebar-guest-card').style.display = 'none';
+  document.getElementById('sidebar-user-card').style.display = 'block';
+
+  // Avatar
+  const avEl = document.getElementById('sb-avatar');
+  if (currentUser.avatar_url) {
+    avEl.innerHTML = `<img src="${currentUser.avatar_url}" onerror="this.parentElement.textContent='${(currentUser.name||'?')[0].toUpperCase()}'">`;
+  } else {
+    avEl.textContent = (currentUser.name||'?')[0].toUpperCase();
+  }
+  document.getElementById('sb-name').textContent = currentUser.name || '—';
+  document.getElementById('sb-coin').textContent = (currentUser.coin||0) + ' 🪙';
+
+  // Streak
+  calStreak = calcStreak();
+  document.getElementById('streak-num').textContent = calStreak;
+  const streakBar = Math.min(100, (calStreak / 30) * 100);
+  setTimeout(() => {
+    document.getElementById('streak-bar').style.width = streakBar + '%';
+  }, 500);
+
+  if (calStreak === 0) {
+    document.getElementById('streak-desc').textContent = 'ابدأ سلسلتك اليوم!';
+    document.getElementById('streak-hint').textContent = 'سجّل الدخول يومياً لزيادة جائزتك!';
+  } else if (calStreak < 7) {
+    document.getElementById('streak-desc').textContent = `${7-calStreak} أيام للوصول لأسبوع`;
+    document.getElementById('streak-hint').textContent = '⚡ الأيام المتتالية تحسّن جودة الجوائز!';
+  } else if (calStreak < 30) {
+    document.getElementById('streak-desc').textContent = `رائع! ${30-calStreak} يوم للشهر الكامل`;
+    document.getElementById('streak-hint').textContent = '🔥 أنت على المسار الصحيح! استمر!';
+  } else {
+    document.getElementById('streak-desc').textContent = 'شهر كامل! أسطوري 🏆';
+    document.getElementById('streak-hint').textContent = '👑 حققت إنجاز الشهر الكامل!';
+  }
+
+  // Gift streak bonus
+  if (calStreak >= 3) {
+    document.getElementById('gift-streak-bonus').style.display = 'block';
+    document.getElementById('gift-streak-val').textContent = calStreak;
+  }
+}
+
+// ============================================================
+// CHECK GIFT CLAIMED
+// ============================================================
+function checkGiftClaimed() {
+  const todayKey = 'cal_gift_' + (currentUser ? currentUser.id : 'guest') + '_' + new Date().toISOString().split('T')[0];
+  giftClaimedToday = !!localStorage.getItem(todayKey);
+  const btn = document.getElementById('gift-open-btn');
+  const statusEl = document.getElementById('gift-status-text');
+  if (giftClaimedToday) {
+    btn.classList.add('claimed');
+    btn.innerHTML = '<span class="gift-icon-big" style="font-size:18px">✅</span><span>استلمت جائزتك اليوم</span>';
+    if (statusEl) statusEl.textContent = 'عُد غداً لجائزة جديدة!';
+  } else {
+    if (statusEl) statusEl.textContent = 'تُجدَّد الجائزة كل يوم';
+  }
+}
+
+function markGiftClaimed() {
+  const todayKey = 'cal_gift_' + (currentUser ? currentUser.id : 'guest') + '_' + new Date().toISOString().split('T')[0];
+  localStorage.setItem(todayKey, '1');
+  giftClaimedToday = true;
+}
+
+// ============================================================
+// CALENDAR RENDER
+// ============================================================
+function renderCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  // اسم الشهر عربي
+  const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  document.getElementById('cal-month-name').textContent = monthNames[month] + ' ' + year;
+  document.getElementById('total-days-badge').textContent = totalDays;
+  document.getElementById('visited-count').textContent = visitedDays.length;
+
+  // اليوم الأول من الشهر (0=أحد)
+  const firstDay = new Date(year, month, 1).getDay();
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // خانات فارغة قبل اليوم الأول
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
+  }
+
+  // أيام الشهر
+  for (let d = 1; d <= totalDays; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+
+    const isVisited = visitedDays.includes(d);
+    const isToday = d === today;
+    const isFuture = d > today;
+
+    if (isVisited) {
+      cell.classList.add('visited');
+      // لون فريد لكل يوم (بناءً على رقم اليوم)
+      const colorIdx = (d - 1) % DAY_COLORS.length;
+      cell.style.background = DAY_COLORS[colorIdx];
+      cell.style.boxShadow = `0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)`;
+
+      // sparkles
+      cell.innerHTML = `
+        <span class="sparkle s1">✦</span>
+        <span class="sparkle s2">✦</span>
+        <span class="sparkle s3">✦</span>
+        <span class="day-num">${d}</span>
+      `;
+
+      // تأخير أنيميشن الدخول
+      setTimeout(() => {
+        cell.classList.add('animate-in');
+      }, (d * 40));
+
+    } else if (isFuture) {
+      cell.classList.add('future');
+      cell.innerHTML = `<span class="day-num">${d}</span>`;
+    } else {
+      // ماضٍ ولم يسجّل
+      cell.classList.add('future');
+      cell.style.opacity = '0.4';
+      cell.innerHTML = `<span class="day-num" style="font-size:0.75em">${d}</span>`;
+    }
+
+    if (isToday) {
+      cell.classList.add('today-cell');
+      if (!isVisited) cell.classList.add('not-visited');
+      // باج اليوم
+      const badge = document.createElement('div');
+      badge.className = 'today-badge';
+      badge.textContent = 'اليوم';
+      cell.appendChild(badge);
+    }
+
+    // tooltip بسيط عند النقر
+    if (isVisited) {
+      cell.title = `يوم ${d} - سجّلت الدخول ✓`;
+      cell.style.cursor = 'pointer';
+      cell.addEventListener('click', () => showDayToast(d));
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function showDayToast(day) {
+  showCalToast(`✅ يوم ${day} — سجّلت دخولك بنجاح!`);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showCalToast(msg) {
+  const t = document.getElementById('cal-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+// GIFT BOX OPEN
+// ============================================================
+function openGiftBox() {
+  if (!currentUser) {
+    showCalToast('يرجى تسجيل الدخول أولاً!');
+    return;
+  }
+  if (giftClaimedToday) {
+    showCalToast('لقد استلمت جائزتك اليوم! عُد غداً 🌙');
+    return;
+  }
+  // إعادة الشاشات
+  document.getElementById('gift-box-screen').style.display = 'block';
+  document.getElementById('gift-result-screen').style.display = 'none';
+  document.getElementById('gift-overlay').classList.remove('hidden');
+}
+
+function closeGiftOverlay() {
+  document.getElementById('gift-overlay').classList.add('hidden');
+}
+
+// ============================================================
+// GIFT BOX ANIMATION & PRIZE
+// ============================================================
+async function openGiftBoxAnimation() {
+  // أنيميشن هزّ الصندوق
+  const boxEl = document.querySelector('.gift-box-img');
+  boxEl.style.animation = 'none';
+  boxEl.textContent = '📦';
+  setTimeout(() => {
+    boxEl.style.animation = '';
+    boxEl.textContent = '🎁';
+  }, 50);
+
+  // تأثير ضوء وهزّ
+  boxEl.style.transition = 'transform 0.1s';
+  boxEl.style.transform = 'scale(1.3) rotate(10deg)';
+  setTimeout(() => { boxEl.style.transform = 'scale(0.9) rotate(-10deg)'; }, 150);
+  setTimeout(() => { boxEl.style.transform = 'scale(1.2) rotate(5deg)'; }, 300);
+  setTimeout(() => { boxEl.style.transform = 'scale(0.8) rotate(-5deg)'; }, 450);
+
+  await new Promise(r => setTimeout(r, 600));
+
+  // اختر الجائزة
+  const prize = rollPrize();
+
+  // تطبيق الجائزة
+  await applyPrize(prize);
+
+  // إظهار شاشة النتيجة
+  showResultScreen(prize);
+
+  // كونفيتي
+  launchConfetti();
+
+  // حفظ
+  markGiftClaimed();
+  checkGiftClaimed();
+}
+
+// ============================================================
+// PRIZE ROLL
+// ============================================================
+function rollPrize() {
+  const rand = Math.random() * 100;
+  const streak = calStreak;
+
+  // مكافأة التتابع: زيادة احتمال الجوائز الأفضل
+  const bonusMult = 1 + Math.min(streak * 0.03, 0.5); // حتى +50% عند 17 يوم
+
+  // 30% coin
+  // 23% level points
+  // 23% tool card
+  // 23% friend char
+  // 1%  golden brain (المخ الذهبي)
+
+  if (rand < 1) {
+    // 🏆 المخ الذهبي (1%)
+    return { type: 'golden', icon: '🧠', label: 'المخ الذهبي', value: null, desc: 'فزت بجائزة المخ الذهبي النادرة! تحقق من ملفك الشخصي.' };
+  }
+  if (rand < 24) {
+    // شخصية صديق (23%)
+    const charIdx = Math.floor(Math.random() * CHARS_KEYS.length);
+    const uses = Math.floor(Math.random() * 3) + 1; // 1-3
+    return {
+      type: 'char',
+      icon: '🤖',
+      label: 'استخدام صديق',
+      charKey: CHARS_KEYS[charIdx],
+      charName: CHARS_NAMES[charIdx],
+      value: uses,
+      desc: `${uses} استخدام${uses>1?'ات':''} لشخصية ${CHARS_NAMES[charIdx]}!`
+    };
+  }
+  if (rand < 47) {
+    // بطاقة أداة (23%)
+    const toolIdx = Math.floor(Math.random() * TOOL_KEYS.length);
+    const uses = Math.floor(Math.random() * 3) + 1;
+    return {
+      type: 'tool',
+      icon: toolIdx===0?'🚫':toolIdx===1?'🔄':'🔀',
+      label: 'بطاقة مباراة',
+      toolKey: TOOL_KEYS[toolIdx],
+      toolName: TOOL_NAMES[TOOL_KEYS[toolIdx]],
+      value: uses,
+      desc: `${uses} استخدام${uses>1?'ات':''} من ${TOOL_NAMES[TOOL_KEYS[toolIdx]]}!`
+    };
+  }
+  if (rand < 70) {
+    // نقاط الصدارة (23%)
+    const pts = Math.floor(Math.random() * 10 + 1); // 1-10
+    const bonus = streak >= 7 ? Math.floor(streak / 7) : 0;
+    return { type: 'level', icon: '⭐', label: 'نقاط صدارة', value: pts + bonus, desc: `+${pts+bonus} نقطة صدارة أضيفت لرصيدك!${bonus>0?' (مكافأة تتابع)':''}` };
+  }
+  // coin (30%)
+  const coins = Math.floor(Math.random() * 46 + 5); // 5-50
+  const bonusCoins = streak >= 3 ? Math.floor(streak * 0.5) : 0;
+  return { type: 'coin', icon: '🪙', label: 'عملات', value: coins + bonusCoins, desc: `+${coins+bonusCoins} عملة أضيفت لرصيدك!${bonusCoins>0?' (مكافأة تتابع)':''}` };
+}
+
+// ============================================================
+// APPLY PRIZE
+// ============================================================
+async function applyPrize(prize) {
+  if (!currentUser) return;
+  try {
+    if (prize.type === 'coin') {
+      const newCoin = Math.max(0, (currentUser.coin||0) + prize.value);
+      await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+        method:'PATCH', body: JSON.stringify({ coin: newCoin })
+      });
+      currentUser.coin = newCoin;
+      localStorage.setItem('genius_user', JSON.stringify(currentUser));
+      document.getElementById('sb-coin').textContent = newCoin + ' 🪙';
+
+    } else if (prize.type === 'level') {
+      const newLevel = Math.max(0, (currentUser.level||0) + prize.value);
+      await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+        method:'PATCH', body: JSON.stringify({ level: newLevel })
+      });
+      currentUser.level = newLevel;
+      localStorage.setItem('genius_user', JSON.stringify(currentUser));
+
+    } else if (prize.type === 'tool') {
+      // تحديث جدول store
+      const storeRes = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=${prize.toolKey}`);
+      const storeRow = storeRes && storeRes[0] ? storeRes[0] : null;
+      const currentCount = storeRow ? (parseInt(storeRow[prize.toolKey])||0) : 0;
+      if (storeRow) {
+        await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+          method:'PATCH', body: JSON.stringify({ [prize.toolKey]: currentCount + prize.value })
+        });
+      } else {
+        await sbFetch(`/rest/v1/store`, {
+          method:'POST', body: JSON.stringify({ id: currentUser.id, [prize.toolKey]: prize.value })
+        });
+      }
+      // تحديث localStorage
+      const storeLocalRaw = localStorage.getItem('genius_store_' + currentUser.id);
+      const storeLocal = storeLocalRaw ? JSON.parse(storeLocalRaw) : {};
+      storeLocal[prize.toolKey] = currentCount + prize.value;
+      localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeLocal));
+
+    } else if (prize.type === 'char') {
+      const storeRes = await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}&select=${prize.charKey}`);
+      const storeRow = storeRes && storeRes[0] ? storeRes[0] : null;
+      const currentCount = storeRow ? (parseInt(storeRow[prize.charKey])||0) : 0;
+      if (storeRow) {
+        await sbFetch(`/rest/v1/store?id=eq.${currentUser.id}`, {
+          method:'PATCH', body: JSON.stringify({ [prize.charKey]: currentCount + prize.value })
+        });
+      } else {
+        await sbFetch(`/rest/v1/store`, {
+          method:'POST', body: JSON.stringify({ id: currentUser.id, [prize.charKey]: prize.value })
+        });
+      }
+      const storeLocalRaw = localStorage.getItem('genius_store_' + currentUser.id);
+      const storeLocal = storeLocalRaw ? JSON.parse(storeLocalRaw) : {};
+      storeLocal[prize.charKey] = currentCount + prize.value;
+      localStorage.setItem('genius_store_' + currentUser.id, JSON.stringify(storeLocal));
+
+    } else if (prize.type === 'golden') {
+      // جائزة نادرة - يمكن إضافة منطق خاص
+      const newCoin = (currentUser.coin||0) + 100;
+      const newLevel = (currentUser.level||0) + 10;
+      await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+        method:'PATCH', body: JSON.stringify({ coin: newCoin, level: newLevel })
+      });
+      currentUser.coin = newCoin; currentUser.level = newLevel;
+      localStorage.setItem('genius_user', JSON.stringify(currentUser));
+      prize.desc = `فزت بجائزة نادرة! +100 عملة و+10 نقاط صدارة! 🏆`;
+    }
+  } catch(e) {
+    console.error('Prize apply error:', e);
+  }
+}
+
+// ============================================================
+// SHOW RESULT SCREEN
+// ============================================================
+function showResultScreen(prize) {
+  document.getElementById('gift-box-screen').style.display = 'none';
+  const rs = document.getElementById('gift-result-screen');
+  rs.style.display = 'block';
+
+  document.getElementById('result-icon').textContent = prize.icon;
+  document.getElementById('result-type').textContent = prize.label;
+  document.getElementById('result-desc').textContent = prize.desc;
+
+  let valText = '';
+  if (prize.type === 'coin') valText = '+' + prize.value + ' 🪙';
+  else if (prize.type === 'level') valText = '+' + prize.value + ' ⭐';
+  else if (prize.type === 'tool') valText = '×' + prize.value;
+  else if (prize.type === 'char') valText = '×' + prize.value;
+  else if (prize.type === 'golden') valText = '👑';
+  document.getElementById('result-value').textContent = valText;
+
+  // لون gradient للقيمة حسب النوع
+  const gradients = {
+    coin: 'linear-gradient(135deg,#f59e0b,#f97316)',
+    level: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+    tool: 'linear-gradient(135deg,#10b981,#06b6d4)',
+    char: 'linear-gradient(135deg,#ec4899,#8b5cf6)',
+    golden: 'linear-gradient(135deg,#f59e0b,#ef4444,#8b5cf6)',
+  };
+  document.getElementById('result-value').style.backgroundImage = gradients[prize.type]||gradients.coin;
+  document.getElementById('result-value').style['-webkitBackgroundClip'] = 'text';
+  document.getElementById('result-value').style['webkitTextFillColor'] = 'transparent';
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const colors = ['#f59e0b','#ef4444','#ec4899','#8b5cf6','#3b82f6','#10b981','#f97316'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:-10px;
+      background:${color};
+      width:${Math.random()*8+4}px;
+      height:${Math.random()*8+4}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      --d:${(Math.random()*1.5+1).toFixed(1)}s;
+      --dl:${(Math.random()*1.5).toFixed(1)}s;
+    `;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3500);
+  }
+}
+</script>
+</body>
+</html>

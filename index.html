@@ -962,6 +962,30 @@
   .contact-fab-btn:focus-visible { outline: none; }
   .contact-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
   .contact-fab-btn.open { background: var(--ink); transform: rotate(45deg); }
+  /* زر التقويم العائم */
+  .cal-fab-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    color: #fff; font-size: 18px;
+    box-shadow: 0 4px 16px rgba(139,92,246,0.45);
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .cal-fab-btn:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 6px 24px rgba(139,92,246,0.6); }
+  .cal-fab-btn::after {
+    content: 'تقويمي';
+    position: absolute; right: calc(100% + 10px);
+    background: rgba(0,0,0,0.75); color: #fff;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+    padding: 4px 10px; border-radius: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .cal-fab-btn:hover::after { opacity: 1; }
   .contact-fab-popup {
     position: absolute;
     bottom: 68px; left: 0;
@@ -2491,6 +2515,11 @@
       <div id="contact-buy-result"></div>
     </div>
   </div>
+
+  <!-- زر التقويم — فوق زر + -->
+  <a href="calendar.html" class="cal-fab-btn" title="تقويم تسجيل الدخول">
+    <i class="fa-solid fa-calendar-days"></i>
+  </a>
 
   <button class="contact-fab-btn" id="contact-fab-btn" onclick="toggleContactFab()" title="تواصل معنا">
     <i class="fa-solid fa-plus"></i>
