@@ -155,15 +155,32 @@ async function sbFetch(path) {
 let lbAllData = [];
 
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100');
+  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url,coin,like,time&order=level.desc&limit=100');
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
     return;
   }
+  // ترتيب: نقاط الصدارة أولاً، ثم coin، ثم like
+  data.sort((a, b) => {
+    if ((b.level||0) !== (a.level||0)) return (b.level||0) - (a.level||0);
+    if ((b.coin||0) !== (a.coin||0)) return (b.coin||0) - (a.coin||0);
+    return (b.like||0) - (a.like||0);
+  });
   lbAllData = data;
   document.getElementById('lb-search').value = '';
   renderLeaderboard(data);
+}
+
+function getStatusDot(timeVal) {
+  if (!timeVal) return ''; // offline — no dot
+  const nowSecs = Math.floor(Date.now() / 1000);
+  const diff = nowSecs - Number(timeVal);
+  if (diff <= 10) {
+    // online — green dot
+    return `<span style="width:10px;height:10px;border-radius:50%;background:#27ae60;display:inline-block;box-shadow:0 0 4px rgba(39,174,96,0.6);flex-shrink:0" title="متصل الآن"></span>`;
+  }
+  return ''; // offline — no dot
 }
 
 function filterLeaderboard() {
@@ -188,17 +205,33 @@ function renderLeaderboard(data, highlight='') {
       const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
       nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
     }
+    const statusDot = getStatusDot(u.time);
+    const coinVal = u.coin || 0;
+    const likeVal = u.like || 0;
     return `
     <div class="lb-row" style="cursor:pointer" onclick="window.location.href='/abqari/${(u.name||'').trim().replace(/\s+/g,'-')}'">
       <div class="lb-rank ${rankClass[globalRank]||''}">
         ${globalRank===0?'<i class="fa-solid fa-medal"></i>':globalRank===1?'<i class="fa-solid fa-medal" style="color:#aaa"></i>':globalRank===2?'<i class="fa-solid fa-medal" style="color:#b07d4a"></i>':displayRank}
       </div>
-      <div class="lb-avatar">${u.avatar_url?`<img src="${u.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name?u.name[0].toUpperCase():'?'}'">`:(u.name?u.name[0].toUpperCase():'?')}</div>
+      <div style="position:relative;flex-shrink:0">
+        <div class="lb-avatar">${u.avatar_url?`<img src="${u.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name?u.name[0].toUpperCase():'?'}'">`:(u.name?u.name[0].toUpperCase():'?')}</div>
+        ${statusDot ? `<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#27ae60;border:2px solid #fff;box-shadow:0 0 4px rgba(39,174,96,0.6);display:block" title="متصل الآن"></span>` : ''}
+      </div>
       <div class="lb-info">
         <div class="lb-name">${nameDisplay}</div>
         <div class="lb-country">${u.country||''}</div>
       </div>
-      <div class="lb-pts">${u.level||0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة صدارة</span></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <div class="lb-pts">${u.level||0} <span style="font-size:11px;color:var(--ink3);font-weight:400">نقطة صدارة</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:#b5882e;font-weight:700;display:flex;align-items:center;gap:3px">
+            <img src="/coin.png" onerror="this.outerHTML='🪙'" style="width:13px;height:13px;object-fit:contain"> ${coinVal}
+          </span>
+          <span style="font-size:12px;color:#e74c7c;font-weight:700;display:flex;align-items:center;gap:3px">
+            <i class="fa-solid fa-heart" style="font-size:11px"></i> ${likeVal}
+          </span>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
