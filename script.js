@@ -334,8 +334,14 @@ function updateNavAvatar() {
 }
 
 async function loadRank() {
-  const all = await sbFetch('/rest/v1/system?select=id,level&order=level.desc', { method: 'GET' });
+  const all = await sbFetch('/rest/v1/system?select=id,level,coin,like&order=level.desc', { method: 'GET' });
   if (all) {
+    // ترتيب: نقاط الصدارة ثم coin ثم like
+    all.sort((a, b) => {
+      if ((b.level||0) !== (a.level||0)) return (b.level||0) - (a.level||0);
+      if ((b.coin||0) !== (a.coin||0)) return (b.coin||0) - (a.coin||0);
+      return (b.like||0) - (a.like||0);
+    });
     const idx = all.findIndex(u => u.id === currentUser.id);
     document.getElementById('stat-rank').textContent = '#' + (idx + 1);
   }
@@ -2168,18 +2174,18 @@ let liveStatsInterval = null;
 
 async function fetchLiveStats() {
   try {
-    const nowSecs = Math.floor(Date.now() / 1000);
-    const onlineThreshold = 10; // لاعب يُعتبر online إذا أرسل heartbeat خلال 10 ثوانٍ
+    const nowMs = Date.now();
+    const onlineThresholdMs = 15000; // لاعب يُعتبر online إذا أرسل date خلال 15 ثانية
 
-    // جلب كل اللاعبين مع time و match و status
-    const allPlayers = await sbFetch('/rest/v1/system?select=id,time,match,status', { method: 'GET' });
+    // جلب كل اللاعبين مع date و match و status
+    const allPlayers = await sbFetch('/rest/v1/system?select=id,date,match,status', { method: 'GET' });
 
     if (!Array.isArray(allPlayers)) return;
 
-    // اللاعبون المتصلون: time موجود وقريب من الحاضر
+    // اللاعبون المتصلون: date موجود وقريب من الحاضر
     const onlinePlayers = allPlayers.filter(p => {
-      if (!p.time) return false;
-      return (nowSecs - Number(p.time)) <= onlineThreshold;
+      if (!p.date) return false;
+      return (nowMs - new Date(p.date).getTime()) <= onlineThresholdMs;
     });
 
     // اللاعبون في البحث عن مباراة (online + status=searching)
@@ -3217,7 +3223,7 @@ async function _sendTimeHeartbeat() {
   try {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ time: nowSecs })
+      body: JSON.stringify({ time: nowSecs, date: new Date().toISOString() })
     });
   } catch(e) {}
 }

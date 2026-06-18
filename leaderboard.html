@@ -155,13 +155,13 @@ async function sbFetch(path) {
 let lbAllData = [];
 
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url,coin,like,time&order=level.desc&limit=100');
+  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url,coin,like,time,date,"time-in-match"&order=level.desc&limit=100');
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
     return;
   }
-  // ترتيب: نقاط الصدارة أولاً، ثم coin، ثم like
+  // الترتيب: نقاط الصدارة أولاً، ثم coin، ثم like
   data.sort((a, b) => {
     if ((b.level||0) !== (a.level||0)) return (b.level||0) - (a.level||0);
     if ((b.coin||0) !== (a.coin||0)) return (b.coin||0) - (a.coin||0);
@@ -172,15 +172,41 @@ async function loadLeaderboard() {
   renderLeaderboard(data);
 }
 
-function getStatusDot(timeVal) {
-  if (!timeVal) return ''; // offline — no dot
-  const nowSecs = Math.floor(Date.now() / 1000);
-  const diff = nowSecs - Number(timeVal);
-  if (diff <= 10) {
-    // online — green dot
-    return `<span style="width:10px;height:10px;border-radius:50%;background:#27ae60;display:inline-block;box-shadow:0 0 4px rgba(39,174,96,0.6);flex-shrink:0" title="متصل الآن"></span>`;
+/**
+ * getPlayerStatus — يعيد حالة اللاعب:
+ *   'online'  → date حديث (خلال 15 ثانية) ولم يكن في مباراة
+ *   'in-match' → time-in-match حديث (خلال 15 ثانية)
+ *   'offline'  → غير ذلك
+ */
+function getPlayerStatus(u) {
+  const nowMs = Date.now();
+  const THRESH = 15000; // 15 ثانية
+
+  // تحقق من time-in-match أولاً (الأولوية: في مباراة)
+  const timInMatch = u['time-in-match'];
+  if (timInMatch) {
+    const diff = nowMs - new Date(timInMatch).getTime();
+    if (diff <= THRESH) return 'in-match';
   }
-  return ''; // offline — no dot
+
+  // تحقق من date (online)
+  if (u.date) {
+    const diff = nowMs - new Date(u.date).getTime();
+    if (diff <= THRESH) return 'online';
+  }
+
+  return 'offline';
+}
+
+function getStatusDot(u) {
+  const status = getPlayerStatus(u);
+  if (status === 'online') {
+    return `<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#27ae60;border:2px solid #fff;box-shadow:0 0 4px rgba(39,174,96,0.6);display:block" title="متصل الآن"></span>`;
+  }
+  if (status === 'in-match') {
+    return `<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#e74c3c;border:2px solid #fff;box-shadow:0 0 4px rgba(231,76,60,0.6);display:block" title="في مباراة"></span>`;
+  }
+  return '';
 }
 
 function filterLeaderboard() {
@@ -205,7 +231,7 @@ function renderLeaderboard(data, highlight='') {
       const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
       nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
     }
-    const statusDot = getStatusDot(u.time);
+    const statusDot = getStatusDot(u);
     const coinVal = u.coin || 0;
     const likeVal = u.like || 0;
     return `
@@ -215,7 +241,7 @@ function renderLeaderboard(data, highlight='') {
       </div>
       <div style="position:relative;flex-shrink:0">
         <div class="lb-avatar">${u.avatar_url?`<img src="${u.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name?u.name[0].toUpperCase():'?'}'">`:(u.name?u.name[0].toUpperCase():'?')}</div>
-        ${statusDot ? `<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#27ae60;border:2px solid #fff;box-shadow:0 0 4px rgba(39,174,96,0.6);display:block" title="متصل الآن"></span>` : ''}
+        ${statusDot}
       </div>
       <div class="lb-info">
         <div class="lb-name">${nameDisplay}</div>
