@@ -334,14 +334,8 @@ function updateNavAvatar() {
 }
 
 async function loadRank() {
-  const all = await sbFetch('/rest/v1/system?select=id,level,coin,like&order=level.desc', { method: 'GET' });
+  const all = await sbFetch('/rest/v1/system?select=id,level&order=level.desc', { method: 'GET' });
   if (all) {
-    // ترتيب: نقاط الصدارة ثم coin ثم like
-    all.sort((a, b) => {
-      if ((b.level||0) !== (a.level||0)) return (b.level||0) - (a.level||0);
-      if ((b.coin||0) !== (a.coin||0)) return (b.coin||0) - (a.coin||0);
-      return (b.like||0) - (a.like||0);
-    });
     const idx = all.findIndex(u => u.id === currentUser.id);
     document.getElementById('stat-rank').textContent = '#' + (idx + 1);
   }
@@ -1832,28 +1826,20 @@ function startLeaderboardRealtime() {
 }
 
 async function loadMiniLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url,coin,like,time&order=level.desc&limit=20', { method: 'GET' });
+  const data = await sbFetch('/rest/v1/system?select=id,name,country,level,avatar_url,coin&order=level.desc&limit=5', { method: 'GET' });
   const el = document.getElementById('side-lb-list');
   if (!el) return;
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:24px;font-size:13px">لا يوجد لاعبون بعد</div>';
     return;
   }
-  // ترتيب: level → coin → like
-  data.sort((a, b) => {
-    if ((b.level||0) !== (a.level||0)) return (b.level||0) - (a.level||0);
-    if ((b.coin||0) !== (a.coin||0)) return (b.coin||0) - (a.coin||0);
-    return (b.like||0) - (a.like||0);
-  });
-  const top5 = data.slice(0, 5);
-  const nowSecs = Math.floor(Date.now() / 1000);
   const rankClass = ['r1','r2','r3'];
   const rankIcon = [
     '<i class="fa-solid fa-medal" style="color:#c9a227;font-size:16px"></i>',
     '<i class="fa-solid fa-medal" style="color:#909090;font-size:16px"></i>',
     '<i class="fa-solid fa-medal" style="color:#b07d4a;font-size:16px"></i>'
   ];
-  el.innerHTML = top5.map((u, i) => {
+  el.innerHTML = data.map((u, i) => {
     const initial = u.name ? u.name[0].toUpperCase() : '?';
     const isMe = currentUser && u.id === currentUser.id;
     const avatarHtml = u.avatar_url
@@ -1861,17 +1847,10 @@ async function loadMiniLeaderboard() {
       : initial;
     const rankHtml = i < 3 ? rankIcon[i] : `<span class="side-lb-rank ${rankClass[i]||''}">${i+1}</span>`;
     const coinHtml = u.coin ? `<span style="font-size:10px;color:var(--gold);display:block;margin-top:2px"><img src="coin.png" style="width:11px;height:11px;object-fit:contain;vertical-align:middle" onerror="this.outerHTML='🪙'"> ${u.coin}</span>` : '';
-    // نقطة الحالة
-    let statusDotStyle = '';
-    if (u.time) {
-      const diff = nowSecs - Number(u.time);
-      if (diff <= 10) statusDotStyle = 'background:#27ae60'; // online
-    }
-    const statusDot = statusDotStyle ? `<span style="position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;${statusDotStyle};border:2px solid var(--bg);display:block"></span>` : '';
     return `
       <div class="side-lb-row${isMe ? ' me-row' : ''}">
         <div class="side-lb-rank ${rankClass[i]||''}">${rankHtml}</div>
-        <div class="side-lb-avatar" style="position:relative">${avatarHtml}${statusDot}</div>
+        <div class="side-lb-avatar">${avatarHtml}</div>
         <div class="side-lb-info">
           <div class="side-lb-name">${u.name || 'لاعب'}${isMe ? ' <span style="font-size:10px;color:var(--blue)">(أنت)</span>' : ''}</div>
           <div class="side-lb-country">${u.country || ''}</div>
@@ -2169,36 +2148,29 @@ async function saveProfileEdit() {
 
 
 
-// ── LIVE STATS (polling every 3s) ──
+// ── LIVE STATS (polling every 0.5s) ──
 let liveStatsInterval = null;
 
 async function fetchLiveStats() {
   try {
-    const nowMs = Date.now();
-    const onlineThresholdMs = 15000; // لاعب يُعتبر online إذا أرسل date خلال 15 ثانية
+    // Searching players: status = 'searching'
+    const [searchRes, matchRes] = await Promise.all([
+      sbFetch('/rest/v1/system?status=eq.searching&select=id', { method: 'GET' }),
+      sbFetch('/rest/v1/system?match=not.is.null&select=id,match', { method: 'GET' })
+    ]);
 
-    // جلب كل اللاعبين مع date و match و status
-    const allPlayers = await sbFetch('/rest/v1/system?select=id,date,match,status', { method: 'GET' });
+    const searchingCount = Array.isArray(searchRes) ? searchRes.length : 0;
 
-    if (!Array.isArray(allPlayers)) return;
-
-    // اللاعبون المتصلون: date موجود وقريب من الحاضر
-    const onlinePlayers = allPlayers.filter(p => {
-      if (!p.date) return false;
-      return (nowMs - new Date(p.date).getTime()) <= onlineThresholdMs;
-    });
-
-    // اللاعبون في البحث عن مباراة (online + status=searching)
-    const searchingCount = onlinePlayers.filter(p => p.status === 'searching').length;
-
-    // المباريات النشطة
+    // Active matches: rows where match column has an opponent player id
     let activeMatchIds = new Set();
-    onlinePlayers.forEach(row => {
-      if (row.match && String(row.match).trim() !== '') {
-        activeMatchIds.add(row.match);
-      }
-    });
-    const activeMatches = Math.floor(activeMatchIds.size);
+    if (Array.isArray(matchRes)) {
+      matchRes.forEach(row => {
+        if (row.match && String(row.match).trim() !== '') {
+          activeMatchIds.add(row.match);
+        }
+      });
+    }
+    const activeMatches = Math.floor(activeMatchIds.size); // each match counted once (2 players share 1 match)
 
     updateLiveStatsPills(searchingCount, activeMatches);
   } catch(e) {
@@ -3223,7 +3195,7 @@ async function _sendTimeHeartbeat() {
   try {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ time: nowSecs, date: new Date().toISOString() })
+      body: JSON.stringify({ time: nowSecs })
     });
   } catch(e) {}
 }
