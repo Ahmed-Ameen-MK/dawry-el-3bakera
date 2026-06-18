@@ -961,22 +961,26 @@
   .contact-fab-btn:focus { outline: none; box-shadow: 0 4px 20px rgba(0,113,227,0.4); }
   .contact-fab-btn:focus-visible { outline: none; }
   .contact-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
-  .contact-fab-btn.open { background: var(--ink); transform: rotate(45deg); }
+  .contact-fab-btn.open { background: var(--ink); }
+  .contact-fab-btn.open i { display: none; }
+  .contact-fab-btn.open::before { content: '✕'; font-size: 18px; color: #fff; }
   /* زر التقويم العائم */
   .cal-fab-btn {
     display: flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-    color: #fff; font-size: 18px;
-    box-shadow: 0 4px 16px rgba(139,92,246,0.45);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--blue);
+    color: #fff; font-size: 20px;
+    box-shadow: 0 4px 20px rgba(0,113,227,0.4);
     text-decoration: none;
     transition: all 0.2s;
     margin-bottom: 10px;
     position: relative;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
-  .cal-fab-btn:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 6px 24px rgba(139,92,246,0.6); }
+  .cal-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
   .cal-fab-btn::after {
-    content: 'تقويمي';
+    content: 'التقويم';
     position: absolute; right: calc(100% + 10px);
     background: rgba(0,0,0,0.75); color: #fff;
     font-family: 'El Messiri', sans-serif;
@@ -986,6 +990,19 @@
     transition: opacity 0.2s;
   }
   .cal-fab-btn:hover::after { opacity: 1; }
+  /* tooltip زر التواصل */
+  .contact-fab-btn::after {
+    content: 'التواصل';
+    position: absolute; right: calc(100% + 10px);
+    background: rgba(0,0,0,0.75); color: #fff;
+    font-family: 'El Messiri', sans-serif;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+    padding: 4px 10px; border-radius: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .contact-fab-btn:hover::after { opacity: 1; }
+  .contact-fab-btn { position: relative; }
   .contact-fab-popup {
     position: absolute;
     bottom: 68px; left: 0;
@@ -2522,7 +2539,7 @@
   </a>
 
   <button class="contact-fab-btn" id="contact-fab-btn" onclick="toggleContactFab()" title="تواصل معنا">
-    <i class="fa-solid fa-plus"></i>
+    <i class="fa-solid fa-comment-dots" id="contact-fab-icon"></i>
   </button>
 </div>
 
