@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
       // البحث بالاسم (case-insensitive)
       const userRes = await fetch(
-        `${SB_URL}/rest/v1/system?name=ilike.${encodeURIComponent(nameFromSlug)}&select=id,name,email,points,level,coin,country,like,dislike`,
+        `${SB_URL}/rest/v1/system?name=ilike.${encodeURIComponent(nameFromSlug)}&select=id,name,email,points,level,coin,country,like,dislike,time,time-in-web`,
         { headers: SB_HEADERS }
       );
       const userData = await userRes.json();
@@ -91,6 +91,8 @@ export default async function handler(req, res) {
   const avatar  = '';
   const initial = name.slice(0, 1);
   const userId  = user?.id ?? '';
+  const userTime    = user?.time ?? null;
+  const userTimeWeb = user?.['time-in-web'] ?? null;
   // إعادة بناء الرابط من الاسم الفعلي (وليس من slug المُدخل)
   const slugSafe = user?.name ? escHtml(user.name.trim().replace(/\s+/g, '-')) : escHtml(slug ?? '');
 
@@ -105,6 +107,7 @@ export default async function handler(req, res) {
     user, rank, error,
     name, email, level, coin, country, avatar, initial,
     rankColor, slugSafe, awards, userId, likes, dislikes,
+    userTime, userTimeWeb,
   }));
 }
 
@@ -222,7 +225,7 @@ async function handleAction(req, res, slug) {
 }
 
 // ── HTML Template ──────────────────────────────────────────────
-function renderHTML({ user, rank, error, name, email, level, coin, country, avatar, initial, rankColor, slugSafe, awards, userId, likes, dislikes }) {
+function renderHTML({ user, rank, error, name, email, level, coin, country, avatar, initial, rankColor, slugSafe, awards, userId, likes, dislikes, userTime, userTimeWeb }) {
   const title = user
     ? `${name} | دوري العباقرة`
     : 'حساب غير موجود | دوري العباقرة';
@@ -360,6 +363,17 @@ header{border-bottom:1px solid var(--line);padding:0 24px;background:rgba(255,25
 .error-card .icon{font-size:48px;margin-bottom:16px;color:var(--ink3)}
 .error-card h2{font-size:22px;font-weight:700;margin-bottom:8px}
 .error-card p{color:var(--ink3);font-size:15px;margin-bottom:24px}
+
+/* ── نقطة الحالة على الصورة ── */
+.status-dot{position:absolute;bottom:4px;left:4px;width:14px;height:14px;border-radius:50%;border:2.5px solid var(--bg);z-index:3}
+.status-dot.online  {background:#2ecc71;box-shadow:0 0 0 2px rgba(46,204,113,0.35)}
+.status-dot.in-match{background:#e74c3c;box-shadow:0 0 0 2px rgba(231,76,60,0.35)}
+
+/* ── شريط آخر ظهور ── */
+.last-seen-bar{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13px;color:var(--ink2);margin-bottom:10px}
+.last-seen-bar i{font-size:13px;flex-shrink:0}
+.last-seen-bar .ls-main{font-weight:600;color:var(--ink)}
+.last-seen-bar .ls-ago{color:var(--ink3);font-size:12px;margin-right:4px}
 </style>
 </head>
 <body>
@@ -372,7 +386,7 @@ header{border-bottom:1px solid var(--line);padding:0 24px;background:rgba(255,25
 </header>
 
 <div class="page-wrap">
-${user ? renderProfile({ name, email, level, coin, country, avatar, initial, rank, rankColor, slugSafe, awards, userId, likes, dislikes }) : renderError(error)}
+${user ? renderProfile({ name, email, level, coin, country, avatar, initial, rank, rankColor, slugSafe, awards, userId, likes, dislikes, userTime, userTimeWeb }) : renderError(error)}
 </div>
 
 <script>
@@ -509,9 +523,95 @@ document.addEventListener('DOMContentLoaded', initVotes);
 </html>`;
 }
 
-function renderProfile({ name, email, level, coin, country, avatar, initial, rank, slugSafe, awards, userId, likes, dislikes }) {
+function renderProfile({ name, email, level, coin, country, avatar, initial, rank, slugSafe, awards, userId, likes, dislikes, userTime, userTimeWeb }) {
   const lvl = parseInt(level).toLocaleString('ar-EG');
   const coinFmt = parseInt(coin).toLocaleString('ar-EG');
+
+  // ── حساب الحالة (server-side بتوقيت الإنشاء) ──
+  const MATCH_THRESHOLD = 8;   // ثواني
+  const ONLINE_THRESHOLD = 12; // ثواني
+
+  const nowSecs = Math.floor(Date.now() / 1000);
+  const timeSecs  = userTime ? Number(userTime) : 0;
+  const webSecs   = userTimeWeb ? Math.floor(new Date(userTimeWeb).getTime() / 1000) : 0;
+
+  let statusDot = '';
+  let statusBar = '';
+
+  const isInMatch = timeSecs  && (nowSecs - timeSecs)  <= MATCH_THRESHOLD;
+  const isOnline  = webSecs   && (nowSecs - webSecs)   <= ONLINE_THRESHOLD;
+
+  // النقطة
+  if (isInMatch) {
+    statusDot = '<span class="status-dot in-match" title="في مباراة الآن"></span>';
+  } else if (isOnline) {
+    statusDot = '<span class="status-dot online" title="متصل الآن"></span>';
+  }
+
+  // شريط الحالة مع التاريخ الكامل
+  const lastActiveSecs = isInMatch ? timeSecs : (webSecs || 0);
+  if (isInMatch) {
+    statusBar = `
+      <div class="last-seen-bar">
+        <i class="fa-solid fa-circle" style="color:#e74c3c;font-size:9px"></i>
+        <span class="ls-main">في مباراة الآن</span>
+      </div>`;
+  } else if (isOnline) {
+    statusBar = `
+      <div class="last-seen-bar">
+        <i class="fa-solid fa-circle" style="color:#2ecc71;font-size:9px"></i>
+        <span class="ls-main">متصل الآن</span>
+      </div>`;
+  } else if (lastActiveSecs) {
+    // حساب التفاصيل
+    const lastDate = new Date(lastActiveSecs * 1000);
+    const diffSecs = nowSecs - lastActiveSecs;
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffSecs / 3600);
+    const diffDays = Math.floor(diffSecs / 86400);
+
+    // نص "منذ ..."
+    let agoText = '';
+    if (diffSecs < 60)       agoText = 'منذ لحظات';
+    else if (diffMins < 60)  agoText = `منذ ${diffMins} دقيقة`;
+    else if (diffHours < 24) {
+      const remMins = diffMins % 60;
+      agoText = remMins > 0
+        ? `منذ ${diffHours} ساعة و${remMins} دقيقة`
+        : `منذ ${diffHours} ساعة`;
+    } else {
+      const remHours = diffHours % 24;
+      agoText = remHours > 0
+        ? `منذ ${diffDays} يوم و${remHours} ساعة`
+        : `منذ ${diffDays} يوم`;
+    }
+
+    // نص التاريخ الكامل
+    const todayStart  = new Date(); todayStart.setHours(0,0,0,0);
+    const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+    const hh = lastDate.getHours().toString().padStart(2,'0');
+    const mm = lastDate.getMinutes().toString().padStart(2,'0');
+    const timeStr = `${hh}:${mm}`;
+
+    let dateLabel = '';
+    if (lastDate >= todayStart) {
+      dateLabel = `اليوم الساعة ${timeStr}`;
+    } else if (lastDate >= yesterdayStart) {
+      dateLabel = `الأمس الساعة ${timeStr}`;
+    } else {
+      const d = lastDate.getDate();
+      const mo = lastDate.getMonth() + 1;
+      const y = lastDate.getFullYear();
+      dateLabel = `يوم ${d}/${mo}/${y}م الساعة ${timeStr}`;
+    }
+
+    statusBar = `
+      <div class="last-seen-bar">
+        <i class="fa-solid fa-clock" style="color:var(--ink3)"></i>
+        <span><span class="ls-main">${dateLabel}</span><span class="ls-ago">(${agoText})</span></span>
+      </div>`;
+  }
 
   // بناء رف الجوائز
   let awardsHtml = '';
@@ -542,11 +642,13 @@ function renderProfile({ name, email, level, coin, country, avatar, initial, ran
             : `<div class="avatar-initial">${initial}</div>`
           }
           ${rank ? `<div class="rank-badge">${rank === 1 ? '👑' : ''}#${rank}</div>` : ''}
+          ${statusDot}
         </div>
 
         <div class="profile-name">${name}</div>
         ${country ? `<div class="profile-country">${country}</div>` : ''}
 
+        ${statusBar}
         ${email ? `<div class="info-row"><i class="fa-solid fa-envelope"></i><span>${email}</span></div>` : ''}
         <div class="info-row">
           <i class="fa-solid fa-link"></i>
