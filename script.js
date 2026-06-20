@@ -3184,12 +3184,12 @@ let _webHeartbeatInterval = null;
 function startTimeHeartbeat() {
   if (!currentUser) return;
   stopTimeHeartbeat();
-  // أرسل الوقت فوراً
+  // أرسل فوراً
   _sendTimeHeartbeat();
   _sendWebHeartbeat();
-  // ثم كل ثانية
+  // time: كل ثانية (للمباراة فقط)
   _timeHeartbeatInterval = setInterval(_sendTimeHeartbeat, 1000);
-  // time-in-web كل 5 ثوانٍ (يكفي للكشف)
+  // time-in-web: كل 5 ثوانٍ (طالما الصفحة مفتوحة وخارج مباراة)
   _webHeartbeatInterval = setInterval(_sendWebHeartbeat, 5000);
 }
 
@@ -3199,7 +3199,7 @@ async function _sendTimeHeartbeat() {
   if (!isInMatch) return;
   const nowSecs = Math.floor(Date.now() / 1000);
   try {
-    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    await sbFetch('/rest/v1/system?id=eq.' + currentUser.id, {
       method: 'PATCH',
       body: JSON.stringify({ time: nowSecs })
     });
@@ -3208,10 +3208,11 @@ async function _sendTimeHeartbeat() {
 
 async function _sendWebHeartbeat() {
   if (!currentUser) return;
-  // أرسل time-in-web فقط عندما لا يكون اللاعب في مباراة
+  // أرسل time-in-web فقط خارج المباراة
   if (isInMatch) return;
   const nowIso = new Date().toISOString();
   try {
+    // fetch مباشر بـ return=minimal لتجنب مشكلة sbFetch مع Prefer header
     await fetch(SB_URL + '/rest/v1/system?id=eq.' + currentUser.id, {
       method: 'PATCH',
       headers: {
