@@ -1129,7 +1129,7 @@ function playSound(file) {
 }
 
 function playCorrectSound() {
-  const options = ['correct1.mp3', 'correct2.mp3', 'correct3.mp3'];
+  const options = ['correct1.mp3', 'correct2.mp3', 'correct3.mp3', 'correct4.mp3'];
   playSound(options[Math.floor(Math.random() * options.length)]);
 }
 
@@ -1142,6 +1142,11 @@ function playDisconnectSound() { playSound('disconnect.mp3'); }
 function playFlipSound()       { playSound('flip.mp3'); }
 function playTimeWarningSound() { playSound('time.mp3'); }
 function playHijackSound()     { playSound('hijack.mp3'); }
+function playVictorySound()    { playSound('vactory1.mp3'); }
+function playLossSound()       {
+  const options = ['loss1.mp3', 'loss2.mp3'];
+  playSound(options[Math.floor(Math.random() * options.length)]);
+}
 
 // صوت البحث عن خصم - يُولَّد بـ Web Audio API (مشابه FC Mobile)
 function playSearchSound() {
@@ -1395,9 +1400,11 @@ function showMatchResult(result, oldLevel, oldCoin) {
   if (result === 'win' || result === 'win-forfeit') {
     header.classList.add('rs-win');
     title.textContent = 'النصر';
+    playVictorySound();
   } else if (result === 'lose') {
     header.classList.add('rs-lose');
     title.textContent = 'هزيمة';
+    playLossSound();
   } else {
     header.classList.add('rs-draw');
     title.textContent = 'تعادل';
@@ -2153,13 +2160,15 @@ let liveStatsInterval = null;
 
 async function fetchLiveStats() {
   try {
-    // Searching players: status = 'searching'
-    const [searchRes, matchRes] = await Promise.all([
-      sbFetch('/rest/v1/system?status=eq.searching&select=id', { method: 'GET' }),
+    const nowIso = new Date().toISOString();
+    // المتصلون: time-in-web >= منذ 12 ثانية
+    const since = new Date(Date.now() - 12000).toISOString();
+    const [onlineRes, matchRes] = await Promise.all([
+      sbFetch(`/rest/v1/system?time-in-web=gte.${encodeURIComponent(since)}&select=id`, { method: 'GET' }),
       sbFetch('/rest/v1/system?match=not.is.null&select=id,match', { method: 'GET' })
     ]);
 
-    const searchingCount = Array.isArray(searchRes) ? searchRes.length : 0;
+    const onlineCount = Array.isArray(onlineRes) ? onlineRes.length : 0;
 
     // Active matches: rows where match column has an opponent player id
     let activeMatchIds = new Set();
@@ -2170,9 +2179,9 @@ async function fetchLiveStats() {
         }
       });
     }
-    const activeMatches = Math.floor(activeMatchIds.size); // each match counted once (2 players share 1 match)
+    const activeMatches = Math.floor(activeMatchIds.size);
 
-    updateLiveStatsPills(searchingCount, activeMatches);
+    updateLiveStatsPills(onlineCount, activeMatches);
   } catch(e) {
     // silently fail
   }

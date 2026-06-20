@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حسابي - دوري العباقرة</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<meta name="google-site-verification" content="6nlZ7R-1cDpMGzaXz-gFXbkZse5Py7SEpvhwygR4QDU" />
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  :root {
+    --bg:#ffffff; --bg2:#f5f5f7; --bg3:#e8e8ed;
+    --ink:#1d1d1f; --ink2:#3d3d3f; --ink3:#6e6e73;
+    --line:#d2d2d7; --line2:rgba(0,0,0,0.06);
+    --blue:#0071e3; --blue-hover:#0077ed;
+    --green:#1d8348; --green-bg:#f0faf4;
+    --red:#c0392b; --red-bg:#fef1ef;
+    --gold:#b5882e; --gold-bg:#fdf6e3;
+    --radius:18px; --radius-sm:10px;
+    --shadow:0 2px 20px rgba(0,0,0,0.08);
+    --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  * { -webkit-user-select:none; -moz-user-select:none; user-select:none; }
+  input, textarea { -webkit-user-select:text; -moz-user-select:text; user-select:text; }
+  ::selection { background:transparent; }
+
+  body { font-family:'El Messiri',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased; }
+  .container { max-width:900px; margin:0 auto; padding:0 24px; }
+
+  /* HEADER */
+  header { border-bottom:1px solid var(--line); padding:0 24px; position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .header-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; height:52px; }
+  .brand { font-size:17px; font-weight:700; letter-spacing:-0.3px; color:var(--ink); display:flex; align-items:center; gap:8px; text-decoration:none; }
+  .brand i { color:var(--blue); font-size:15px; }
+  .back-btn { background:none; border:none; color:var(--ink3); padding:6px 14px; border-radius:20px; cursor:pointer; font-family:'El Messiri',sans-serif; font-size:14px; font-weight:500; display:flex; align-items:center; gap:6px; transition:all 0.15s; text-decoration:none; }
+  .back-btn:hover { background:var(--bg2); color:var(--ink); }
+  .back-btn i { font-size:13px; }
+
+  .section { padding:32px 0; }
+
+  /* CARD */
+  .card { background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); padding:28px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .card-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .card-header .icon-wrap { width:40px; height:40px; border-radius:10px; background:var(--bg2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:16px; }
+  .card-header h2 { font-size:19px; font-weight:700; color:var(--ink); letter-spacing:-0.3px; }
+
+  /* AVATAR */
+  .profile-avatar-wrap { position:relative; display:inline-block; cursor:pointer; }
+  .profile-avatar-wrap:hover .profile-avatar-overlay { opacity:1; }
+  .profile-avatar-overlay { position:absolute; inset:0; border-radius:50%; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; }
+  .profile-avatar-overlay i { color:#fff; font-size:16px; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px; margin-bottom:20px; }
+  @media (max-width:520px) { .stats-grid { grid-template-columns:repeat(3,1fr); gap:6px; } .stat-card { padding:10px 6px; } .stat-card .num { font-size:20px; } .stat-card .lbl { font-size:10px; } }
+  .stat-card { background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-sm); padding:20px; text-align:center; box-shadow:var(--shadow); }
+  .stat-card .num { font-size:26px; font-weight:700; color:var(--ink); letter-spacing:-1px; }
+  .stat-card .lbl { font-size:12px; color:var(--ink3); margin-top:4px; }
+
+  /* FORM */
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--ink2); margin-bottom:6px; }
+  .form-group input { width:100%; background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius-sm); padding:11px 14px; color:var(--ink); font-family:'El Messiri',sans-serif; font-size:15px; outline:none; transition:border-color 0.15s,box-shadow 0.15s; }
+  .form-group input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,113,227,0.12); }
+
+  /* BUTTONS */
+  .btn { padding:12px 24px; border-radius:50px; border:none; font-family:'El Messiri',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:8px; }
+  .btn-primary { background:var(--blue); color:#fff; }
+  .btn-primary:hover { background:var(--blue-hover); }
+  .btn-danger { background:var(--red-bg); color:var(--red); border:1px solid rgba(192,57,43,0.2); }
+  .btn-danger:hover { background:#fde8e5; }
+
+  /* MSG */
+  .msg { padding:11px 16px; border-radius:var(--radius-sm); font-size:14px; margin-top:12px; }
+  .msg.error { background:var(--red-bg); border:1px solid rgba(192,57,43,0.2); color:var(--red); }
+  .msg.success { background:var(--green-bg); border:1px solid rgba(29,131,72,0.2); color:var(--green); }
+  .msg.info { background:#eef4fb; border:1px solid rgba(0,113,227,0.2); color:var(--blue); }
+
+  /* NOT LOGGED IN */
+  #not-logged-in { text-align:center; padding:80px 24px; }
+  #not-logged-in i { font-size:48px; color:var(--ink3); display:block; margin-bottom:16px; }
+  #not-logged-in h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
+  #not-logged-in p { color:var(--ink3); font-size:15px; margin-bottom:24px; }
+  .loading-center { text-align:center; padding:60px; color:var(--ink3); font-size:15px; }
+
+  /* FOOTER */
+  footer { border-top:1px solid var(--line); background:var(--bg2); margin-top:40px; padding:32px 24px 24px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-crown"></i>
+      دوري العباقرة
+    </a>
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-right"></i>
+      <span>رجوع</span>
+    </a>
+  </div>
+</header>
+
+<div class="container">
+  <div class="section">
+
+    <!-- loading -->
+    <div class="loading-center" id="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin" style="font-size:28px;margin-bottom:12px;display:block;color:var(--blue)"></i>
+      جاري التحميل...
+    </div>
+
+    <!-- not logged in -->
+    <div id="not-logged-in" style="display:none">
+      <i class="fa-solid fa-user-slash"></i>
+      <h2>يجب تسجيل الدخول</h2>
+      <p>سجّل دخولك أولاً للوصول إلى حسابك</p>
+      <a href="index.html" class="btn btn-primary">
+        <i class="fa-solid fa-right-to-bracket"></i> تسجيل الدخول
+      </a>
+    </div>
+
+    <!-- account content -->
+    <div id="account-content" style="display:none">
+
+      <!-- معلومات الحساب -->
+      <div class="card">
+        <div class="card-header">
+          <div class="icon-wrap"><i class="fa-solid fa-user"></i></div>
+          <h2>حسابي</h2>
+        </div>
+        <div id="profile-info">
+          <!-- يُحقن بـ JS -->
+        </div>
+      </div>
+
+      <!-- تعديل الحساب -->
+      <div class="card">
+        <div class="card-header">
+          <div class="icon-wrap"><i class="fa-solid fa-pen"></i></div>
+          <h2 style="font-size:17px">تعديل الحساب</h2>
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني الجديد</label>
+          <input type="email" id="edit-email" placeholder="اتركه فارغاً إن لم تريد تغييره">
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور الجديدة</label>
+          <input type="password" id="edit-pass" placeholder="اتركها فارغة إن لم تريد تغييرها">
+        </div>
+        <button class="btn btn-primary" onclick="saveProfileEdit()">
+          <i class="fa-solid fa-floppy-disk"></i> حفظ التعديلات
+        </button>
+        <div id="edit-msg"></div>
+      </div>
+
+      <!-- تسجيل الخروج وحذف الحساب -->
+      <div class="card">
+        <div class="card-header">
+          <div class="icon-wrap" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h2 style="font-size:17px">منطقة الخطر</h2>
+        </div>
+        <button class="btn btn-danger" onclick="doLogout()">
+          <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+        </button>
+        <div style="margin-top:12px;border-top:1px solid rgba(192,57,43,0.15);padding-top:16px">
+          <button class="btn btn-danger" onclick="confirmDeleteAccount()">
+            <i class="fa-solid fa-trash"></i> حذف الحساب نهائياً
+          </button>
+          <div id="delete-account-msg"></div>
+        </div>
+      </div>
+
+    </div><!-- /account-content -->
+  </div>
+</div>
+
+<footer>
+  <div style="max-width:900px;margin:0 auto;">
+    <div style="border-top:1px solid var(--line2);padding-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <p style="font-size:12px;color:var(--ink3);">Copyright © 2026 دوري العباقرة. جميع الحقوق محفوظة.</p>
+      <p dir="ltr" style="font-size:12px;">&lt; Developed by = " <a style="text-decoration:none;color:pink;" href="https://nafezly.com/service/71680?ref=69f507b3714b4"><b style="color:red;">A.ameen</b></a> " /&gt;</p>
+      <p style="font-size:12px;color:var(--ink3);">صُنع في مصر</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+const SB_URL = 'https://spbbtsrabohqaspqzsph.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwYmJ0c3JhYm9ocWFzcHF6c3BoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTk4ODEsImV4cCI6MjA5MzYzNTg4MX0.SfgtGV2RpvmpthbR9D036bXWJZdBkDQFrUJbqsOjHsI';
+const Q_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Prefer': 'return=representation'
+};
+
+let currentUser = null;
+
+// ── sbFetch ──────────────────────────────
+async function sbFetch(path, opts = {}, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(SB_URL + path, {
+        ...opts,
+        headers: { ...Q_HEADERS, ...(opts.headers || {}) },
+      });
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { return null; }
+    } catch (e) {
+      if (i === retries) return null;
+    }
+  }
+}
+
+// ── helpers ──────────────────────────────
+function showMsg(el, txt, type) {
+  if (!el) return;
+  el.innerHTML = `<div class="msg ${type}">${txt}</div>`;
+}
+
+function getMatchHistory() {
+  if (!currentUser) return [];
+  const key = 'genius_match_history_' + currentUser.id;
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; }
+}
+
+function getWinRate() {
+  const h = getMatchHistory();
+  if (!h.length) return 0;
+  return Math.round((h.filter(m => m.result === 'win').length / h.length) * 100);
+}
+
+// ── loadProfile ──────────────────────────
+async function loadProfile() {
+  if (!currentUser) return;
+
+  const avatarUrl = currentUser.avatar_url || '';
+  const avatarHtml = avatarUrl
+    ? `<img src="${avatarUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--line)">`
+    : `<div style="width:60px;height:60px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">${currentUser.name[0].toUpperCase()}</div>`;
+
+  const history  = getMatchHistory();
+  const winRate  = getWinRate();
+  const coins    = currentUser.coin || 0;
+
+  // سجل المباريات
+  const historyHtml = history.length === 0
+    ? `<div style="text-align:center;color:var(--ink3);padding:24px;font-size:14px"><i class="fa-solid fa-gamepad" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>لم تلعب أي مباراة بعد</div>`
+    : history.slice(0, 50).map(m => {
+        const d = new Date(m.date);
+        const dateStr = d.toLocaleDateString('ar-EG', { month:'short', day:'numeric' });
+        const icons  = { win:'🏆', lose:'😔', draw:'🤝' };
+        const colors = { win:'var(--green)', lose:'var(--red)', draw:'var(--gold)' };
+        const labels = { win:'فوز', lose:'خسارة', draw:'تعادل' };
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)">
+            <span style="font-size:20px">${icons[m.result]||'❓'}</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:${colors[m.result]||'var(--ink)'}">${labels[m.result]||m.result}</div>
+              <div style="font-size:11px;color:var(--ink3)">${m.opp?'ضد: '+m.opp:''} • ${dateStr}</div>
+            </div>
+            <div style="text-align:left;font-size:12px;color:var(--ink3)">
+              ${m.coinDelta>0?`<span style="color:var(--gold)">+${m.coinDelta}🪙</span>`:''}
+              ${m.levelDelta!==0?`<span style="color:${m.levelDelta>0?'var(--green)':'var(--red)'};margin-right:4px">${m.levelDelta>0?'+':''}${m.levelDelta}⭐</span>`:''}
+            </div>
+          </div>`;
+      }).join('');
+
+  // جوائز المتجر
+  const storeRaw  = localStorage.getItem('genius_store_' + currentUser.id);
+  const storeData = storeRaw ? JSON.parse(storeRaw) : {};
+  const prizes = [];
+  if ((storeData.exclusion||0) > 0) prizes.push({ icon:'🚫', name:'بطاقة استبعاد', count:storeData.exclusion });
+  if ((storeData.replace  ||0) > 0) prizes.push({ icon:'🔄', name:'بطاقة استبدال', count:storeData.replace });
+  if ((storeData.flip     ||0) > 0) prizes.push({ icon:'🔀', name:'بطاقة قلب',     count:storeData.flip });
+  if ((storeData.friend   ||0) > 0) prizes.push({ icon:'📞', name:'اتصل بصديق',    count:storeData.friend });
+
+  const prizesHtml = prizes.length === 0
+    ? `<div style="text-align:center;color:var(--ink3);padding:16px;font-size:13px"><i class="fa-solid fa-store" style="font-size:20px;display:block;margin-bottom:6px;opacity:0.4"></i>لم تشترِ أي جوائز من المتجر بعد</div>`
+    : prizes.map(p => `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2)">
+          <span style="font-size:24px">${p.icon}</span>
+          <div style="flex:1;font-size:14px;font-weight:600;color:var(--ink)">${p.name}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--blue)">×${p.count}</div>
+        </div>`).join('');
+
+  document.getElementById('profile-info').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <div class="profile-avatar-wrap" onclick="document.getElementById('avatar-file-input').click()" title="تغيير الصورة الشخصية">
+        ${avatarHtml}
+        <div class="profile-avatar-overlay"><i class="fa-solid fa-camera"></i></div>
+      </div>
+      <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--ink)">${currentUser.name}</div>
+        <div style="color:var(--ink3);font-size:14px">${currentUser.email}</div>
+        <div style="color:var(--ink3);font-size:12px;margin-top:4px"><i class="fa-solid fa-camera" style="margin-left:4px"></i>انقر على الصورة لتغييرها</div>
+      </div>
+    </div>
+    <div id="avatar-upload-msg"></div>
+
+    <!-- إحصائيات -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="num">${currentUser.level||0}</div>
+        <div class="lbl"><i class="fa-solid fa-ranking-star" style="font-size:10px;color:var(--blue);margin-left:3px"></i> نقاط الصدارة</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="profile-rank">#-</div>
+        <div class="lbl"><i class="fa-solid fa-trophy" style="font-size:10px;color:var(--gold);margin-left:3px"></i> ترتيبك</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <img src="coin.png" style="width:22px;height:22px;object-fit:contain" onerror="this.outerHTML='🪙'">
+          ${coins}
+        </div>
+        <div class="lbl">عملتي</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">${currentUser.country||'🌍'}</div>
+        <div class="lbl">البلد</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">${winRate}%</div>
+        <div class="lbl">نسبة الفوز</div>
+      </div>
+    </div>
+
+    <!-- رف الجوائز -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px">
+        <i class="fa-solid fa-trophy" style="color:var(--gold)"></i> رف الجوائز
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 16px;">${prizesHtml}</div>
+    </div>
+
+    <!-- المباريات الأخيرة -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px">
+        <i class="fa-solid fa-gamepad" style="color:var(--blue)"></i> المباريات الأخيرة
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 16px;max-height:310px;overflow-y:auto;">${historyHtml}</div>
+    </div>
+  `;
+
+  loadProfileRank();
+}
+
+async function loadProfileRank() {
+  const all = await sbFetch('/rest/v1/system?select=id,level&order=level.desc');
+  if (all) {
+    const idx = all.findIndex(u => u.id === currentUser.id);
+    const el = document.getElementById('profile-rank');
+    if (el) el.textContent = '#' + (idx + 1);
+  }
+}
+
+// ── uploadAvatar ──────────────────────────
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msgEl = document.getElementById('avatar-upload-msg');
+  if (file.size > 2 * 1024 * 1024) return showMsg(msgEl, 'حجم الصورة يجب أن لا يتجاوز 2 ميغابايت', 'error');
+
+  showMsg(msgEl, 'جاري رفع الصورة...', 'info');
+  const fileExt  = file.name.split('.').pop();
+  const fileName = `avatar_${currentUser.id}.${fileExt}`;
+
+  const uploadRes = await fetch(`${SB_URL}/storage/v1/object/avatars/${fileName}`, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file
+  });
+
+  if (!uploadRes.ok) {
+    const err = await uploadRes.json().catch(() => ({}));
+    return showMsg(msgEl, `فشل رفع الصورة: ${err.message || uploadRes.status}`, 'error');
+  }
+
+  const publicUrl = `${SB_URL}/storage/v1/object/public/avatars/${fileName}`;
+  await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method:'PATCH', body:JSON.stringify({ avatar_url: publicUrl }) });
+  currentUser.avatar_url = publicUrl;
+  localStorage.setItem('genius_user', JSON.stringify(currentUser));
+  showMsg(msgEl, 'تم حفظ الصورة بنجاح! ✓', 'success');
+  loadProfile();
+}
+
+// ── saveProfileEdit ───────────────────────
+async function saveProfileEdit() {
+  const newEmail = document.getElementById('edit-email').value.trim();
+  const newPass  = document.getElementById('edit-pass').value.trim();
+  const msgEl    = document.getElementById('edit-msg');
+  if (!newEmail && !newPass) return showMsg(msgEl, 'أدخل بريداً أو كلمة مرور جديدة للتعديل', 'error');
+
+  if (newEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) return showMsg(msgEl, 'صيغة البريد الإلكتروني غير صحيحة (مثال: user@example.com)', 'error');
+    const check = await sbFetch(`/rest/v1/system?email=eq.${encodeURIComponent(newEmail)}&select=id`);
+    if (check && check.length > 0 && check[0].id !== currentUser.id) return showMsg(msgEl, 'هذا البريد مستخدم من قبل حساب آخر', 'error');
+  }
+  if (newPass) {
+    if (/[<:=>]/.test(newPass)) return showMsg(msgEl, 'كلمة المرور لا يجب أن تحتوي على الرموز: < : = >', 'error');
+    if (newPass.length < 6) return showMsg(msgEl, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+  }
+
+  showMsg(msgEl, 'جاري الحفظ...', 'info');
+  const updates = {};
+  if (newEmail) updates.email = newEmail;
+  if (newPass)  updates.password = newPass;
+
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method:'PATCH', body:JSON.stringify(updates) });
+  if (res !== null) {
+    if (newEmail) currentUser.email = newEmail;
+    localStorage.setItem('genius_user', JSON.stringify(currentUser));
+    showMsg(msgEl, 'تم حفظ التعديلات بنجاح!', 'success');
+    document.getElementById('edit-email').value = '';
+    document.getElementById('edit-pass').value = '';
+    loadProfile();
+  } else {
+    showMsg(msgEl, 'حدث خطأ أثناء الحفظ، حاول مرة أخرى', 'error');
+  }
+}
+
+// ── doLogout ──────────────────────────────
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('genius_user');
+  localStorage.removeItem('genius_sb_token');
+  window.location.href = 'index.html';
+}
+
+// ── confirmDeleteAccount ──────────────────
+async function confirmDeleteAccount() {
+  const first = confirm('هل أنت متأكد من حذف حسابك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.');
+  if (!first) return;
+  const second = confirm('تأكيد أخير: سيتم حذف جميع بياناتك بشكل دائم. هل تريد المتابعة؟');
+  if (!second) return;
+
+  const msgEl = document.getElementById('delete-account-msg');
+  showMsg(msgEl, 'جاري حذف الحساب...', 'info');
+
+  const res = await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, { method:'DELETE' });
+  if (res !== null) {
+    currentUser = null;
+    localStorage.removeItem('genius_user');
+    localStorage.removeItem('genius_sb_token');
+    alert('تم حذف حسابك بنجاح.');
+    window.location.href = 'index.html';
+  } else {
+    showMsg(msgEl, 'حدث خطأ أثناء الحذف، حاول مرة أخرى', 'error');
+  }
+}
+
+// ── INIT ──────────────────────────────────
+(function init() {
+  const raw = localStorage.getItem('genius_user');
+  document.getElementById('loading-state').style.display = 'none';
+  if (!raw) {
+    document.getElementById('not-logged-in').style.display = '';
+    return;
+  }
+  try { currentUser = JSON.parse(raw); } catch { document.getElementById('not-logged-in').style.display = ''; return; }
+  if (!currentUser || !currentUser.id) { document.getElementById('not-logged-in').style.display = ''; return; }
+  document.getElementById('account-content').style.display = '';
+  loadProfile();
+})();
+</script>
+</body>
+</html>
