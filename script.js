@@ -3212,8 +3212,14 @@ async function _sendWebHeartbeat() {
   if (isInMatch) return;
   const nowIso = new Date().toISOString();
   try {
-    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+    await fetch(SB_URL + '/rest/v1/system?id=eq.' + currentUser.id, {
       method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'return=minimal'
+      },
       body: JSON.stringify({ 'time-in-web': nowIso })
     });
   } catch(e) {}
