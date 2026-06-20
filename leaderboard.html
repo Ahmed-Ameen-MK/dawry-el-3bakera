@@ -61,6 +61,17 @@
   .lb-country { font-size:12px; color:var(--ink3); margin-top:1px; }
   .lb-pts { font-size:15px; font-weight:700; color:var(--blue); white-space:nowrap; flex-shrink:0; }
 
+  /* نقطة الحالة */
+  .lb-avatar-wrap { position:relative; flex-shrink:0; }
+  .status-dot {
+    position:absolute; bottom:1px; left:1px;
+    width:11px; height:11px; border-radius:50%;
+    border:2px solid var(--bg);
+    z-index:2;
+  }
+  .status-dot.online  { background:#2ecc71; box-shadow:0 0 0 1px rgba(46,204,113,0.4); }
+  .status-dot.in-match { background:#e74c3c; box-shadow:0 0 0 1px rgba(231,76,60,0.4); }
+
   @media (max-width:520px) {
     nav a .nav-text, nav button .nav-text { display:none; }
     nav a, nav button { padding:6px 10px; }
@@ -154,8 +165,31 @@ async function sbFetch(path) {
 
 let lbAllData = [];
 
+// الحد الزمني: إذا كان آخر تحديث قبل أكثر من X ثانية → غير متصل
+const ONLINE_THRESHOLD_SECS  = 12;  // time-in-web: كل 5 ث، نعطي هامش 12 ث
+const MATCH_THRESHOLD_SECS   = 8;   // time: كل ثانية، نعطي هامش 8 ث
+
+function getStatusDot(u) {
+  const nowSecs = Math.floor(Date.now() / 1000);
+
+  // time (unix seconds) — في مباراة
+  const timeSecs = u.time ? Number(u.time) : 0;
+  if (timeSecs && (nowSecs - timeSecs) <= MATCH_THRESHOLD_SECS) {
+    return '<span class="status-dot in-match" title="في مباراة الآن"></span>';
+  }
+
+  // time-in-web (ISO timestamp) — متصل في الموقع
+  const webTs = u['time-in-web'] ? Math.floor(new Date(u['time-in-web']).getTime() / 1000) : 0;
+  if (webTs && (nowSecs - webTs) <= ONLINE_THRESHOLD_SECS) {
+    return '<span class="status-dot online" title="متصل الآن"></span>';
+  }
+
+  // غير متصل → لا نقطة
+  return '';
+}
+
 async function loadLeaderboard() {
-  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url&order=level.desc&limit=100');
+  const data = await sbFetch('/rest/v1/system?select=name,country,level,avatar_url,time,time-in-web&order=level.desc&limit=100');
   const el = document.getElementById('lb-list');
   if (!data || data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px">لا يوجد لاعبون بعد</div>';
@@ -180,7 +214,7 @@ function renderLeaderboard(data, highlight='') {
     return;
   }
   const rankClass = ['gold','silver','bronze'];
-  el.innerHTML = data.map((u, i) => {
+  el.innerHTML = data.map((u) => {
     const globalRank = lbAllData.indexOf(u);
     const displayRank = globalRank + 1;
     let nameDisplay = u.name || 'لاعب';
@@ -188,12 +222,19 @@ function renderLeaderboard(data, highlight='') {
       const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
       nameDisplay = nameDisplay.replace(regex, '<mark style="background:#fff3b0;border-radius:3px;padding:0 1px">$1</mark>');
     }
+    const avatarContent = u.avatar_url
+      ? `<img src="${u.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name?u.name[0].toUpperCase():'?'}'">` 
+      : (u.name ? u.name[0].toUpperCase() : '?');
+    const dot = getStatusDot(u);
     return `
     <div class="lb-row" style="cursor:pointer" onclick="window.location.href='/abqari/${(u.name||'').trim().replace(/\s+/g,'-')}'">
       <div class="lb-rank ${rankClass[globalRank]||''}">
         ${globalRank===0?'<i class="fa-solid fa-medal"></i>':globalRank===1?'<i class="fa-solid fa-medal" style="color:#aaa"></i>':globalRank===2?'<i class="fa-solid fa-medal" style="color:#b07d4a"></i>':displayRank}
       </div>
-      <div class="lb-avatar">${u.avatar_url?`<img src="${u.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${u.name?u.name[0].toUpperCase():'?'}'">`:(u.name?u.name[0].toUpperCase():'?')}</div>
+      <div class="lb-avatar-wrap">
+        <div class="lb-avatar">${avatarContent}</div>
+        ${dot}
+      </div>
       <div class="lb-info">
         <div class="lb-name">${nameDisplay}</div>
         <div class="lb-country">${u.country||''}</div>
@@ -204,6 +245,8 @@ function renderLeaderboard(data, highlight='') {
 }
 
 loadLeaderboard();
+// تحديث كل 10 ثوانٍ لتحديث النقاط
+setInterval(loadLeaderboard, 10000);
 </script>
 </body>
 </html>

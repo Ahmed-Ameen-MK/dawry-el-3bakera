@@ -961,20 +961,20 @@
   .contact-fab-btn:focus { outline: none; box-shadow: 0 4px 20px rgba(0,113,227,0.4); }
   .contact-fab-btn:focus-visible { outline: none; }
   .contact-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); }
-  .contact-fab-btn.open { background: var(--ink); transform: rotate(45deg); }
+  .contact-fab-btn.open { background: var(--ink); }
   /* زر التقويم العائم */
   .cal-fab-btn {
     display: flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-    color: #fff; font-size: 18px;
-    box-shadow: 0 4px 16px rgba(139,92,246,0.45);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--blue);
+    color: #fff; font-size: 20px;
+    box-shadow: 0 4px 20px rgba(0,113,227,0.4);
     text-decoration: none;
     transition: all 0.2s;
     margin-bottom: 10px;
     position: relative;
   }
-  .cal-fab-btn:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 6px 24px rgba(139,92,246,0.6); }
+  .cal-fab-btn:hover { background: var(--blue-hover); transform: scale(1.08); box-shadow: 0 4px 20px rgba(0,113,227,0.4); }
   .cal-fab-btn::after {
     content: 'تقويمي';
     position: absolute; right: calc(100% + 10px);
@@ -2522,7 +2522,7 @@
   </a>
 
   <button class="contact-fab-btn" id="contact-fab-btn" onclick="toggleContactFab()" title="تواصل معنا">
-    <i class="fa-solid fa-plus"></i>
+    <i class="fa-solid fa-message"></i>
   </button>
 </div>
 

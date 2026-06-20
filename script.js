@@ -3179,18 +3179,24 @@ if (typeof nextQuestion === 'function') {
 // هذا يتيح كشف انقطاع اتصال الخصم بدقة خلال 5 ثوانٍ
 
 let _timeHeartbeatInterval = null;
+let _webHeartbeatInterval = null;
 
 function startTimeHeartbeat() {
   if (!currentUser) return;
   stopTimeHeartbeat();
   // أرسل الوقت فوراً
   _sendTimeHeartbeat();
+  _sendWebHeartbeat();
   // ثم كل ثانية
   _timeHeartbeatInterval = setInterval(_sendTimeHeartbeat, 1000);
+  // time-in-web كل 5 ثوانٍ (يكفي للكشف)
+  _webHeartbeatInterval = setInterval(_sendWebHeartbeat, 5000);
 }
 
 async function _sendTimeHeartbeat() {
   if (!currentUser) { stopTimeHeartbeat(); return; }
+  // أرسل time فقط عندما يكون اللاعب في مباراة
+  if (!isInMatch) return;
   const nowSecs = Math.floor(Date.now() / 1000);
   try {
     await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
@@ -3200,10 +3206,27 @@ async function _sendTimeHeartbeat() {
   } catch(e) {}
 }
 
+async function _sendWebHeartbeat() {
+  if (!currentUser) return;
+  // أرسل time-in-web فقط عندما لا يكون اللاعب في مباراة
+  if (isInMatch) return;
+  const nowIso = new Date().toISOString();
+  try {
+    await sbFetch(`/rest/v1/system?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 'time-in-web': nowIso })
+    });
+  } catch(e) {}
+}
+
 function stopTimeHeartbeat() {
   if (_timeHeartbeatInterval) {
     clearInterval(_timeHeartbeatInterval);
     _timeHeartbeatInterval = null;
+  }
+  if (_webHeartbeatInterval) {
+    clearInterval(_webHeartbeatInterval);
+    _webHeartbeatInterval = null;
   }
 }
 
